@@ -16,14 +16,14 @@
 #
 #     python -m pts.do
 #
-# This script simply invokes the command.perform() function situated within this same directory, so that the
-# bulk of the code is contained in file with a regular name (i.e. without underscores).
+# This script simply invokes the perform() function of the command module situated in the admin package,
+# so that the bulk of the code is contained in file with a regular name (i.e. without underscores).
 #
 
 # -----------------------------------------------------------------
 
-# import the command module from this directory and invoke the perform() function
-from . import command
-command.perform()
+# import the command module and invoke the perform() function
+from pts.admin.command import perform
+perform()
 
 # -----------------------------------------------------------------
