@@ -1,0 +1,10 @@
+*~
+.DS_Store
+*.pyc
+__pycache__
+.idea
+._*
+*.c
+lib.*/
+temp.*/
+*.pyxbldc
