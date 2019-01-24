@@ -126,10 +126,10 @@ import argparse
 import importlib
 import inspect
 import logging
-import pathlib
 import sys
 
 import pts.utils.error
+import pts.utils.path
 
 # -----------------------------------------------------------------
 
@@ -149,7 +149,7 @@ def doWithCommandLineArguments():
         return
 
     # get the path to the top-level pts directory
-    ptsdir = pathlib.Path(inspect.getfile(inspect.currentframe())).parent.parent
+    ptsdir = pts.utils.path.pts()
 
     # make a list of all pts package directories containing a "do" directory
     packagenames = [x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]
@@ -184,7 +184,7 @@ def doWithCommandLineArguments():
 ## This public function lists all available PTS commands, per package.
 def listCommands():
     # get the path to the top-level pts directory
-    ptsdir = pathlib.Path(inspect.getfile(inspect.currentframe())).parent.parent
+    ptsdir = pts.utils.path.pts()
 
     # loop over all pts package directories containing a "do" directory
     for pname in sorted([ x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]):
