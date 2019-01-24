@@ -9,7 +9,11 @@
 #
 # This module enables command scripts to be executed from the command line to expose PTS functionality
 # to a terminal session. The doWithCommandLineArguments() function is invoked from the \_\_main\_\_ module in the
-# \c do package when that package is specified on the python command line. Typical usage is as follows:
+# \c do package when that package is specified on the python command line.
+#
+# __Acessing command scripts__
+#
+# Typical usage is as follows:
 #
 #     alias pts='export PYTHONPATH=~/SKIRT/PTS9 ; python -m pts.do'
 #     ...
@@ -34,6 +38,8 @@
 #     pts ad/tr me
 #     pts tr "you and me"
 #     pts do "you and me"
+#
+# __Defining the do() function__
 #
 # A PTS command script must define a top-level function called \c do() with a number of positional
 # and/or optional parameters as required by the script. These parameters must be declared in a specific
@@ -86,6 +92,32 @@
 #       Float number:    8.3
 #       Integer number:  17
 #     Finished admin/try_do...
+#
+# __The do() function body__
+#
+# The body of the do() function in a command script should be fairly short. Preferably, most if not all of
+# the functionality is implemented in other modules residing in the same package as the command script
+# (but outside of the \c do directory). The interface offered by these modules can then also be used by
+# other code internal or external to PTS.
+#
+# Furthermore, contrary to what is recommended and customary for modules, import statements in command scripts
+# are preferably placed inside the do() function body. This allows the command script to be imported (for
+# example to retrieve the do() function signature) without recursively performing its own imports.
+#
+# __Logging and error reporting__
+#
+# The functions in this module setup the standard logging package with appropriate formatting. To ensure
+# consistent output and error handling, the following rules apply during the execution of a command script,
+# and by extension in all PTS code.
+#
+#  - Do not write text output to stdin or stdout through the print() function or otherwise.
+#  - Call logging.info() to output regular information or to show progress.
+#  - Call logging.warning() to alert the user about issues that allow the program to continue normally.
+#  - Call logging.error() to report problems that might affect the program's normal execution, but are not fatal.
+#  - Raise a pts.utils.error.UserError() to report fatal problems that are likely caused by a user error
+#    and thus should be reported in a user-friendly manner (for example, showing usage help instead of a stack trace).
+#  - Raise another exception such as the standard TypeError() or ValueError() to report fatal problems that are
+#    likely caused by a programming error, and thus should be reported with a stack trace.
 #
 
 # -----------------------------------------------------------------
