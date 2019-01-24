@@ -7,7 +7,7 @@
 
 ## \package pts.admin.do.try_do Test basic PTS command line functionality.
 #
-# You can use this script to test basic PTS command line functionality. It simply prints the values
+# You can use this script to test basic PTS command line functionality. It simply outputs the values
 # of its argument (a single positional argument and three optional arguments).
 #
 # The script can also serve as a starting template for developing other scripts.
@@ -21,10 +21,11 @@ def do( aFixedString : (str,"first and only positional argument"),
         anInteger : (int,"optional integer argument") = 7,
         ) -> "try the PTS command mechanism":
 
-    print("Command line arguments are:")
-    print("  Fixed string:    {}".format(aFixedString))
-    print("  Optional string: {}".format(aString))
-    print("  Float number:    {}".format(aFloat))
-    print("  Integer number:  {}".format(anInteger))
+    import logging
+    logging.info("Command line arguments are:")
+    logging.info("  Fixed string:    {}".format(aFixedString))
+    logging.info("  Optional string: {}".format(aString))
+    logging.info("  Float number:    {}".format(aFloat))
+    logging.info("  Integer number:  {}".format(anInteger))
 
 # -----------------------------------------------------------------

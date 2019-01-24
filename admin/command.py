@@ -8,7 +8,7 @@
 ## \package pts.admin.command Execute one of the PTS command scripts from the command line
 #
 # This module enables command scripts to be executed from the command line to expose PTS functionality
-# to a terminal session. The top-level perform() function is invoked from the \_\_main\_\_ module in the
+# to a terminal session. The doWithCommandLineArguments() function is invoked from the \_\_main\_\_ module in the
 # \c do package when that package is specified on the python command line. Typical usage is as follows:
 #
 #     alias pts='export PYTHONPATH=~/SKIRT/PTS9 ; python -m pts.do'
@@ -37,10 +37,10 @@
 #
 # A PTS command script must define a top-level function called \c do() with a number of positional
 # and/or optional parameters as required by the script. These parameters must be declared in a specific
-# way as described below. The perform() function in this module inspects the function signature to
-# obtain information about the number of parameters and the semantics of each parameter. This information
-# is then used to create a command line argument parser (including help text), and to translate
-# command line arguments to function argument values.
+# way as described below. The doWithCommandLineArguments() function in this module inspects the function
+# signature to obtain information about the number of parameters and the semantics of each parameter.
+# This information is then used to create a command line argument parser (including help text), and to
+# translate command line arguments to function argument values.
 #
 # For example, the try_do script used in the previous example could have a function declaration as follows:
 #
@@ -93,6 +93,7 @@
 import argparse
 import importlib
 import inspect
+import logging
 import pathlib
 import sys
 
@@ -100,7 +101,7 @@ import sys
 
 ## This function locates the PTS command script corresponding to the first command line argument,
 # and then invokes it with the remaining command line arguments.
-def perform():
+def doWithCommandLineArguments():
     # split the command specification into a package name (if any) and a script name
     commandspec = sys.argv[1].split('/')
     if len(commandspec) == 1:
@@ -110,7 +111,8 @@ def perform():
         packagename = commandspec[0].lower()
         scriptname = commandspec[1].lower()
     else:
-        raise ValueError("invalid command spec")
+        logging.critical("Invalid command specification: '{}'; use packagename/scriptname".format(sys.argv[1]))
+        return
 
     # get the path to the top-level pts directory
     ptsdir = pathlib.Path(inspect.getfile(inspect.currentframe())).parent.parent
@@ -133,13 +135,15 @@ def perform():
 
     # verify that the list has exactly one script
     if len(scriptnames) < 1:
-        raise ValueError("command not found")
+        logging.critical("Command not found: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
+        return
     elif len(scriptnames) > 1:
-        raise ValueError("command is ambiguous")
+        logging.critical("Command is ambiguous: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
+        return
 
     # construct the command script object and perform its function
     script = CommandScript(*scriptnames[0])
-    script.performWithCommandLineArguments()
+    script.doWithCommandLineArguments()
 
 # -----------------------------------------------------------------
 
@@ -150,12 +154,12 @@ def listCommands():
 
     # loop over all pts package directories containing a "do" directory
     for pname in sorted([ x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]):
-        print("Package {}:".format(pname))
+        logging.info("Package {}:".format(pname))
 
         # loop over all command scripts in this package
         for sname in sorted([ x.stem for x in (ptsdir/pname/"do").iterdir() if x.suffix==".py" ]):
             script = CommandScript(pname, sname)
-            print("  {}: {}".format(script.name(), script.description()))
+            logging.info("  {}: {}".format(script.name(), script.description()))
 
 # -----------------------------------------------------------------
 
@@ -186,7 +190,7 @@ class CommandScript:
     ## This function inspects the arguments offered by the script's do() function, retrieves the
     # appropriate values from the corresponding command line arguments using the standard argument parser,
     # and finally invokes the function with these arguments.
-    def performWithCommandLineArguments(self):
+    def doWithCommandLineArguments(self):
         # initialize an argument parser based on the function parameters
         parser = argparse.ArgumentParser(prog="pts",
                                          description="{}: {}".format(self._name, self._signature.return_annotation))
@@ -204,9 +208,9 @@ class CommandScript:
         del args[self._name]
 
         # invoke the do function in the command script with the appropriate arguments
-        print("Starting {}..." .format(self._name))
+        logging.info("Starting {}..." .format(self._name))
         self._dofunction(**args)
-        print("Finished {}." .format(self._name))
+        logging.info("Finished {}." .format(self._name))
 
 # -----------------------------------------------------------------
 

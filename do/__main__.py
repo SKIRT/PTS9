@@ -16,14 +16,40 @@
 #
 #     python -m pts.do
 #
-# This script simply invokes the perform() function of the command module situated in the admin package,
-# so that the bulk of the code is contained in file with a regular name (i.e. without underscores).
+# This script configures logging for use from the command line and then simply invokes the
+# doWithCommandLineArguments() function of the command module situated in the admin package.
+# See there for more information.
 #
 
 # -----------------------------------------------------------------
 
-# import the command module and invoke the perform() function
-from pts.admin.command import perform
-perform()
+import logging
+from pts.admin import command
+
+# -----------------------------------------------------------------
+
+## This class overrides the logging formatter to adjust the format for the message level.
+class CommandLineLoggingFormatter(logging.Formatter):
+    def format(self, record):
+        line = super().format(record)
+        line = line.replace("<DEBUG>",    ".", 1)
+        line = line.replace("<INFO>",     " ", 1)
+        line = line.replace("<WARNING>",  "!", 1)
+        line = line.replace("<ERROR>",    "* ERROR:", 1)
+        line = line.replace("<CRITICAL>", "* CRITICAL ERROR:", 1)
+        return line
+
+# -----------------------------------------------------------------
+
+# configure logging facilities for use from the command line
+formatter = CommandLineLoggingFormatter(fmt='%(asctime)s.%(msecs)03d <%(levelname)s> %(message)s',
+                                        datefmt='%m/%d/%Y %H:%M:%S')
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logging.root.addHandler(handler)
+logging.root.setLevel(logging.DEBUG)
+
+# invoke the do() function
+command.doWithCommandLineArguments()
 
 # -----------------------------------------------------------------
