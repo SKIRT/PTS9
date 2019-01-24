@@ -97,6 +97,8 @@ import logging
 import pathlib
 import sys
 
+import pts.utils.error
+
 # -----------------------------------------------------------------
 
 ## This function locates the PTS command script corresponding to the first command line argument,
@@ -111,7 +113,7 @@ def doWithCommandLineArguments():
         packagename = commandspec[0].lower()
         scriptname = commandspec[1].lower()
     else:
-        logging.critical("Invalid command specification: '{}'; use packagename/scriptname".format(sys.argv[1]))
+        logging.error("Invalid command specification: '{}'; use packagename/scriptname".format(sys.argv[1]))
         return
 
     # get the path to the top-level pts directory
@@ -135,10 +137,10 @@ def doWithCommandLineArguments():
 
     # verify that the list has exactly one script
     if len(scriptnames) < 1:
-        logging.critical("Command not found: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
+        logging.error("Command not found: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
         return
     elif len(scriptnames) > 1:
-        logging.critical("Command is ambiguous: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
+        logging.error("Command is ambiguous: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
         return
 
     # construct the command script object and perform its function
@@ -173,7 +175,7 @@ class LoggingArgumentParser(argparse.ArgumentParser):
         logging.info(self.format_usage())
 
     def error(self, message):
-        logging.critical(message)
+        logging.error(message)
         self.print_help()
         self.exit(2)
 
@@ -224,8 +226,17 @@ class CommandScript:
         del args[self._name]
 
         # invoke the do function in the command script with the appropriate arguments
+        # catch custom PTS user errors and report them by logging an error
         logging.info("Starting {}..." .format(self._name))
-        self._dofunction(**args)
+        try:
+            self._dofunction(**args)
+        except pts.utils.error.UserError as error:
+            logging.error(error.message)
+            parser.print_help()
+            return
+        except Exception as exception:
+            logging.critical("{}: {!s}".format(type(exception).__name__, exception))
+            raise
         logging.info("Finished {}." .format(self._name))
 
 # -----------------------------------------------------------------
