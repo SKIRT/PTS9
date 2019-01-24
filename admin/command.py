@@ -163,6 +163,22 @@ def listCommands():
 
 # -----------------------------------------------------------------
 
+## This class overrides the output functions in the argument parser to send all output to the logger
+# instead of directly to stdin or stderr.
+class LoggingArgumentParser(argparse.ArgumentParser):
+    def print_help(self, file=None):
+        logging.info(self.format_help())
+
+    def print_usage(self, file=None):
+        logging.info(self.format_usage())
+
+    def error(self, message):
+        logging.critical(message)
+        self.print_help()
+        self.exit(2)
+
+# -----------------------------------------------------------------
+
 ## The CommandScript class encapsulates a particular PTS command script. It offers functions to
 # obtain information such as the script's name and description, and to execute its do() function
 # using the current command line arguments.#
@@ -192,8 +208,8 @@ class CommandScript:
     # and finally invokes the function with these arguments.
     def doWithCommandLineArguments(self):
         # initialize an argument parser based on the function parameters
-        parser = argparse.ArgumentParser(prog="pts",
-                                         description="{}: {}".format(self._name, self._signature.return_annotation))
+        parser = LoggingArgumentParser(prog="pts",
+                                       description="{}: {}".format(self._name, self._signature.return_annotation))
         parser.add_argument(self._name, type=str, help="packagename/scriptname")
         for p in self._signature.parameters.values():
             if p.default == inspect.Parameter.empty:  # no default ==> positional argument
