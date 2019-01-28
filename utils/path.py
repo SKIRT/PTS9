@@ -23,4 +23,10 @@ import pathlib
 def pts():
     return pathlib.Path(inspect.getfile(inspect.currentframe())).parent.parent
 
+## This function returns the absolute path to the directory containing the SKIRT and PTS
+# project directories as a pathlib.Path object. In the canonical SKIRT/PTS developer
+# directory structure, this is the grandparent of the pts repository.
+def projectParent():
+    return pts().parent.parent
+
 # -----------------------------------------------------------------

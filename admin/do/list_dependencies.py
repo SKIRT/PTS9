@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.admin.do.list_dependencies List external package dependencies for PTS.
+## \package pts.admin.do.list_dependencies List external package dependencies for PTS
 #
 # This script lists all non-PTS packages on which the PTS code directly depends, including standard
 # packages and third-party packages, and indicates whether these packages are currently installed or not.
@@ -24,6 +24,7 @@ def do() -> "list external package dependencies for PTS":
     import pts.utils.path
 
     # ----- find dependencies -----
+
     # get the path to the top-level pts directory
     ptsdir = pts.utils.path.pts()
 

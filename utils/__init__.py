@@ -9,10 +9,8 @@
 #  Package initialization file
 # -----------------------------------------------------------------
 
-## \package pts.do Exposing PTS functionality to the command line
+## \package pts.utils General utilities
 #
-# The Python scripts residing in the (optional) \c do sub-directory of each PTS package are intended to be invoked
-# from the command line, exposing (part of) the package's functionality for interactive use in a terminal session.
-# The \c __main__ module in this package enables executing any of these scripts from the command line,
-# without having to specify the exact location.
+# This package includes utilities deemed sufficiently generic that they don’t belong in one of the other packages,
+# and that are likely shared between multiple packages.
 #

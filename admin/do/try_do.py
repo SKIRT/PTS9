@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.admin.do.try_do Test basic PTS command line functionality.
+## \package pts.admin.do.try_do Test basic PTS command line functionality
 #
 # You can use this script to test basic PTS command line functionality. It simply outputs the values
 # of its argument (a single positional argument and three optional arguments).

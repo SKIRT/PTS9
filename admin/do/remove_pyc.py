@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.admin.do.remove_pyc Remove all compiled Python files from the local PTS repository.
+## \package pts.admin.do.remove_pyc Remove all compiled Python files from the local PTS repository
 #
 # This script removes all compiled Python files (\c *.pyc and \c __pycache__ directories) from the
 # local PTS repository. Although these files are ignored by git, removing them can be useful to

@@ -9,10 +9,8 @@
 #  Package initialization file
 # -----------------------------------------------------------------
 
-## \package pts.do Exposing PTS functionality to the command line
+## \package pts.admin.do Administrative commands
 #
-# The Python scripts residing in the (optional) \c do sub-directory of each PTS package are intended to be invoked
-# from the command line, exposing (part of) the package's functionality for interactive use in a terminal session.
-# The \c __main__ module in this package enables executing any of these scripts from the command line,
-# without having to specify the exact location.
+# The Python scripts residing in the do sub-directory of this package implement administrative commands,
+# such as listing all available commands, creating backup archives, and removing compiled Python files.
 #
