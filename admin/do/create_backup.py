@@ -71,6 +71,8 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
         ) -> "create backup archives for the SKIRT/PTS parent project":
 
     import logging
+    import shutil
+    import subprocess
     import zipfile
     from pts.utils.error import UserError
     import pts.utils.path
@@ -124,13 +126,37 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
                                 logging.info("  Including {}".format(source))
                                 ziparchive.write(source, arcname=source.relative_to(projectdir))
 
-                # for repository, pull repository and create archive
+                # for repository, clone upstream repository and create archive
                 if datatype=="repository" and repos!=0:
-                    logging.info("Creating backup for repository {}...".format(sourcedir))
+
+                    # get the upstream repository URL
+                    gitout = subprocess.run(("git", "--git-dir", projectdir/sourcedir/".git", "remote", "-v"),
+                                            capture_output=True, text=True, check=True).stdout
+                    upstream = ""
+                    for line in gitout.splitlines():
+                        if line.startswith("origin") and line.endswith("(fetch)"):
+                            upstream = line.split()[1]
+                    if len(upstream)==0:
+                        raise ValueError("Cannot get upstream repository URL for {}".format(sourcedir))
+
+                    # clone a bare copy of the repository
                     linecount += 1
+                    barename = backupdir / "{:02d}-{}-repo-bare".format(linecount, sourcedir.replace("/", "-").lower())
+                    gitout = subprocess.run(("git", "--git-dir", projectdir/sourcedir/".git", "clone", "--bare",
+                                             upstream, barename), check=True).stdout
+
+                    # create the archive
+                    logging.info("Creating backup for repository {}...".format(sourcedir))
                     zipname = backupdir / "{:02d}-{}-repo.zip".format(linecount, sourcedir.replace("/", "-").lower())
                     with zipfile.ZipFile(zipname, mode='w', compression=zipfile.ZIP_DEFLATED,
                                          compresslevel = 6) as ziparchive:
-                        pass
+
+                        # include the contents of the bare repository
+                        for source in barename.rglob("*"):
+                            logging.info("  Including {}".format(source))
+                            ziparchive.write(source, arcname=source.relative_to(barename.parent))
+
+                    # remove the temporary bare repository
+                    shutil.rmtree(barename, ignore_errors=True)
 
 # -----------------------------------------------------------------
