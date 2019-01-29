@@ -191,7 +191,8 @@ def listCommands():
         logging.info("Package {}:".format(pname))
 
         # loop over all command scripts in this package
-        for sname in sorted([ x.stem for x in (ptsdir/pname/"do").iterdir() if x.suffix==".py" ]):
+        for sname in sorted([ x.stem for x in (ptsdir/pname/"do").iterdir()  \
+                                if x.suffix==".py" and not x.stem.startswith("__")]):
             script = CommandScript(pname, sname)
             logging.info("  {}: {}".format(script.name(), script.description()))
 
