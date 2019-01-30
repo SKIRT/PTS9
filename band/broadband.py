@@ -143,7 +143,7 @@ import pts.utils.path
 # | 10 | 787 - 950 | 0.38 - 0.32 |  320 - 380  |
 #
 class BroadBand:
-    # The band information dictionary described in the class header
+    ## The band information dictionary described in the class header
     _bandinfo = {
         # SVO
         "2MASS_2MASS_H": ("SVO", "2MASS.2MASS.H.xml", True),
@@ -229,7 +229,7 @@ class BroadBand:
         "ALMA_ALMA_10": ("ALMA", "alma-0-2000-02.dat", (320, 380)),
     }
 
-    # The speed of light in vacuum (m/s)
+    ## The speed of light in vacuum (m/s)
     _c = 2.99792458e8
 
     ## The constructor creates a BroadBand instance in one of the following two ways, depending on the type of
@@ -272,12 +272,8 @@ class BroadBand:
 
         else: raise ValueError("Unsuppported type of band specification '{}'".format(bandspec))
 
-        # precalculate and normalize
-        print (self._bandname)
-        print (len(self._wavelengths), len(self._transmissions))
-        print (self._wavelengths[0],self._wavelengths[-1])
-        print (self._transmissions.min(),self._transmissions.max())
-
+        # normalize the transmission curve
+        self._normalize()
 
     ## This function matches the given band specification with all built-in band names, i.e. the keys of the
     # _bandinfo dictionary. If there is a single match, the corresponding key is returned. If there is no match,
@@ -381,11 +377,61 @@ class BroadBand:
         self._wavelengths = np.flipud(wavelengths)
         self._transmissions = np.flipud(transmissions)
 
+    ## This function normalizes the transmission curve after it has been loaded during construction.
+    # It expects _bandname, _wavelengths, _transmissions, and _photoncounter to be set.
+    def _normalize(self):
+        # for photon counters, convert from response curve to transmission curve (with arbitrary scaling)
+        if self._photoncounter:
+            self._transmissions *= self._wavelengths
+
+        # normalize the transmission curve to unity
+        self._transmissions /= np.trapz(x=self._wavelengths, y=self._transmissions)
+
     # -----------------------------------------------------------------
+
+    ## This function returns an iterable over all built-in band names, in arbitrary order.
+    @classmethod
+    def builtinBandNames(cls):
+        return cls._bandinfo.keys()
 
     ## This function returns the band's name, i.e. one of the keys of the _bandinfo dictionary, or "Uniform"
     # for uniform bands.
     def name(self):
         return self._bandname
+
+    ## This function returns a tuple of floating point numbers specifying the wavelength range for this band in micron.
+    # The transmission may be zero in some (usually small) intervals within the range, but it is guaranteed to be zero
+    # outside the range.
+    def wavelengthRange(self):
+        return self._wavelengths[0], self._wavelengths[-1]
+
+    ## This function returns the minimum wavelength for the band, in micron.
+    def minWavelength(self):
+        return self._wavelengths[0]
+
+    ## This function returns the maximum wavelength for the band, in micron.
+    def maxWavelength(self):
+        return self._wavelengths[-1]
+
+    ## This function returns the pivot wavelength in micron, as defined in the class header.
+    def pivotWavelength(self):
+        return np.sqrt(1. /  np.trapz(x=self._wavelengths, y=self._transmissions/self._wavelengths**2) )
+
+    ## This function returns the effective band width (a wavelength interval) in micron, as defined in the class header.
+    def effectiveWidth(self):
+        return 1. / self._transmissions.max()
+
+    ## This function returns a tuple containing (a reference to) the wavelength and transmission arrays representing
+    # the transmission curve for this band. For photon counters the response curve has already been converted to a
+    # transmission curve as described in the class header. The wavelengths are in micron and the transmissions are
+    # normalized to unity assuming wavelengths in micron.
+    def transmissionCurve(self):
+        return self._wavelengths, self._transmissions
+
+# -----------------------------------------------------------------
+
+## This function returns an iterable over all built-in band names, in arbitrary order.
+def builtinBandNames():
+    return BroadBand.builtinBandNames()
 
 # -----------------------------------------------------------------
