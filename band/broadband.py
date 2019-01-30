@@ -421,12 +421,12 @@ class BroadBand:
     def effectiveWidth(self):
         return 1. / self._transmissions.max()
 
-    ## This function returns a tuple containing (a reference to) the wavelength and transmission arrays representing
+    ## This function returns a tuple containing a copy of the wavelength and transmission arrays representing
     # the transmission curve for this band. For photon counters the response curve has already been converted to a
     # transmission curve as described in the class header. The wavelengths are in micron and the transmissions are
     # normalized to unity assuming wavelengths in micron.
     def transmissionCurve(self):
-        return self._wavelengths, self._transmissions
+        return self._wavelengths.copy(), self._transmissions.copy()
 
 # -----------------------------------------------------------------
 

@@ -56,8 +56,12 @@ formatter = CommandLineLoggingFormatter(fmt='%(asctime)s.%(msecs)03d <%(levelnam
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logging.root.addHandler(handler)
-logging.root.setLevel(logging.DEBUG)
+logging.root.setLevel(logging.INFO)
 logging.captureWarnings(True)
+
+# configure matplotlib with the non-interactive PDF backend
+import matplotlib
+matplotlib.use("pdf")
 
 # invoke the do() function
 command.doWithCommandLineArguments()

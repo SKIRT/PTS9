@@ -36,4 +36,14 @@ def pts():
 def projectParent():
     return pts().parent.parent
 
+## This function returns the absolute canonical path corresponding to the given path. The input path may
+# be specified as a string or as a pathlib.Path object. If the input path is relative, it is interpreted
+# relative to the current working directory. If it starts with a tilde, the tilde is expanded to the home
+# directory of the current user. In all cases, the path is streamlined by removing and "." and ".." segments
+# and following symbolic links.
+def absolute(inpath):
+    path = pathlib.Path(inpath).expanduser()
+    if not path.is_absolute(): path = pathlib.Path.cwd() / path
+    return path.resolve()
+
 # -----------------------------------------------------------------

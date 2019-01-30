@@ -13,7 +13,7 @@
 
 # -----------------------------------------------------------------
 
-def do() -> "list all broadbands built into PTS":
+def do() -> "list all built-in broadbands":
 
     import logging
     import pts.band.broadband as bb
