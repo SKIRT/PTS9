@@ -69,9 +69,83 @@ import pts.utils.path
 # The table below lists the built-in bands available at the time of writing. The first column lists
 # the complete band name; the second column indicates the corresponding pivot wavelength.
 #
-# | %Band name | Pivot wavelength (micron)
-# |------------|--------------------------
-# |  XX        | table to be completed
+#   | Band name | Pivot wavelength (micron)
+#   |-----------|--------------------------
+#   | 2MASS_2MASS_J      | 1.2393
+#   | 2MASS_2MASS_H      | 1.6495
+#   | 2MASS_2MASS_KS     | 2.1639
+#   | ALMA_ALMA_10       | 349.89
+#   | ALMA_ALMA_9        | 456.2
+#   | ALMA_ALMA_8        | 689.59
+#   | ALMA_ALMA_7        | 937.98
+#   | ALMA_ALMA_6        | 1244.4
+#   | ALMA_ALMA_5        | 1616
+#   | ALMA_ALMA_4        | 2100.2
+#   | ALMA_ALMA_3        | 3043.4
+#   | GALEX_GALEX_FUV    | 0.15351
+#   | GALEX_GALEX_NUV    | 0.23008
+#   | GENERIC_JOHNSON_U  | 0.35247
+#   | GENERIC_JOHNSON_B  | 0.44169
+#   | GENERIC_JOHNSON_V  | 0.55251
+#   | GENERIC_JOHNSON_R  | 0.6899
+#   | GENERIC_JOHNSON_I  | 0.8739
+#   | GENERIC_JOHNSON_J  | 1.2431
+#   | GENERIC_JOHNSON_M  | 5.0122
+#   | HERSCHEL_PACS_70   | 70.77
+#   | HERSCHEL_PACS_100  | 100.8
+#   | HERSCHEL_PACS_160  | 161.89
+#   | HERSCHEL_SPIRE_250 | 252.55
+#   | HERSCHEL_SPIRE_350 | 354.27
+#   | HERSCHEL_SPIRE_500 | 515.35
+#   | IRAS_IRAS_12       | 11.41
+#   | IRAS_IRAS_25       | 23.609
+#   | IRAS_IRAS_60       | 60.409
+#   | IRAS_IRAS_100      | 101.14
+#   | JCMT_SCUBA2_450    | 449.3
+#   | JCMT_SCUBA2_850    | 853.81
+#   | PLANCK_HFI_857     | 352.42
+#   | PLANCK_HFI_545     | 545.55
+#   | PLANCK_HFI_353     | 839.3
+#   | PLANCK_HFI_217     | 1367.6
+#   | PLANCK_HFI_143     | 2130.7
+#   | PLANCK_HFI_100     | 3001.1
+#   | PLANCK_LFI_70      | 4303
+#   | PLANCK_LFI_44      | 6845.9
+#   | PLANCK_LFI_30      | 10674
+#   | SLOAN_SDSS_U       | 0.35565
+#   | SLOAN_SDSS_G       | 0.47025
+#   | SLOAN_SDSS_R       | 0.61756
+#   | SLOAN_SDSS_I       | 0.749
+#   | SLOAN_SDSS_Z       | 0.89467
+#   | SPITZER_IRAC_I1    | 3.5508
+#   | SPITZER_IRAC_I2    | 4.496
+#   | SPITZER_IRAC_I3    | 5.7245
+#   | SPITZER_IRAC_I4    | 7.8842
+#   | SPITZER_MIPS_24    | 23.759
+#   | SPITZER_MIPS_70    | 71.985
+#   | SPITZER_MIPS_160   | 156.43
+#   | SWIFT_UVOT_UVW2    | 0.20552
+#   | SWIFT_UVOT_UVM2    | 0.22462
+#   | SWIFT_UVOT_UVW1    | 0.25804
+#   | SWIFT_UVOT_U       | 0.34628
+#   | SWIFT_UVOT_B       | 0.43496
+#   | SWIFT_UVOT_V       | 0.54254
+#   | TNG_OIG_U          | 0.37333
+#   | TNG_OIG_B          | 0.43978
+#   | TNG_OIG_V          | 0.53729
+#   | TNG_OIG_R          | 0.63902
+#   | TNG_NICS_J         | 1.2758
+#   | TNG_NICS_H         | 1.6265
+#   | TNG_NICS_K         | 2.2016
+#   | UKIRT_UKIDSS_Z     | 0.88264
+#   | UKIRT_UKIDSS_Y     | 1.0314
+#   | UKIRT_UKIDSS_J     | 1.2501
+#   | UKIRT_UKIDSS_H     | 1.6354
+#   | UKIRT_UKIDSS_K     | 2.2058
+#   | WISE_WISE_W1       | 3.3897
+#   | WISE_WISE_W2       | 4.6406
+#   | WISE_WISE_W3       | 12.568
+#   | WISE_WISE_W4       | 22.314
 #
 # Built-in band implementation
 # ----------------------------
