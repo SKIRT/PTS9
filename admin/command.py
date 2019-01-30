@@ -135,9 +135,12 @@ import pts.utils.path
 
 ## This function locates the PTS command script corresponding to the first command line argument,
 # and then invokes it with the remaining command line arguments.
-def doWithCommandLineArguments():
+# If the \em arguments are omitted, the function obtains the command line arguments from the system.
+def doWithCommandLineArguments(arguments = None):
+    command = arguments[0] if arguments is not None else sys.argv[1]
+
     # split the command specification into a package name (if any) and a script name
-    commandspec = sys.argv[1].split('/')
+    commandspec = command.split('/')
     if len(commandspec) == 1:
         packagename = ""
         scriptname = commandspec[0]
@@ -145,17 +148,17 @@ def doWithCommandLineArguments():
         packagename = commandspec[0].lower()
         scriptname = commandspec[1].lower()
     else:
-        logging.error("Invalid command specification: '{}'; use packagename/scriptname".format(sys.argv[1]))
+        logging.error("Invalid command specification: '{}'; use packagename/scriptname".format(command))
         return
 
     # get the path to the top-level pts directory
     ptsdir = pts.utils.path.pts()
 
     # make a list of all pts package directories containing a "do" directory
-    packagenames = [x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]
+    packagenames = [ x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]
 
     # shorten the list to package names that match the specified package name, if any
-    packagenames = [pname for pname in packagenames if pname.lower().startswith(packagename) ]
+    packagenames = [ pname for pname in packagenames if pname.lower().startswith(packagename) ]
 
     # make a list of all script names in the eligible packages
     scriptnames = [ (pname,x.stem) for pname in packagenames for x in (ptsdir/pname/"do").iterdir() if x.suffix==".py" ]
@@ -169,15 +172,15 @@ def doWithCommandLineArguments():
 
     # verify that the list has exactly one script
     if len(scriptnames) < 1:
-        logging.error("Command not found: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
+        logging.error("Command not found: '{}'; 'pts list_commands' lists available commands".format(command))
         return
     elif len(scriptnames) > 1:
-        logging.error("Command is ambiguous: '{}'; 'pts list_commands' lists available commands".format(sys.argv[1]))
+        logging.error("Command is ambiguous: '{}'; 'pts list_commands' lists available commands".format(command))
         return
 
     # construct the command script object and perform its function
     script = CommandScript(*scriptnames[0])
-    script.doWithCommandLineArguments()
+    script.doWithCommandLineArguments(arguments)
 
 # -----------------------------------------------------------------
 
@@ -241,7 +244,7 @@ class CommandScript:
     ## This function inspects the arguments offered by the script's do() function, retrieves the
     # appropriate values from the corresponding command line arguments using the standard argument parser,
     # and finally invokes the function with these arguments.
-    def doWithCommandLineArguments(self):
+    def doWithCommandLineArguments(self, arguments=None):
         # initialize an argument parser based on the function parameters
         parser = LoggingArgumentParser(prog="pts",
                                        description="{}: {}".format(self._name, self._signature.return_annotation))
@@ -255,7 +258,7 @@ class CommandScript:
                                     metavar="<{}>".format(p.annotation[0].__name__))
 
         # make the parser process the command line arguments
-        args = vars(parser.parse_args())
+        args = vars(parser.parse_args(args=arguments))
         del args[self._name]
 
         # invoke the do function in the command script with the appropriate arguments
