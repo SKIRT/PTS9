@@ -201,11 +201,19 @@ def listCommands():
 
 # -----------------------------------------------------------------
 
+## An instance of this class is raised as an exception when the argument parser wants to "exit"
+# because of a user request for help or because of an error in the command line.
+class ArgumentParserError(Exception):
+    ## The constructor has no arguments and does nothing
+    def __init__(self):
+        pass
+
 ## This class overrides the output functions in the argument parser to send all output to the logger
 # instead of directly to stdin or stderr.
 class LoggingArgumentParser(argparse.ArgumentParser):
     def print_help(self, file=None):
         logging.info(self.format_help())
+        raise ArgumentParserError()
 
     def print_usage(self, file=None):
         logging.info(self.format_usage())
@@ -213,7 +221,6 @@ class LoggingArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         logging.error(message)
         self.print_help()
-        self.exit(2)
 
 # -----------------------------------------------------------------
 
@@ -258,8 +265,12 @@ class CommandScript:
                                     metavar="<{}>".format(p.annotation[0].__name__))
 
         # make the parser process the command line arguments
-        args = vars(parser.parse_args(args=arguments))
-        del args[self._name]
+        # catch argument parser help requests or user errors and simply return from this function
+        try:
+            args = vars(parser.parse_args(args=arguments))
+            del args[self._name]
+        except ArgumentParserError:
+            return
 
         # invoke the do function in the command script with the appropriate arguments
         # catch custom PTS user errors and report them by logging an error
@@ -268,7 +279,7 @@ class CommandScript:
             self._dofunction(**args)
         except pts.utils.error.UserError as error:
             logging.error(error.message)
-            parser.print_help()
+            logging.info(parser.format_help())
             return
         except Exception as exception:
             logging.critical("{}: {!s}".format(type(exception).__name__, exception))
