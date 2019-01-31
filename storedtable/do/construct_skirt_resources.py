@@ -12,9 +12,8 @@
 # in that same hierarchy.
 # See the pts.storedtable.conversionspec module for more information.
 #
-# When invoked without command line arguments, the script constructs all resources in the directory hierarchy.
-# Provide the name of a (possibly nested) subdirectory as the first argument to restrict execution to that
-# portion of the directory tree.
+# Provide the name of a (possibly nested) subdirectory as the single argument to restrict execution to that
+# portion of the directory tree, or the string "." to construct all resources in the directory hierarchy.
 #
 
 # -----------------------------------------------------------------

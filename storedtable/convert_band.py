@@ -29,9 +29,10 @@ def writeBroadBands(inFilePaths, outFilePaths):
         # construct the output file path based on the band ID
         outFilePath = outFilePaths[0].replace("*",name)
 
-        # get the transmission curve and convert wavelengths from micron to m
+        # get the transmission curve and convert from micron to m
         w, T = band.transmissionCurve()
         w *= 1e-6
+        T *= 1e6
 
         # write stored table
         writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [w], ['T'], ['1'], ['lin'], [T])
