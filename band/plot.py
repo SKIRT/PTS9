@@ -28,8 +28,9 @@ import pts.band.broadband as bb
 #    at least one of these segments
 #
 # The plot path is interpreted according to the rules described for the pts.utils.path.absolute() function.
+# If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotBuiltinBands(plotpath, figsize=(20,6), minWavelength=1e-6, maxWavelength=1e6, nameSegments=None):
+def plotBuiltinBands(plotpath=None, figsize=(20,6), minWavelength=1e-6, maxWavelength=1e6, nameSegments=None):
 
     # load all bands that satisfy the specified criteria
     bands = [ bb.BroadBand(name) for name in bb.builtinBandNames() ]
@@ -67,10 +68,11 @@ def plotBuiltinBands(plotpath, figsize=(20,6), minWavelength=1e-6, maxWavelength
     plt.xlabel(r"$\lambda\,(\mu \mathrm{m})$", fontsize='large')
     plt.ylabel("Transmission", fontsize='large')
 
-    # save the figure
-    plotpath = pts.utils.path.absolute(plotpath)
-    plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
-    plt.close()
-    logging.info("Created {}".format(plotpath))
+    # if a filepath is provided, save the figure; otherwise leave it open
+    if plotpath is not None:
+        plotpath = pts.utils.path.absolute(plotpath)
+        plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
+        plt.close()
+        logging.info("Created {}".format(plotpath))
 
 # ----------------------------------------------------------------------
