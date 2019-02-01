@@ -30,7 +30,8 @@ import pts.band.broadband as bb
 # The plot file path is interpreted according to the rules described for the pts.utils.path.absolute() function.
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotBuiltinBands(plotFilePath=None, figsize=(20,6), minWavelength=1e-6, maxWavelength=1e6, nameSegments=None):
+def plotBuiltinBands(minWavelength=1e-6, maxWavelength=1e6, nameSegments=None, *,
+                     plotFilePath=None, figsize=(20,6)):
 
     # load all bands that satisfy the specified criteria
     bands = [ bb.BroadBand(name) for name in bb.builtinBandNames() ]

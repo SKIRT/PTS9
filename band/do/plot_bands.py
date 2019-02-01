@@ -25,7 +25,7 @@ def do( minw : (float,"smallest pivot wavelength to be plotted, in micron") = 0.
         ) -> "plot built-in broadbands in a given wavelength range":
 
     import pts.band.plot
-    pts.band.plot.plotBuiltinBands("FigBands.pdf", minWavelength=minw, maxWavelength=maxw,
+    pts.band.plot.plotBuiltinBands(plotFilePath="FigBands.pdf", minWavelength=minw, maxWavelength=maxw,
                                    nameSegments=names.split(',') if len(names)>0 else None)
 
 # ----------------------------------------------------------------------
