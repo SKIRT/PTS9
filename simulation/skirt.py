@@ -16,6 +16,7 @@
 import subprocess
 import sys
 import pts.utils.path
+from .simulation import Simulation
 
 # -----------------------------------------------------------------
 
@@ -31,7 +32,7 @@ class Skirt:
     # to the PTS9 or PTS directory.
     def __init__(self, path=None):
 
-        # Set the SKIRT path
+        # set the SKIRT path
         if path is None:
             self._path = pts.utils.path.skirt()
             if self._path is None:
@@ -41,7 +42,7 @@ class Skirt:
             if not self._path.is_file():
                 raise ValueError("Specified SKIRT executable does not exist: {}".format(self._path))
 
-        # Initialize execution state
+        # initialize execution state
         self._process = None
 
     ## This function returns the absolute file path of the SKIRT executable used by this instance.
@@ -49,7 +50,7 @@ class Skirt:
         return self._path
 
     ## This function invokes the SKIRT executable with the simulation and command line options corresponding to the
-    #  values of the function arguments, as described below. The function returns a pts.simulation.Simulation
+    #  values of the function arguments, as described below. The function returns a pts.simulation.simulation.Simulation
     #  instance corresponding to the simulation being performed (or attempted, in case of failure). The function
     #  supports asynchronous execution, allowing the caller to perform other tasks while the simulation is running.
     #
@@ -126,19 +127,20 @@ class Skirt:
         if verbose:
             arguments += ["-v"]
 
-        # Logging options
+        # logging options
         if console!='regular' or not wait:
             arguments += ["-b"]
 
         # --- launch SKIRT ---
 
         if wait:
+            self._process = None
             subprocess.run(arguments, stdout=subprocess.DEVNULL if console=='silent' else sys.stdout,
                                       stderr=subprocess.DEVNULL if console=='silent' else sys.stderr)
         else:
             self._process = subprocess.Popen(arguments, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        return 44  # TO DO
+        return Simulation(skiFilePath=skiFilePath, inDirPath=inpath, outDirPath=outpath, process=self._process)
 
     ## This function returns True if the simulation started with the most recent call to the execute() function
     # is still running, and False otherwise.
