@@ -36,6 +36,18 @@ def pts():
 def projectParent():
     return pts().parent.parent
 
+## This function returns the absolute path to the SKIRT executable built as part of the project structure including
+# this PTS source file, or None if no executable is found. The function assumes that a SKIRT release version is built
+# under a \c ~/SKIRT9 or \c SKIRT directory in the directory returned by the projectParent() function. The \c SKIRT9
+# directory is tried first.
+def skirt():
+    project = projectParent()
+    path = project / "SKIRT9" / "release" / "SKIRT" / "main" / "skirt"
+    if path.is_file(): return path
+    path = project / "SKIRT" / "release" / "SKIRT" / "main" / "skirt"
+    if path.is_file(): return path
+    return None
+
 ## This function returns the absolute canonical path corresponding to the given path. The input path may
 # be specified as a string or as a pathlib.Path object. If the input path is relative, it is interpreted
 # relative to the current working directory. If it starts with a tilde, the tilde is expanded to the home
