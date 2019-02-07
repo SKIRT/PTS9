@@ -80,8 +80,9 @@ class SkiFile:
 
     # ---------- Generic functions -----------------------------
 
-    ## This function returns an attribute value as a string. The first argument is an XPath expression relative to
-    # the document root that selects exactly one element. The second argument is the attribute name.
+    ## This function returns an attribute value or element tag as a string. The first argument is an XPath expression
+    # relative to the document root that selects exactly one element. The second argument is an attribute name string
+    # or None. In the latter case, the element tag (corresponding to the SKIRT property or class name) is returned.
     # If the element is not found, there are multiple elements, or the selected element does not have the specified
     # attribute, an error is raised.
     def getStringAttribute(self, xpath, attribute):
@@ -92,11 +93,29 @@ class SkiFile:
         elem = elems[0]
         if not etree.iselement(elem): raise ValueError("Ski file xpath '{}' returns a non-element".format(xpath))
 
-        # get the attribute value
-        value = elem.get(attribute)
+        # get the attribute value or the element tag
+        value = elem.get(attribute) if attribute is not None else elem.tag
         if not isinstance(value, str): raise ValueError("Ski file element for xpath '{}' has no attribute '{}'" \
                                                         .format(xpath, attribute))
         return value
+
+    ## This function returns a list including the string values of a particular attribute for a number of elements.
+    # The first argument is an XPath expression relative to the document root that selects one or more elements.
+    # The second argument is the attribute name (the attribute must be present for all selected elements).
+    # If the attribute argument is None, the element tags (corresponding to SKIRT class names) are returned instead.
+    # If no elements are found, the function returns an empty list. If one or more of the selected element does
+    # not have the specified attribute, an error is raised.
+    def getStringAttributes(self, xpath, attribute):
+        values = []
+        # loop over the element(s)
+        for elem in self._tree.xpath(xpath):
+            if not etree.iselement(elem): raise ValueError("Ski file xpath '{}' returns a non-element".format(xpath))
+            # get the attribute value or the element tag
+            value = elem.get(attribute) if attribute is not None else elem.tag
+            if not isinstance(value, str): raise ValueError("Ski file element for xpath '{}' has no attribute '{}'" \
+                                                            .format(xpath, attribute))
+            values.append(value)
+        return values
 
     ## This function sets an attribute value from a string. The first argument is an XPath expression relative to
     # the document root that selects exactly one element. The second argument is the attribute name. The third
@@ -173,5 +192,35 @@ class SkiFile:
     ## This function sets the number of photon packets launched per simulation segment for primary sources
     def setNumPrimaryPackets(self, value):
         self.setFloatAttribute("//MonteCarloSimulation", "numPackets", value)
+
+    ## This function returns the names of the instruments in the instrument system as a list of strings,
+    # in their order of appearance in the ski file.
+    def instrumentNames(self):
+        return self.getStringAttributes("//InstrumentSystem/instruments/*", "instrumentName")
+
+    ## This function returns the names of the probes in the probe system as a list of strings,
+    # in their order of appearance in the ski file.
+    def probeNames(self):
+        return self.getStringAttributes("//ProbeSystem/probes/*", "probeName")
+
+    ## This function returns the type of the specified instrument, i.e. the corresponding SKIRT class name as a string.
+    # The instrument argument can be an instrument name or a zero-based integer index (in order of ski file appearance).
+    # If this argument does not unambiguously identify an instrument in the ski file, the function raises an error.
+    def instrumentType(self, instrument):
+        if isinstance(instrument,str):
+            xpath = "//InstrumentSystem/instruments/*[@instrumentName='{}']".format(instrument)
+        else:
+            xpath = "//InstrumentSystem/instruments/*[{}]".format(int(instrument)+1)
+        return self.getStringAttribute(xpath, None)
+
+    ## This function returns the type of the specified probe, i.e. the corresponding SKIRT class name as a string.
+    # The probe argument can be a probe name or a zero-based integer index (in order of ski file appearance).
+    # If this argument does not unambiguously identify a probe in the ski file, the function raises an error.
+    def probeType(self, probe):
+        if isinstance(probe,str):
+            xpath = "//ProbeSystem/probes/*[@probeName='{}']".format(probe)
+        else:
+            xpath = "//ProbeSystem/probes/*[{}]".format(int(probe)+1)
+        return self.getStringAttribute(xpath, None)
 
 # -----------------------------------------------------------------
