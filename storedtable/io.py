@@ -41,6 +41,7 @@ import functools
 import logging
 import numpy as np
 import struct
+import pts.simulation.units as su
 import pts.utils.path as pp
 
 # -----------------------------------------------------------------
@@ -91,8 +92,8 @@ def listStoredTableInfo(inFilePath):
 #  - quantityNames: list of quantity names, in order of occurrence
 #  - quantityUnits: list of corresponding units
 #  - quantityScales: list of corresponding scales
-#  - for each axis name: array with grid points
-#  - for each quantity name: array with values
+#  - for each axis name: array with grid points as an astropy quantity with the appropriate unit
+#  - for each quantity name: array with values as an astropy quantity with the appropriate unit
 #
 def readStoredTable(inFilePath):
     inpath = pp.absolute(inFilePath)
@@ -130,11 +131,11 @@ def readStoredTable(inFilePath):
 
     # add axis grids
     for i in range(numAxes):
-        d[axisNames[i]] = axisGrids[i]
+        d[axisNames[i]] = axisGrids[i] << su.unit(axisUnits[i])
 
     # add quantities information
     for i in range(numQuantities):
-        d[quantityNames[i]] = values[i]
+        d[quantityNames[i]] = values[i] << su.unit(quantityUnits[i])
 
     return d
 
@@ -142,17 +143,20 @@ def readStoredTable(inFilePath):
 
 ## This function writes the specified data and metadata to a disk file in SKIRT stored table format.
 #
+# \note This low-level function does \em not support astropy quantities; it expects plain numpy arrays with values
+#       presented in the proper units (i.e. as declared by the unit strings).
+#
 # The function expects the following arguments:
 #  - outFilePath: the output file's absolute or relative path, including filename and '.stab' extension
 #  - axisNames: a sequence of axis name strings
 #  - axisUnits: a sequence of axis unit strings (should match internal SKIRT units, i.e. usually SI units)
 #  - axisScales: a sequence of axis scale strings ('lin' or 'log') controlling interpolation behavior
-#  - axisGrids: a sequence of numpy arrays specifying the grid points for each axis
+#  - axisGrids: a sequence of numpy arrays specifying the grid points for each axis in the correct units
 #  - quantityNames: a sequence of quantity name strings
 #  - quantityUnits: a sequence of quantity unit strings (should match internal SKIRT units, i.e. usually SI units)
 #  - quantityScales: a sequence of quantity scale strings ('lin' or 'log') controlling interpolation behavior
-#  - quantityValues: a sequence of numpy arrays specifying the values for each quantity; each array
-#                    has indices in the same order and with the same range as the specified axes
+#  - quantityValues: a sequence of numpy arrays specifying the values for each quantity in the correct units;
+#                     each array has indices in the same order and with the same range as the specified axes
 #
 # The sequences must be nonempty and have the same number of items within each group (axis and quantity).
 # A name or unit string must contain 1 to 8 printable and non-whitespace 7-bit ASCII characters.

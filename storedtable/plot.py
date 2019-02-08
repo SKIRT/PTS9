@@ -15,6 +15,7 @@
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
+import pts.simulation.units as su
 import pts.storedtable.io
 import pts.utils.path as pp
 
@@ -71,8 +72,8 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
     if horScale == 'log': plt.xscale('log')
     if verScale == 'log': plt.yscale('log')
     plt.plot(horGrid, verValues)
-    plt.xlabel("{} ({})".format(horName, horUnit))
-    plt.ylabel("{} ({})".format(verName, verUnit))
+    plt.xlabel(horName + su.latex(horUnit))
+    plt.ylabel(verName + su.latex(verUnit))
 
     # if a filepath is provided, save the figure; otherwise leave it open
     if plotFilePath is not None:
@@ -108,7 +109,7 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
         horIndx = table['axisNames'].index(horName)
         horUnit = table['axisUnits'][horIndx]
         horScale = table['axisScales'][horIndx]
-        horGrid = table[horName]
+        horGrid = table[horName].value
 
         # get info on vertical axis
         verName = args['veraxis']
@@ -123,9 +124,9 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
                 index.append(Ellipsis)
             else:
                 axisValue = args[axisName]
-                axisGrid = table[axisName]
+                axisGrid = table[axisName].value
                 index.append((np.abs(axisGrid - axisValue)).argmin())
-        verValues = table[verName][tuple(index)]
+        verValues = table[verName][tuple(index)].value
 
         # create the plot
         plt.figure(figsize=figsize)
@@ -133,8 +134,8 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
         if verScale == 'log': plt.yscale('log')
         plt.plot(horGrid, verValues)
         plt.vlines([args[horName]], verValues.min(), verValues.max(), linestyle='--')
-        plt.xlabel("{} ({})".format(horName, horUnit))
-        plt.ylabel("{} ({})".format(verName, verUnit))
+        plt.xlabel(horName + su.latex(horUnit))
+        plt.ylabel(verName + su.latex(verUnit))
         plt.show()
 
     # load the complete stored table
@@ -144,13 +145,13 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
     axisSliders = {}
     for axisName, axisScale in zip(table['axisNames'], table['axisScales']):
         axisGrid = table[axisName]
-        minValue = axisGrid.min()
-        maxValue = axisGrid.max()
+        minValue = axisGrid.min().value
+        maxValue = axisGrid.max().value
         if axisScale != 'log':
             axisSliders[axisName] = ipywidgets.FloatSlider(min=minValue, max=maxValue,
                                         value=minValue, readout_format='.3g', continuous_update=False)
         else:
-            if minValue<=0: minValue = axisGrid[1]  # avoid zero values for logarithmic treatment
+            if minValue<=0: minValue = axisGrid[1].value  # avoid zero values for logarithmic treatment
             axisSliders[axisName] = ipywidgets.FloatLogSlider(min=np.log10(minValue), max=np.log10(maxValue),
                                             value=minValue, readout_format='.3e', continuous_update=False)
 

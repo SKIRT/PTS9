@@ -13,24 +13,26 @@
 
 # -----------------------------------------------------------------
 
+import astropy.units as u
 import logging
 import matplotlib.pyplot as plt
 import pts.band.broadband as bb
+import pts.simulation.units as su
 import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
 ## This function creates a plot of the transmission curves for all built-in broadbands that satisfy the
 # all of the specified selection criteria:
-#  - \em minWavelength (float): if specified, the pivot wavelength must exceed this value
-#  - \em maxWavelength (float): if specified, the pivot wavelength must be lower than this value
+#  - \em minWavelength (astropy quantity): if specified, the pivot wavelength must exceed this value
+#  - \em maxWavelength (astropy quantity): if specified, the pivot wavelength must be lower than this value
 #  - \em nameSegments (string or iterable of strings): if specified, the band name must contain
 #    at least one of these segments
 #
 # The plot file path is interpreted according to the rules described for the pts.utils.path.absolute() function.
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotBuiltinBands(minWavelength=1e-6, maxWavelength=1e6, nameSegments=None, *,
+def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, nameSegments=None, *,
                      plotFilePath=None, figsize=(20,6)):
 
     # load all bands that satisfy the specified criteria
@@ -53,12 +55,13 @@ def plotBuiltinBands(minWavelength=1e-6, maxWavelength=1e6, nameSegments=None, *
     colorindex = 0
     for band in bands:
         wavelengths, transmissions = band.transmissionCurve()
+        wavelengths <<= u.micron              # convert to micron
         transmissions /= transmissions.max()  # normalize to a maximum of 1
-        plt.plot(wavelengths, transmissions, color=colors[colorindex])
+        plt.plot(wavelengths.value, transmissions.value, color=colors[colorindex])
         labelpos += 0.05
         if labelpos > 0.69: labelpos = 0.25
-        plt.text(band.pivotWavelength(), labelpos, band.name(), horizontalalignment='center', fontsize='x-small',
-                 color=colors[colorindex], backgroundcolor='w')
+        plt.text(band.pivotWavelength().to_value(wavelengths.unit), labelpos, band.name(),
+                 horizontalalignment='center', fontsize='x-small', color=colors[colorindex], backgroundcolor='w')
         colorindex = (colorindex + 1) % len(colors)
 
     # set axis details
@@ -66,7 +69,7 @@ def plotBuiltinBands(minWavelength=1e-6, maxWavelength=1e6, nameSegments=None, *
     plt.grid(True, axis='y')
 
     # add axis labels and a legend
-    plt.xlabel(r"$\lambda\,(\mu \mathrm{m})$", fontsize='large')
+    plt.xlabel(r"$\lambda$" + su.latex(wavelengths), fontsize='large')
     plt.ylabel("Transmission", fontsize='large')
 
     # if a filepath is provided, save the figure; otherwise leave it open

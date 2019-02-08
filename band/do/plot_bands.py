@@ -19,13 +19,15 @@
 
 # -----------------------------------------------------------------
 
-def do( minw : (float,"smallest pivot wavelength to be plotted, in micron") = 0.001,
-        maxw : (float,"largest pivot wavelength to be plotted, in micron") = 20000.,
+def do( wmin : (float,"smallest pivot wavelength to be plotted, in micron") = 0.001,
+        wmax : (float,"largest pivot wavelength to be plotted, in micron") = 20000.,
         names : (str,"band name segments for bands to be plotted, comma separated") = "",
         ) -> "plot built-in broadbands in a given wavelength range":
 
+    import astropy.units as u
     import pts.band.plot
-    pts.band.plot.plotBuiltinBands(plotFilePath="FigBands.pdf", minWavelength=minw, maxWavelength=maxw,
+    pts.band.plot.plotBuiltinBands(plotFilePath="FigBands.pdf",
+                                   minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
                                    nameSegments=names.split(',') if len(names)>0 else None)
 
 # ----------------------------------------------------------------------

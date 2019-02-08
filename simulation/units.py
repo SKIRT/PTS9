@@ -47,8 +47,9 @@ def unit(unitlike):
     raise ValueError("Unsupported unit-like type: {}".format(type(unitlike)))
 
 ## This function returns a latex-formatted string representation for the "unit-like" input,
-# which is interpreted as described for the unit() function in this module.
+# enclosed in square brackets and preceded by a short space. The input argument
+# is interpreted as described for the unit() function in this module.
 def latex(unitlike):
-    return unit(unitlike).to_string("latex_inline")
+    return r"$\,$[" + unit(unitlike).to_string("latex_inline") + r"]"
 
 # -----------------------------------------------------------------

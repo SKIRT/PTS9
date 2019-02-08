@@ -14,6 +14,7 @@
 
 # -----------------------------------------------------------------
 
+import astropy.units as u
 import numpy as np
 import xml.etree.ElementTree
 import pts.utils.path as pp
@@ -322,7 +323,12 @@ class BroadBand:
     # If \em bandspec has a different type, or if its string contents does not unambiguously match a built-in band
     # name, the constructor raises an exception.
     #
+    # \note During the first part of construction, _wavelengths are initialized in micron but without explicit units,
+    # and _transmissions have arbitrary scale. Thus, these are plain numpy arrays, not astropy quantities. At the
+    # end of construction, the _normalize() function attaches the appropriate units.
+    #
     def __init__(self, bandspec):
+
 
         # construction of built-in band
         if isinstance(bandspec, str):
@@ -346,7 +352,7 @@ class BroadBand:
 
         else: raise ValueError("Unsuppported type of band specification '{}'".format(bandspec))
 
-        # normalize the transmission curve
+        # normalize the transmission curve and attach the appropriate astropy units
         self._normalize()
 
     ## This function matches the given band specification with all built-in band names, i.e. the keys of the
@@ -451,7 +457,8 @@ class BroadBand:
         self._wavelengths = np.flipud(wavelengths)
         self._transmissions = np.flipud(transmissions)
 
-    ## This function normalizes the transmission curve after it has been loaded during construction.
+    ## This function normalizes the transmission curve after it has been loaded during construction,
+    # and attaches the appropriate astropy units (micron and 1/micron, respectively)
     # It expects _bandname, _wavelengths, _transmissions, and _photoncounter to be set.
     def _normalize(self):
         # for photon counters, convert from response curve to transmission curve (with arbitrary scaling)
@@ -460,6 +467,10 @@ class BroadBand:
 
         # normalize the transmission curve to unity
         self._transmissions /= np.trapz(x=self._wavelengths, y=self._transmissions)
+
+        # attach the appropriate astropy units
+        self._wavelengths <<= u.micron
+        self._transmissions <<= u.micron**(-1)
 
     # -----------------------------------------------------------------
 
@@ -473,32 +484,33 @@ class BroadBand:
     def name(self):
         return self._bandname
 
-    ## This function returns a tuple of floating point numbers specifying the wavelength range for this band in micron.
+    ## This function returns a tuple of astropy quantities specifying the wavelength range for this band in micron.
     # The transmission may be zero in some (usually small) intervals within the range, but it is guaranteed to be zero
     # outside the range.
     def wavelengthRange(self):
         return self._wavelengths[0], self._wavelengths[-1]
 
-    ## This function returns the minimum wavelength for the band, in micron.
+    ## This function returns the minimum wavelength for the band, as an astropy quantity in micron.
     def minWavelength(self):
         return self._wavelengths[0]
 
-    ## This function returns the maximum wavelength for the band, in micron.
+    ## This function returns the maximum wavelength for the band, as an astropy quantity in micron.
     def maxWavelength(self):
         return self._wavelengths[-1]
 
-    ## This function returns the pivot wavelength in micron, as defined in the class header.
+    ## This function returns the pivot wavelength as defined in the class header, as an astropy quantity in micron.
     def pivotWavelength(self):
         return np.sqrt(1. /  np.trapz(x=self._wavelengths, y=self._transmissions/self._wavelengths**2) )
 
-    ## This function returns the effective band width (a wavelength interval) in micron, as defined in the class header.
+    ## This function returns the effective band width (a wavelength interval) as defined in the class header
+    # as an astropy quantity in micron.
     def effectiveWidth(self):
         return 1. / self._transmissions.max()
 
     ## This function returns a tuple containing a copy of the wavelength and transmission arrays representing
     # the transmission curve for this band. For photon counters the response curve has already been converted to a
-    # transmission curve as described in the class header. The wavelengths are in micron and the transmissions are
-    # normalized to unity assuming wavelengths in micron.
+    # transmission curve as described in the class header. Both arrays are astropy quantities. The wavelengths
+    # are in micron and the transmissions in 1/micron (because of the normalization to unity).
     def transmissionCurve(self):
         return self._wavelengths.copy(), self._transmissions.copy()
 
