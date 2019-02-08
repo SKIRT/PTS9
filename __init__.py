@@ -31,8 +31,8 @@
 #
 # The following frequently-used modules are imported with a local name:
 #
-#     import astropy.units as u
 #     import astropy.io.fits as fits
+#     import astropy.units as u
 #     import lxml.etree as etree
 #     import matplotlib.pyplot as plt
 #     import numpy as np
