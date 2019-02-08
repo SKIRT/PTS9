@@ -26,7 +26,7 @@
 # -----------------------------------------------------------------
 
 import numpy as np
-from .io import writeStoredTable
+import pts.storedtable.io
 
 # -----------------------------------------------------------------
 
@@ -48,7 +48,7 @@ def convertDraineEnthalpies(inFilePaths, outFilePaths):
     h *= bulkdensity
 
     # write stored table
-    writeStoredTable(outFilePath, ['T'], ['K'], ['log'], [T],  ['h'], ['J/m3'], ['log'], [h])
+    pts.storedtable.io.writeStoredTable(outFilePath, ['T'], ['K'], ['log'], [T],  ['h'], ['J/m3'], ['log'], [h])
 
 # -----------------------------------------------------------------
 
@@ -72,7 +72,7 @@ def convertTrustBenchmarkEnthalpies(inFilePaths, outFilePaths):
     h *= bulkdensity
 
     # write stored table
-    writeStoredTable(outFilePath, ['T'], ['K'], ['log'], [T],  ['h'], ['J/m3'], ['log'], [h])
+    pts.storedtable.io.writeStoredTable(outFilePath, ['T'], ['K'], ['log'], [T],  ['h'], ['J/m3'], ['log'], [h])
 
 # -----------------------------------------------------------------
 
@@ -98,6 +98,6 @@ def convertDustemEnthalpies(inFilePaths, outFilePaths):
         T = 10.**logT
 
         # write stored table
-        writeStoredTable(outFilePath, ['T'], ['K'], ['log'], [T],  ['h'], ['J/m3'], ['log'], [h])
+        pts.storedtable.io.writeStoredTable(outFilePath, ['T'], ['K'], ['log'], [T],  ['h'], ['J/m3'], ['log'], [h])
 
 # -----------------------------------------------------------------

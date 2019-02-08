@@ -41,14 +41,14 @@ import functools
 import logging
 import numpy as np
 import struct
-import pts.utils.path
+import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
 ## This function lists relevant metadata about the specified SKIRT stored table file. The printed information
 # includes the names, units and ranges for each of the axes, and the names and units for each of the quantities.
 def listStoredTableInfo(inFilePath):
-    inpath = pts.utils.path.absolute(inFilePath)
+    inpath = pp.absolute(inFilePath)
 
     # open the file
     with open(inpath, 'rb') as infile:
@@ -95,7 +95,7 @@ def listStoredTableInfo(inFilePath):
 #  - for each quantity name: array with values
 #
 def readStoredTable(inFilePath):
-    inpath = pts.utils.path.absolute(inFilePath)
+    inpath = pp.absolute(inFilePath)
 
     # open the file
     with open(inpath, 'rb') as infile:
@@ -159,7 +159,7 @@ def readStoredTable(inFilePath):
 #
 def writeStoredTable(outFilePath, axisNames, axisUnits, axisScales, axisGrids,
                                   quantityNames, quantityUnits, quantityScales, quantityValues):
-    outpath = pts.utils.path.absolute(outFilePath)
+    outpath = pp.absolute(outFilePath)
 
     # verify some of the requirements/restrictions on the specified data
     if outpath.suffix != ".stab":

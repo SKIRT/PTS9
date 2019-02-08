@@ -15,7 +15,7 @@
 
 def do() -> "list all PTS command scripts":
 
-    from pts.admin import command
-    command.listCommands()
+    import pts.admin.command
+    pts.admin.command.listCommands()
 
 # -----------------------------------------------------------------

@@ -27,9 +27,9 @@
 
 # -----------------------------------------------------------------
 
-import numpy as np
 import glob
-from .io import writeStoredTable
+import numpy as np
+import pts.storedtable.io
 
 # -----------------------------------------------------------------
 
@@ -52,9 +52,9 @@ def convertMeanInterstellarOpticalProps(inFilePaths, outFilePaths):
     mu = np.zeros_like(w) + 1.870e-29     # in kg/H
 
     # write stored table -- reverse order because input file has decreasing wavelengths
-    writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w[::-1]],
-            ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'],
-            [sa[::-1],ss[::-1],g[::-1],mu[::-1]])
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w[::-1]],
+                        ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'],
+                        [sa[::-1],ss[::-1],g[::-1],mu[::-1]])
 
 # -----------------------------------------------------------------
 
@@ -74,7 +74,7 @@ def convertMeanDraineLiOpticalProps(inFilePaths, outFilePaths):
     mu = np.zeros_like(w) + (5.4e-4 + 5.4e-4 + 1.8e-4 + 2.33e-3 + 8.27e-3) * 1.67262178e-27
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
             ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'], [sa,ss,g,mu])
 
 # -----------------------------------------------------------------
@@ -98,7 +98,7 @@ def convertMeanZubkoOpticalProps(inFilePaths, outFilePaths):
     mu = np.zeros_like(w) + 1.44e-29    # in kg/H
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
             ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'], [sa,ss,g,mu])
 
 # -----------------------------------------------------------------
@@ -123,7 +123,7 @@ def createMeanIvezicBenchmarkOpticalProps(inFilePaths, outFilePaths):
     mu = np.zeros_like(w) + 1.5e-29   # arbitrary value, in kg/H
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
             ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'], [sa,ss,g,mu])
 
 # -----------------------------------------------------------------
@@ -150,7 +150,7 @@ def convertMeanPascucciBenchmarkOpticalProps(inFilePaths, outFilePaths):
     mu = np.zeros_like(w) + 1.5e-29   # arbitrary value, in kg/H
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
             ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'], [sa,ss,g,mu])
 
 # -----------------------------------------------------------------
@@ -178,7 +178,7 @@ def convertMeanPinteBenchmarkOpticalProps(inFilePaths, outFilePaths):
     g = np.zeros_like(w) + 0.6296066
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
             ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'], [sa,ss,g,mu])
 
 # -----------------------------------------------------------------
@@ -211,7 +211,7 @@ def convertMeanPinteBenchmarkMuellerMatrix(inFilePaths, outFilePaths):
     S34 = np.tile(S34,(len(w),1))
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda','theta'], ['m','rad'], ['log','lin'], [w, theta],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda','theta'], ['m','rad'], ['log','lin'], [w, theta],
             ['S11','S12','S33','S34'], ['1','1','1','1'], ['lin','lin','lin','lin'], [S11,S12,S33,S34])
 
 # -----------------------------------------------------------------
@@ -237,7 +237,7 @@ def convertMeanTrustBenchmarkOpticalProps(inFilePaths, outFilePaths):
     mu = np.zeros_like(w) + 1.434e-29   # in kg/H
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w],
             ['sigmaabs','sigmasca','g','mu'], ['m2/H','m2/H','1','kg/H'], ['log','log','lin','lin'], [sa,ss,g,mu])
 
 # -----------------------------------------------------------------
@@ -274,7 +274,7 @@ def convertMeanTrustBenchmarkMuellerMatrix(inFilePaths, outFilePaths):
     theta *= np.pi/180.
 
     # write stored table
-    writeStoredTable(outFilePaths[0], ['lambda','theta'], ['m','rad'], ['log','lin'], [w, theta],
+    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda','theta'], ['m','rad'], ['log','lin'], [w, theta],
             ['S11','S12','S33','S34'], ['1','1','1','1'], ['lin','lin','lin','lin'], [S11,S12,S33,S34])
 
 # -----------------------------------------------------------------

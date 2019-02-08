@@ -14,8 +14,8 @@
 # -----------------------------------------------------------------
 
 import datetime
-from lxml import etree
-import pts.utils.path
+import lxml.etree as etree
+import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
@@ -27,8 +27,7 @@ import pts.utils.path
 #    information, such as for example the number of photon packets launched by the simulation. These
 #    functions encapsulate explicit knowledge about the ski file structure, and should be updated when that
 #    structure changes (preferably in such a way that older ski files continue to be supported).
-#
-# -  "Generic" functions allow getting or setting information addressed through a subset of the XPath syntax.
+#  - "Generic" functions allow getting or setting information addressed through a subset of the XPath syntax.
 #    These functions require the caller to know (the relevant portion of) the structure of the ski file,
 #    and put the maintenance burden in the event of changes on the side of the caller.
 #
@@ -47,7 +46,7 @@ class SkiFile:
     #
     def __init__(self, skiFilePath):
         # get the absolute path and verify the file name
-        self._path = pts.utils.path.absolute(skiFilePath)
+        self._path = pp.absolute(skiFilePath)
         if not self._path.name.lower().endswith((".ski", "_parameters.xml")):
             raise ValueError("Invalid filename extension for ski file")
 
@@ -66,7 +65,7 @@ class SkiFile:
     # SkiFile instance was originally constructed is allowed, but often not the intention.
     def saveTo(self, saveFilePath):
         # get the absolute path and verify the file name
-        path = pts.utils.path.absolute(saveFilePath)
+        path = pp.absolute(saveFilePath)
         if not path.name.lower().endswith(".ski"):
             raise ValueError("Invalid filename extension for ski file")
 

@@ -15,8 +15,8 @@
 
 import logging
 import matplotlib.pyplot as plt
-import pts.utils.path
 import pts.band.broadband as bb
+import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
@@ -45,7 +45,7 @@ def plotBuiltinBands(minWavelength=1e-6, maxWavelength=1e6, nameSegments=None, *
     logging.info("Plotting {} built-in bands...".format(len(bands)))
 
     # setup the figure
-    figure = plt.figure(figsize=figsize)
+    plt.figure(figsize=figsize)
     colors = ('r','g','b','c','m','y')
 
     # loop over bands
@@ -71,7 +71,7 @@ def plotBuiltinBands(minWavelength=1e-6, maxWavelength=1e6, nameSegments=None, *
 
     # if a filepath is provided, save the figure; otherwise leave it open
     if plotFilePath is not None:
-        plotpath = pts.utils.path.absolute(plotFilePath)
+        plotpath = pp.absolute(plotFilePath)
         plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
         logging.info("Created {}".format(plotpath))

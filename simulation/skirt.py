@@ -15,8 +15,8 @@
 
 import subprocess
 import sys
-import pts.utils.path
-from .simulation import Simulation
+import pts.simulation.simulation as sim
+import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
@@ -34,11 +34,11 @@ class Skirt:
 
         # set the SKIRT path
         if path is None:
-            self._path = pts.utils.path.skirt()
+            self._path = pp.skirt()
             if self._path is None:
                 raise ValueError("Cannot locate default SKIRT executable in PTS/SKIRT project directory structure")
         else:
-            self._path = pts.utils.path.absolute(path)
+            self._path = pp.absolute(path)
             if not self._path.is_file():
                 raise ValueError("Specified SKIRT executable does not exist: {}".format(self._path))
 
@@ -107,16 +107,16 @@ class Skirt:
         arguments += [str(self._path)]
 
         # ski file
-        arguments += [str(pts.utils.path.absolute(skiFilePath))]
+        arguments += [str(pp.absolute(skiFilePath))]
 
         # i/o path options
         if skiRelative:
-            base = pts.utils.path.absolute(skiFilePath).parent
-            inpath = pts.utils.path.absolute(base / inDirPath)
-            outpath = pts.utils.path.absolute(base / outDirPath)
+            base = pp.absolute(skiFilePath).parent
+            inpath = pp.absolute(base / inDirPath)
+            outpath = pp.absolute(base / outDirPath)
         else:
-            inpath = pts.utils.path.absolute(inDirPath)
-            outpath = pts.utils.path.absolute(outDirPath)
+            inpath = pp.absolute(inDirPath)
+            outpath = pp.absolute(outDirPath)
         arguments += ["-i", str(inpath)]
         arguments += ["-o", str(outpath)]
 
@@ -140,7 +140,7 @@ class Skirt:
         else:
             self._process = subprocess.Popen(arguments, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        return Simulation(skiFilePath=skiFilePath, inDirPath=inpath, outDirPath=outpath, process=self._process)
+        return sim.Simulation(skiFilePath=skiFilePath, inDirPath=inpath, outDirPath=outpath, process=self._process)
 
     ## This function returns True if the simulation started with the most recent call to the execute() function
     # is still running, and False otherwise.

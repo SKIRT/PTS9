@@ -21,16 +21,17 @@
 def do( subDirectory : (str,"name of subdirectory to process or . for all"),
         ) -> "construct SKIRT resources from original data":
 
-    import pts.utils.path
-    from pts.storedtable.conversionspec import createConversionSpecs
+    import pts.storedtable.conversionspec
+    import pts.utils.path as pp
 
     # get the paths to the top-level SKIRT resources input and output directories
-    parentPath = pts.utils.path.projectParent()
+    parentPath = pp.projectParent()
     inputPath = parentPath / "Resources9" / "OriginalData"
     outputPath = parentPath / "Resources9" / "StoredTables"
 
     # create the conversion suite
-    specs = createConversionSpecs(str(inputPath), str(outputPath), subDirectory if subDirectory!="." else None)
+    specs = pts.storedtable.conversionspec.createConversionSpecs(str(inputPath), str(outputPath),
+                                                                 subDirectory if subDirectory!="." else None)
 
     # perform the conversion(s)
     specs.perform()

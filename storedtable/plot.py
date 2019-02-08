@@ -15,8 +15,8 @@
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
-import pts.utils.path
-from pts.storedtable.io import readStoredTable
+import pts.storedtable.io
+import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
@@ -40,7 +40,7 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
                          plotFilePath=None, figsize=(8,6)):
 
     # load the complete stored table
-    table = readStoredTable(tableFilePath)
+    table = pts.storedtable.io.readStoredTable(tableFilePath)
 
     # get info on horizontal axis
     horName = table['axisNames'][horAxis]
@@ -76,7 +76,7 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
 
     # if a filepath is provided, save the figure; otherwise leave it open
     if plotFilePath is not None:
-        plotpath = pts.utils.path.absolute(plotFilePath)
+        plotpath = pp.absolute(plotFilePath)
         plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
         logging.info("Created {}".format(plotpath))
@@ -98,7 +98,7 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
 def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
 
     # import this here so that the dependency is limited to this function
-    import ipywidgets as widgets
+    import ipywidgets
 
     # this function plots a particular slice of the data table hypercube
     # according to the configuration created through the widgets.interact() function
@@ -138,7 +138,7 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
         plt.show()
 
     # load the complete stored table
-    table = readStoredTable(tableFilePath)
+    table = pts.storedtable.io.readStoredTable(tableFilePath)
 
     # build a dictionary with a slider for each axis in the data hypercube
     axisSliders = {}
@@ -147,15 +147,15 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
         minValue = axisGrid.min()
         maxValue = axisGrid.max()
         if axisScale != 'log':
-            axisSliders[axisName] = widgets.FloatSlider(min=minValue, max=maxValue,
+            axisSliders[axisName] = ipywidgets.FloatSlider(min=minValue, max=maxValue,
                                         value=minValue, readout_format='.3g', continuous_update=False)
         else:
             if minValue<=0: minValue = axisGrid[1]  # avoid zero values for logarithmic treatment
-            axisSliders[axisName] = widgets.FloatLogSlider(min=np.log10(minValue), max=np.log10(maxValue),
+            axisSliders[axisName] = ipywidgets.FloatLogSlider(min=np.log10(minValue), max=np.log10(maxValue),
                                             value=minValue, readout_format='.3e', continuous_update=False)
 
     # create the interactive plot
-    widgets.interact(plottable, horaxis=table['axisNames'], veraxis=table['quantityNames'], **axisSliders)
+    ipywidgets.interact(plottable, horaxis=table['axisNames'], veraxis=table['quantityNames'], **axisSliders)
     return table
 
 # ----------------------------------------------------------------------

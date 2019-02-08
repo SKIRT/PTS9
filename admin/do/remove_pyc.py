@@ -16,10 +16,10 @@
 
 def do() -> "remove all compiled Python files from the local PTS repository":
     import logging
-    import pts.utils.path
+    import pts.utils.path as pp
 
     # get the path to the top-level pts directory
-    ptsdir = pts.utils.path.pts()
+    ptsdir = pp.pts()
 
     # remove all .pyc files
     for pyc in ptsdir.rglob("*.pyc"):

@@ -13,8 +13,8 @@
 # -----------------------------------------------------------------
 
 import os
-import pts.utils.path
-from .skifile import SkiFile
+import pts.simulation.skifile as ski
+import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
@@ -35,7 +35,7 @@ def createSimulations(outDirPath="", prefix=None):
     simulations = []
 
     # loop over the log files in the specified directory
-    for logfile in pts.utils.path.absolute(outDirPath).glob("*_log.txt"):
+    for logfile in pp.absolute(outDirPath).glob("*_log.txt"):
         if prefix is None or prefix == logfile.stem[:-4]:
             simulations += [ Simulation(outDirPath=logfile.parent, prefix=logfile.stem[:-4]) ]
 
@@ -95,9 +95,9 @@ class Simulation:
             raise ValueError("Simulation constructor must specify prefix or ski file path")
 
         # remember the absolute paths and the prefix
-        self._skiFilePath = pts.utils.path.absolute(skiFilePath) if skiFilePath is not None else None
-        self._inDirPath = pts.utils.path.absolute(inDirPath) if inDirPath is not None else None
-        self._outDirPath = pts.utils.path.absolute(outDirPath)
+        self._skiFilePath = pp.absolute(skiFilePath) if skiFilePath is not None else None
+        self._inDirPath = pp.absolute(inDirPath) if inDirPath is not None else None
+        self._outDirPath = pp.absolute(outDirPath)
         self._prefix = prefix if len(prefix)>0 else self._skiFilePath.stem
 
         # remember the process, if provided, and its completion status
@@ -197,7 +197,7 @@ class Simulation:
     ## This function returns a SkiFile object representing the parameter file for this simulation.
     def parameters(self):
         if self._parameters is None:
-            self._parameters = SkiFile(self.outFilePath("parameters.xml"))
+            self._parameters = ski.SkiFile(self.outFilePath("parameters.xml"))
         return self._parameters
 
     ## This function allows invoking any SkiFile function directly on a simulation object. For example,

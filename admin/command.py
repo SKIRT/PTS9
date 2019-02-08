@@ -128,8 +128,8 @@ import inspect
 import logging
 import sys
 
-import pts.utils.error
-import pts.utils.path
+import pts.utils.error as pe
+import pts.utils.path as pp
 
 # -----------------------------------------------------------------
 
@@ -152,7 +152,7 @@ def doWithCommandLineArguments(arguments = None):
         return
 
     # get the path to the top-level pts directory
-    ptsdir = pts.utils.path.pts()
+    ptsdir = pp.pts()
 
     # make a list of all pts package directories containing a "do" directory
     packagenames = [ x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]
@@ -187,7 +187,7 @@ def doWithCommandLineArguments(arguments = None):
 ## This public function lists all available PTS commands, per package.
 def listCommands():
     # get the path to the top-level pts directory
-    ptsdir = pts.utils.path.pts()
+    ptsdir = pp.pts()
 
     # loop over all pts package directories containing a "do" directory
     for pname in sorted([ x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]):
@@ -277,7 +277,7 @@ class CommandScript:
         logging.info("Starting {}..." .format(self._name))
         try:
             self._dofunction(**args)
-        except pts.utils.error.UserError as error:
+        except pe.UserError as error:
             logging.error(error.message)
             logging.info(parser.format_help())
             return

@@ -21,12 +21,12 @@ def do() -> "list external package dependencies for PTS":
     import logging
     import pkgutil
     import re
-    import pts.utils.path
+    import pts.utils.path as pp
 
     # ----- find dependencies -----
 
     # get the path to the top-level pts directory
-    ptsdir = pts.utils.path.pts()
+    ptsdir = pp.pts()
 
     # initialize the set of dependencies (i.e. package names)
     packages = set()

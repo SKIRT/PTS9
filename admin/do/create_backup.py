@@ -74,12 +74,12 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
     import shutil
     import subprocess
     import zipfile
-    from pts.utils.error import UserError
-    import pts.utils.path
+    import pts.utils.error as pe
+    import pts.utils.path as pp
     import pts.utils.time
 
     # get the path to the project parent directory
-    projectdir = pts.utils.path.projectParent()
+    projectdir = pp.projectParent()
 
     # create the backup directory
     backupdir = projectdir / "Backup" / ("Backup" + "--" + pts.utils.time.timestamp())
@@ -95,10 +95,10 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
                 # split the line in tokens
                 tokens = line.split()
                 if len(tokens)!=2 and len(tokens)!=4:
-                    raise UserError("Backup instruction line has {} tokens rather than 2 or 4".format(len(tokens)))
+                    raise pe.UserError("Backup instruction line has {} tokens rather than 2 or 4".format(len(tokens)))
                 datatype = tokens[0]
                 if not datatype in ["original", "derived", "repository"]:
-                    raise UserError("Unsupported backup instruction data characterization: '{}'".format(datatype))
+                    raise pe.UserError("Unsupported backup instruction data characterization: '{}'".format(datatype))
                 sourcedir = tokens[1]
 
                 # for original and derived, create regular backup archive
@@ -108,7 +108,8 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
                     exclude = ""
                     if len(tokens)==4:
                         if tokens[2] != "exclude":
-                            raise UserError("Expected 'exclude' in backup instruction line, not '{}'".format(tokens[2]))
+                            raise pe.UserError("Expected 'exclude' in backup instruction line, not '{}'" \
+                                               .format(tokens[2]))
                         exclude = tokens[3]
 
                     # create the archive

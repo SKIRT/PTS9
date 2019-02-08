@@ -13,7 +13,7 @@
 # -----------------------------------------------------------------
 
 import pts.band.broadband as bb
-from .io import writeStoredTable
+import pts.storedtable.io
 
 # -----------------------------------------------------------------
 
@@ -35,6 +35,6 @@ def writeBroadBands(inFilePaths, outFilePaths):
         T *= 1e6
 
         # write stored table
-        writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [w], ['T'], ['1'], ['lin'], [T])
+        pts.storedtable.io.writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [w], ['T'], ['1'], ['lin'], [T])
 
 # -----------------------------------------------------------------
