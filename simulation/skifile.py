@@ -218,26 +218,6 @@ class SkiFile:
     def probeNames(self):
         return self.getStringAttributes("//ProbeSystem/probes/*", "probeName")
 
-    ## This function returns the type of the specified instrument, i.e. the corresponding SKIRT class name as a string.
-    # The instrument argument can be an instrument name or a zero-based integer index (in order of ski file appearance).
-    # If this argument does not unambiguously identify an instrument in the ski file, the function raises an error.
-    def instrumentType(self, instrument):
-        if isinstance(instrument,str):
-            xpath = "//InstrumentSystem/instruments/*[@instrumentName='{}']".format(instrument)
-        else:
-            xpath = "//InstrumentSystem/instruments/*[{}]".format(int(instrument)+1)
-        return self.getStringAttribute(xpath, None)
-
-    ## This function returns the type of the specified probe, i.e. the corresponding SKIRT class name as a string.
-    # The probe argument can be a probe name or a zero-based integer index (in order of ski file appearance).
-    # If this argument does not unambiguously identify a probe in the ski file, the function raises an error.
-    def probeType(self, probe):
-        if isinstance(probe,str):
-            xpath = "//ProbeSystem/probes/*[@probeName='{}']".format(probe)
-        else:
-            xpath = "//ProbeSystem/probes/*[{}]".format(int(probe)+1)
-        return self.getStringAttribute(xpath, None)
-
 # -----------------------------------------------------------------
 
 ## This function returns a "pretty" string representation for a floating point number suitable for inclusion

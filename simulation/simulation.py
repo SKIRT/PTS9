@@ -210,4 +210,96 @@ class Simulation:
             except AttributeError: pass
         raise AttributeError("Can't delegate this attribute")
 
+    # -----------------------------------------------------------------
+
+    ## This function returns a list of Instrument instances for each of the instruments in the simulation,
+    # in their order of appearance in the ski file.
+    def instruments(self):
+        return [ Instrument(self, index) for index in range(len(self.instrumentNames())) ]
+
+    ## This function returns a list of Probe instances for each of the probes in the simulation,
+    # in their order of appearance in the ski file.
+    def probes(self):
+        return [ Probe(self, index) for index in range(len(self.probeNames())) ]
+
+# -----------------------------------------------------------------
+
+# This class serves as an abstract base class for the Instrument and Probe classes. Instances of these classes
+# can be spawned from a Simulation object to represent one of those entities and allow retrieving attributes.
+# This base class implements some common functionality.
+class _SimulationEntity:
+    # The constructor accepts the Simulation instance in which this entity resides, and the xpath of the entity
+    # in the ski file for the simulation.
+    # It is intended to be invoked only from within the constructor of a subclass.
+    def __init__(self, simulation, xpath):
+        self._simulation = simulation
+        self._xpath = xpath
+
+    ## This function returns the type of the entity, i.e. the corresponding SKIRT class name, as a string.
+    def type(self):
+        return self._simulation.getStringAttribute(self._xpath, None)
+
+    ## This function returns the value of the specified entity attribute as a string.
+    # If the entity does not have the specified attribute, an error is raised.
+    def getStringAttribute(self, attribute):
+        return self._simulation.getStringAttribute(self._xpath, attribute)
+
+    ## This function returns the value of the specified entity attribute as a Boolean value. The string value is
+    # considered to represent True if it contains "true", "t", "yes", "y" or "1" (case insensitive),
+    # and False otherwise.
+    # If the entity does not have the specified attribute, an error is raised.
+    def getBoolAttribute(self, attribute):
+        return self._simulation.getBoolAttribute(self._xpath, attribute)
+
+    ## This function returns the value of the specified entity attribute as an integer number.
+    # If the entity does not have the specified attribute, an error is raised.
+    def getIntAttribute(self, attribute):
+        return self._simulation.getIntAttribute(self._xpath, attribute)
+
+    ## This function returns the value of the specified entity attribute as a floating point number
+    # representing a dimensionless quantity.
+    # If the entity does not have the specified attribute, an error is raised.
+    def getFloatAttribute(self, attribute):
+        return self._simulation.getFloatAttribute(self._xpath, attribute)
+
+    ## This function returns the value of the specified entity attribute as an astropy scalar quantity
+    # with given units. If the entity does not have the specified attribute, or if the attribute value does
+    # not include a unit string, an error is raised.
+    def getQuantityAttribute(self, attribute):
+        return self._simulation.getQuantityAttribute(self._xpath, attribute)
+
+
+# An instance of the Instrument class can be spawned from a Simulation object to represent an instrument in the
+# simulation, allowing to retrieve its attributes. See the Simulation.instruments() function.
+class Instrument(_SimulationEntity):
+
+    # The constructor accepts the Simulation instance in which this instrument resides, and the zero-based index
+    # of the instrument in the instrument system. It is intended to be invoked only from within the Simulation class.
+    def __init__(self, simulation, index):
+        super().__init__(simulation, "//InstrumentSystem/instruments/*[{}]".format(int(index)+1))
+
+    ## This function returns the name of the instrument as specified in the ski file, as a string.
+    def name(self):
+        return self.getStringAttribute("instrumentName")
+
+    ## For distant instruments (which use parallel projection), this function returns the distance of the instrument
+    # to the model as an astropy scalar quantity with the length units specified in the ski file. If the instrument
+    # does not have a distance attribute, or the distance attribute value does not include a unit string, the
+    # function raises an error.
+    def distance(self):
+        return self.getQuantityAttribute("distance")
+
+# An instance of the Probe class can be spawned from a Simulation object to represent a probe in the
+# simulation, allowing to retrieve its attributes. See the Simulation.probes() function.
+class Probe(_SimulationEntity):
+
+    # The constructor accepts the Simulation instance in which this probe resides, and the zero-based index
+    # of the probe in the probe system. It is intended to be invoked only from within the Simulation class.
+    def __init__(self, simulation, index):
+        super().__init__(simulation, "//ProbeSystem/probes/*[{}]".format(int(index) + 1))
+
+    ## This function returns the name of the probe as specified in the ski file, as a string.
+    def name(self):
+        return self.getStringAttribute("probeName")
+
 # -----------------------------------------------------------------
