@@ -14,8 +14,8 @@
 # -----------------------------------------------------------------
 
 import numpy as np
-import pts.simulation.units as su
-import pts.utils.path as pp
+import pts.utils as ut
+from .units import unit as smunit
 
 # -----------------------------------------------------------------
 
@@ -23,8 +23,9 @@ import pts.utils.path as pp
 # SKIRT's SpatialGridConvergenceProbe class. The value is returned as an astropy quantity with appropriate units,
 # assuming that a valid unit string has been found in the text file.
 #
-# The text line containing the value is located by a trigger (a text string that must occur on a line
-# before the one containing the value) and a header (a text string that must occur on the line containing
+# The file path is interpreted as described for the pts.utils.absPath() function.
+# The text line containing the value is located by the \em trigger (a text string that must occur on a line
+# before the one containing the value) and the \em header (a text string that must occur on the line containing
 # the field). In fact, the trigger can consist of multiple subtriggers, separated by forward slashes, that
 # must be triggered in sequence before the function starts looking for the header.
 # If no conforming line is found, the function raises an error.
@@ -43,7 +44,8 @@ import pts.utils.path as pp
 #     getQuantityFromFile("xxx_log.txt", "ParticleMedium", "Total metallic mass")
 #
 def getQuantityFromFile(path, trigger, header):
-    path = pp.absolute(path)
+    path = ut.absPath(path)
+
     triggers = trigger.split("/")
     triggered = 0
     with open(path) as infile:
@@ -57,9 +59,9 @@ def getQuantityFromFile(path, trigger, header):
                 segments = line.split()
                 if len(segments) >= 2:
                     try:
-                        return float(segments[-1]) << su.unit("")
+                        return float(segments[-1]) << smunit("")
                     except ValueError: pass
-                    return float(segments[-2]) << su.unit(segments[-1])
+                    return float(segments[-2]) << smunit(segments[-1])
 
     raise ValueError("Quantity '{}' not found in text file".format(header))
 
@@ -71,6 +73,8 @@ def getQuantityFromFile(path, trigger, header):
 # \note The specified file \em must have a column header in SKIRT format, because the information in the header
 # is used to determine the appropriate units for each column. If the file does not have a conforming column header,
 # use the numpy.loadtxt() function directly.
+#
+# The file path is interpreted as described for the pts.utils.absPath() function.
 #
 # The columns to be loaded can be specified in one of the following ways:
 #  - A sequence (list or tuple) of integers specifying zero-based column indices.
@@ -84,7 +88,7 @@ def getQuantityFromFile(path, trigger, header):
 # all arrays have the same length.
 #
 def loadColumns(path, columns=None):
-    path = pp.absolute(path)
+    path = ut.absPath(path)
 
     # parse the header
     header = []
@@ -138,7 +142,7 @@ def loadColumns(path, columns=None):
 
     # load the data and assign units
     data = np.loadtxt(path, usecols=usecols, ndmin=2, unpack=True)
-    return [ coldata << su.unit(header[colindex][1]) for colindex, coldata in zip(usecols, data) ]
+    return [coldata << smunit(header[colindex][1]) for colindex, coldata in zip(usecols, data)]
 
 
 ## This helper function returns true is the specified value can be converted to an integer, and False otherwise.
@@ -171,7 +175,7 @@ def _indexForDescriptionInHeader(spec, header):
 # information provided to the function, and automatically converting the data to the specified units.
 #
 # The function expects the following arguments:
-#  - \em path: the absolute or relative path to the output file.
+#  - \em path: the file path to the output file, interpreted as described for the pts.utils.absPath() function.
 #  - \em quantities: a sequence of astropy quantity arrays of the same length, one for each column
 #    (if the output has only a single row, each item in sequence is a scalar scalar astropy quantity).
 #  - \em units: a string containing a comma-separated list of valid SKIRT unit strings.
@@ -192,10 +196,10 @@ def saveColumns(path, quantities, units, descriptions):
         raise ValueError("Number of units or descriptions does not match number of quantities")
 
     # convert the quantities to the requested units
-    quantities = [ quantity.to(su.unit(unit)) for quantity,unit in zip(quantities,units) ]
+    quantities = [quantity.to(smunit(unit)) for quantity, unit in zip(quantities, units)]
 
     # open the file
-    path = pp.absolute(path)
+    path = ut.absPath(path)
     with open(path, 'wt') as outfile:
 
         # write the header

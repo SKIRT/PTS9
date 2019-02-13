@@ -13,8 +13,8 @@
 # -----------------------------------------------------------------
 
 import astropy.units as u
-import pts.band.broadband as bb
-import pts.storedtable.io
+import pts.band as bnd
+import pts.storedtable as stab
 
 # -----------------------------------------------------------------
 
@@ -24,8 +24,8 @@ import pts.storedtable.io
 def writeBroadBands(inFilePaths, outFilePaths):
 
     # loop over all builtin bands
-    for name in bb.builtinBandNames():
-        band = bb.BroadBand(name)
+    for name in bnd.builtinBandNames():
+        band = bnd.BroadBand(name)
 
         # construct the output file path based on the band ID
         outFilePath = outFilePaths[0].replace("*",name)
@@ -34,7 +34,7 @@ def writeBroadBands(inFilePaths, outFilePaths):
         w, T = band.transmissionCurve()
 
         # write stored table
-        pts.storedtable.io.writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [w.to_value(u.m)],
-                                                         ['T'], ['1'], ['lin'], [T.to_value(u.m**(-1))])
+        stab.writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [w.to_value(u.m)],
+                                           ['T'], ['1'], ['lin'], [T.to_value(u.m**(-1))])
 
 # -----------------------------------------------------------------

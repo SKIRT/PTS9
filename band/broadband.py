@@ -17,7 +17,7 @@
 import astropy.units as u
 import numpy as np
 import xml.etree.ElementTree
-import pts.utils.path as pp
+import pts.utils as ut
 
 # -----------------------------------------------------------------
 
@@ -379,7 +379,7 @@ class BroadBand:
     def _loadSVO(self):
         # get band info
         subdir, filename, self._photoncounter = self._bandinfo[self._bandname]
-        filepath = pp.data(BroadBand) / subdir / filename
+        filepath = ut.dataPath(BroadBand) / subdir / filename
 
         # load the XML tree
         with open(filepath, 'r') as bandfile: bandtree = xml.etree.ElementTree.parse(bandfile)
@@ -395,7 +395,7 @@ class BroadBand:
     def _loadJCMT(self):
         subdir, filename, dummy = self._bandinfo[self._bandname]
         self._photoncounter = False
-        filepath = pp.data(BroadBand) / subdir / filename
+        filepath = ut.dataPath(BroadBand) / subdir / filename
         self._wavelengths, self._transmissions = np.loadtxt(filepath, unpack=True)
 
     ## This function loads the transmission curve for the PLANCK format. It expects _bandname to be set,
@@ -404,7 +404,7 @@ class BroadBand:
         # get band info
         subdir, filename, dummy = self._bandinfo[self._bandname]
         self._photoncounter = False
-        filepath = pp.data(BroadBand) / subdir / filename
+        filepath = ut.dataPath(BroadBand) / subdir / filename
 
         # load text columns and process depending on instrument type
         if "LFI" in self._bandname:
@@ -440,7 +440,7 @@ class BroadBand:
     def _loadALMA(self):
         subdir, filename, (wmin, wmax) = self._bandinfo[self._bandname]
         self._photoncounter = False
-        filepath = pp.data(BroadBand) / subdir / filename
+        filepath = ut.dataPath(BroadBand) / subdir / filename
 
         # load text columns
         frequencies, transmissions = np.loadtxt(filepath, usecols=(0, 1), unpack=True)

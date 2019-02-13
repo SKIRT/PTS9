@@ -14,8 +14,8 @@
 # -----------------------------------------------------------------
 
 # initialize PTS for use from the Terminal command line
-import pts.admin.initialize
-pts.admin.initialize.initializePTS(prompt=True)
+from .initialize import initializePTS
+initializePTS(prompt=True)
 
 # -----------------------------------------------------------------
 
@@ -34,7 +34,7 @@ def do(commandline):
     else: arguments = list(commandline)
 
     # perform the command
-    import pts.admin.command
-    pts.admin.command.doWithCommandLineArguments(arguments)
+    from .command import doWithCommandLineArguments
+    doWithCommandLineArguments(arguments)
 
 # -----------------------------------------------------------------

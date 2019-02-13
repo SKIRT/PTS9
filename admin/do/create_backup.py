@@ -74,15 +74,13 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
     import shutil
     import subprocess
     import zipfile
-    import pts.utils.error as pe
-    import pts.utils.path as pp
-    import pts.utils.time
+    import pts.utils as ut
 
     # get the path to the project parent directory
-    projectdir = pp.projectParent()
+    projectdir = ut.projectParentPath()
 
     # create the backup directory
-    backupdir = projectdir / "Backup" / ("Backup" + "--" + pts.utils.time.timestamp())
+    backupdir = projectdir / "Backup" / ("Backup" + "--" + ut.timestamp())
     logging.info("Creating backup directory: {!s}".format(backupdir))
     backupdir.mkdir()
 
@@ -95,10 +93,10 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
                 # split the line in tokens
                 tokens = line.split()
                 if len(tokens)!=2 and len(tokens)!=4:
-                    raise pe.UserError("Backup instruction line has {} tokens rather than 2 or 4".format(len(tokens)))
+                    raise ut.UserError("Backup instruction line has {} tokens rather than 2 or 4".format(len(tokens)))
                 datatype = tokens[0]
                 if not datatype in ["original", "derived", "repository"]:
-                    raise pe.UserError("Unsupported backup instruction data characterization: '{}'".format(datatype))
+                    raise ut.UserError("Unsupported backup instruction data characterization: '{}'".format(datatype))
                 sourcedir = tokens[1]
 
                 # for original and derived, create regular backup archive
@@ -108,7 +106,7 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
                     exclude = ""
                     if len(tokens)==4:
                         if tokens[2] != "exclude":
-                            raise pe.UserError("Expected 'exclude' in backup instruction line, not '{}'" \
+                            raise ut.UserError("Expected 'exclude' in backup instruction line, not '{}'" \
                                                .format(tokens[2]))
                         exclude = tokens[3]
 

@@ -9,9 +9,11 @@
 #  Package initialization file
 # -----------------------------------------------------------------
 
-## \package pts.band Facilities representing broadband filters, including transmission curve data
+## \package pts.band Facilities for representing broadband filters, including transmission curve data
 #
 # This package includes facilities for representing broadband filters, including transmission curve data
 # for a set of standard bands, options to produce basic plots for these curves, and the capability to
 # convolve SEDs or frame data cubes with the transmission curves.
 #
+
+from .broadband import BroadBand, builtinBandNames

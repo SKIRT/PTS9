@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.storedtable.plot Plot data from a SKIRT stored table file
+## \package pts.visual.plotstoredtable Plot data from a SKIRT stored table file
 #
 # This module offer functions to create plots from the data in a SKIRT stored table file.
 #
@@ -15,9 +15,9 @@
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
-import pts.simulation.units as su
-import pts.storedtable.io
-import pts.utils.path as pp
+import pts.simulation as sm
+import pts.storedtable as stab
+import pts.utils as ut
 
 # -----------------------------------------------------------------
 
@@ -32,8 +32,7 @@ import pts.utils.path as pp
 # Thus, by default, the script plots the first table quantity as a function of the first table axis,
 # with half-way values for the other axes, if any.
 #
-# The table file path and the plot file path are interpreted according to the rules described for
-# the pts.utils.path.absolute() function.
+# The table file path and the plot file path are interpreted as described for the pts.utils.absPath() function.
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
 def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
@@ -41,7 +40,7 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
                          plotFilePath=None, figsize=(8,6)):
 
     # load the complete stored table
-    table = pts.storedtable.io.readStoredTable(tableFilePath)
+    table = stab.readStoredTable(tableFilePath)
 
     # get info on horizontal axis
     horName = table['axisNames'][horAxis]
@@ -72,12 +71,12 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
     if horScale == 'log': plt.xscale('log')
     if verScale == 'log': plt.yscale('log')
     plt.plot(horGrid, verValues)
-    plt.xlabel(horName + su.latex(horUnit))
-    plt.ylabel(verName + su.latex(verUnit))
+    plt.xlabel(horName + sm.latex(horUnit))
+    plt.ylabel(verName + sm.latex(verUnit))
 
     # if a filepath is provided, save the figure; otherwise leave it open
     if plotFilePath is not None:
-        plotpath = pp.absolute(plotFilePath)
+        plotpath = ut.absPath(plotFilePath)
         plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
         logging.info("Created {}".format(plotpath))
@@ -90,7 +89,7 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
 # of the plot, such as what to show on the horizontal and vertical axis, can be configured interactively via
 # a user interface created through the ipywidgets package using the metadata in the stored table file.
 #
-# The table file path is interpreted according to the rules described for the pts.utils.path.absolute() function.
+# The table file path is interpreted as described for the pts.utils.absPath() function.
 # The generated figure is not saved and is left open so that is displayed in notebooks.
 #
 # The function returns the stored table dictionary loaded by pts.storedtable.io.readStoredTable so that
@@ -134,12 +133,12 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
         if verScale == 'log': plt.yscale('log')
         plt.plot(horGrid, verValues)
         plt.vlines([args[horName]], verValues.min(), verValues.max(), linestyle='--')
-        plt.xlabel(horName + su.latex(horUnit))
-        plt.ylabel(verName + su.latex(verUnit))
+        plt.xlabel(horName + sm.latex(horUnit))
+        plt.ylabel(verName + sm.latex(verUnit))
         plt.show()
 
     # load the complete stored table
-    table = pts.storedtable.io.readStoredTable(tableFilePath)
+    table = stab.readStoredTable(tableFilePath)
 
     # build a dictionary with a slider for each axis in the data hypercube
     axisSliders = {}

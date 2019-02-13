@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.band.plot Plot built-in broadbands in a given wavelength range or of a given family
+## \package pts.visual.plotbands Plot built-in broadbands in a given wavelength range or of a given family
 #
 # This module offers a function to create a plot of the transmission curves for all built-in broadbands
 # with a pivot wavelength in a given wavelength range, and/or with a band name that contains specified segments.
@@ -16,9 +16,9 @@
 import astropy.units as u
 import logging
 import matplotlib.pyplot as plt
-import pts.band.broadband as bb
-import pts.simulation.units as su
-import pts.utils.path as pp
+import pts.band as bnd
+import pts.simulation as sm
+import pts.utils as ut
 
 # -----------------------------------------------------------------
 
@@ -29,21 +29,21 @@ import pts.utils.path as pp
 #  - \em nameSegments (string or iterable of strings): if specified, the band name must contain
 #    at least one of these segments
 #
-# The plot file path is interpreted according to the rules described for the pts.utils.path.absolute() function.
+# The plot file path is interpreted as described for the pts.utils.absPath() function.
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
 def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, nameSegments=None, *,
                      plotFilePath=None, figsize=(20,6)):
 
     # load all bands that satisfy the specified criteria
-    bands = [ bb.BroadBand(name) for name in bb.builtinBandNames() ]
+    bands = [ bnd.BroadBand(name) for name in bnd.builtinBandNames() ]
     bands = [ band for band in bands if minWavelength <= band.pivotWavelength() <= maxWavelength ]
     if nameSegments is not None:
         if isinstance(nameSegments, str): nameSegments = [ nameSegments ]
         bands = [ band for band in bands if any([s.lower() in band.name().lower().split("_") for s in nameSegments]) ]
 
     # sort the remaining bands on pivot wavelength
-    bands = sorted(bands, key=bb.BroadBand.pivotWavelength)
+    bands = sorted(bands, key=bnd.BroadBand.pivotWavelength)
     logging.info("Plotting {} built-in bands...".format(len(bands)))
 
     # setup the figure
@@ -69,12 +69,12 @@ def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, na
     plt.grid(True, axis='y')
 
     # add axis labels and a legend
-    plt.xlabel(r"$\lambda$" + su.latex(wavelengths), fontsize='large')
+    plt.xlabel(r"$\lambda$" + sm.latex(wavelengths), fontsize='large')
     plt.ylabel("Transmission", fontsize='large')
 
     # if a filepath is provided, save the figure; otherwise leave it open
     if plotFilePath is not None:
-        plotpath = pp.absolute(plotFilePath)
+        plotpath = ut.absPath(plotFilePath)
         plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
         logging.info("Created {}".format(plotpath))

@@ -15,8 +15,8 @@
 
 import subprocess
 import sys
-import pts.simulation.simulation as sim
-import pts.utils.path as pp
+import pts.utils as ut
+from .simulation import Simulation
 
 # -----------------------------------------------------------------
 
@@ -24,9 +24,9 @@ import pts.utils.path as pp
 # given command line arguments for execution on the local host.
 class Skirt:
 
-    ## The constructor accepts an optional argument specifying the path to the SKIRT executable to be used.
-    # If the path is specified, it should include the "skirt" filename of the executable. The path may be absolute,
-    # relative to a user's home folder, or relative to the current working directory.
+    ## The constructor accepts an optional argument specifying the file path to the SKIRT executable to be used.
+    # If the path is specified, it should include the "skirt" filename of the executable. Otherwise the path
+    # is interpreted as described for the pts.utils.absPath() function.
     # If the path is not specified, the constructor looks for a SKIRT executable in the project structure including
     # this PTS source file, assuming that SKIRT is built under a \c ~/SKIRT9 or \c SKIRT directory residing next
     # to the PTS9 or PTS directory.
@@ -34,11 +34,11 @@ class Skirt:
 
         # set the SKIRT path
         if path is None:
-            self._path = pp.skirt()
+            self._path = ut.skirtPath()
             if self._path is None:
                 raise ValueError("Cannot locate default SKIRT executable in PTS/SKIRT project directory structure")
         else:
-            self._path = pp.absolute(path)
+            self._path = ut.absPath(path)
             if not self._path.is_file():
                 raise ValueError("Specified SKIRT executable does not exist: {}".format(self._path))
 
@@ -54,9 +54,8 @@ class Skirt:
     #  instance corresponding to the simulation being performed (or attempted, in case of failure). The function
     #  supports asynchronous execution, allowing the caller to perform other tasks while the simulation is running.
     #
-    # - \em skiFilePath: the file path for the configuration file (\em ski file) to be executed, specified as
-    #   a string or a pathlib.Path object. In both cases the path may be absolute, relative to a user's home folder,
-    #   or relative to the current working directory.
+    # - \em skiFilePath: the file path for the configuration file (\em ski file) to be executed, interpreted as
+    #   as described for the pts.utils.absPath() function.
     # - \em inDirPath: a string specifying the absolute or relative directory path for simulation input files.
     # - \em outDirPath: a string specifying the absolute or relative directory path for simulation output files.
     # - \em skiRelative: if \c True, the simulation input/output directory paths are relative to the directory of the
@@ -107,16 +106,16 @@ class Skirt:
         arguments += [str(self._path)]
 
         # ski file
-        arguments += [str(pp.absolute(skiFilePath))]
+        arguments += [str(ut.absPath(skiFilePath))]
 
         # i/o path options
         if skiRelative:
-            base = pp.absolute(skiFilePath).parent
-            inpath = pp.absolute(base / inDirPath)
-            outpath = pp.absolute(base / outDirPath)
+            base = ut.absPath(skiFilePath).parent
+            inpath = ut.absPath(base / inDirPath)
+            outpath = ut.absPath(base / outDirPath)
         else:
-            inpath = pp.absolute(inDirPath)
-            outpath = pp.absolute(outDirPath)
+            inpath = ut.absPath(inDirPath)
+            outpath = ut.absPath(outDirPath)
         arguments += ["-i", str(inpath)]
         arguments += ["-o", str(outpath)]
 
@@ -140,7 +139,7 @@ class Skirt:
         else:
             self._process = subprocess.Popen(arguments, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        return sim.Simulation(skiFilePath=skiFilePath, inDirPath=inpath, outDirPath=outpath, process=self._process)
+        return Simulation(skiFilePath=skiFilePath, inDirPath=inpath, outDirPath=outpath, process=self._process)
 
     ## This function returns True if the simulation started with the most recent call to the execute() function
     # is still running, and False otherwise.

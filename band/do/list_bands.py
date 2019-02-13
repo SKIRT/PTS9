@@ -16,14 +16,14 @@
 def do() -> "list all built-in broadbands":
 
     import logging
-    import pts.band.broadband as bb
+    import pts.band as bnd
 
     # load all bands
-    bands = [ bb.BroadBand(name) for name in bb.builtinBandNames() ]
+    bands = [ bnd.BroadBand(name) for name in bnd.builtinBandNames() ]
     logging.info("There are {} built-in bands:".format(len(bands)))
 
     # sort them on pivot wavelength within each band family
-    bands = sorted(bands, key=bb.BroadBand.pivotWavelength)
+    bands = sorted(bands, key=bnd.BroadBand.pivotWavelength)
     bands = sorted(bands, key=lambda b: b.name().split('_')[0])
 
     # list band info

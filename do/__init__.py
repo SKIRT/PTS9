@@ -16,3 +16,5 @@
 # The \c __main__ module in this package enables executing any of these scripts from the command line,
 # without having to specify the exact location.
 #
+
+from .command import listCommands, CommandScript

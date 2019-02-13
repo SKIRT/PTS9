@@ -9,12 +9,8 @@
 #  Package initialization file
 # -----------------------------------------------------------------
 
-## \package pts.utils General utilities
+## \package pts.visual.do Commands for visualizing SKIRT-related data through plots and images
 #
-# This package includes utilities deemed sufficiently generic that they don’t belong in one of the other packages,
-# and that are likely shared between multiple packages.
+# The Python scripts residing in the do sub-directory of this package implement commands
+# for visualizing SKIRT-related data through plots (e.g. spectra) and images (e.g. data frames).
 #
-
-from .error import UserError
-from .path import dataPath, ptsPath, projectParentPath, skirtPath, absPath
-from .time import timestamp

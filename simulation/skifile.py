@@ -15,8 +15,8 @@
 
 import datetime
 import lxml.etree as etree
-import pts.simulation.units as su
-import pts.utils.path as pp
+import pts.utils as ut
+from .units import unit as smunit
 
 # -----------------------------------------------------------------
 
@@ -41,13 +41,12 @@ class SkiFile:
     # ---------- Constructing and saving -----------------------------
 
     ## The constructor loads the contents of the specified ski file into a new SkiFile instance.
-    # The path may be specified as a string or a pathlib.Path object.
-    # It may be absolute, relative to a user's home folder, or relative to the current working directory.
+    # The file path is interpreted as described for the pts.utils.absPath() function.
     # The filename of the ski file \em must end with ".ski" or with "_parameters.xml".
     #
     def __init__(self, skiFilePath):
         # get the absolute path and verify the file name
-        self._path = pp.absolute(skiFilePath)
+        self._path = ut.absPath(skiFilePath)
         if not self._path.name.lower().endswith((".ski", "_parameters.xml")):
             raise ValueError("Invalid filename extension for ski file")
 
@@ -59,14 +58,13 @@ class SkiFile:
         return self._path
 
     ## This function saves the (possibly updated) contents of the SkiFile instance into the specified file.
-    # The file path may be specified as a string or a pathlib.Path object.
-    # It may be absolute, relative to a user's home folder, or relative to the current working directory.
+    # The file path is interpreted as described for the pts.utils.absPath() function.
     # The name of the file \em must end with ".ski" or with "_parameters.xml".
     # Saving to and thus replacing the ski file from which this
     # SkiFile instance was originally constructed is allowed, but often not the intention.
     def saveTo(self, saveFilePath):
         # get the absolute path and verify the file name
-        path = pp.absolute(saveFilePath)
+        path = ut.absPath(saveFilePath)
         if not path.name.lower().endswith(".ski"):
             raise ValueError("Invalid filename extension for ski file")
 
@@ -179,7 +177,7 @@ class SkiFile:
         segments = value.split()
         if len(segments) != 2:
             raise ValueError("Ski file quantity attribute has no units or invalid format: '{}'".format(value))
-        return float(segments[0]) * su.unit(segments[1])
+        return float(segments[0]) * smunit(segments[1])
 
     ## This function sets an attribute value representing a physical quantity with given units.
     # The function arguments are the same as those for the setStringAttribute() function, except that the
@@ -195,7 +193,7 @@ class SkiFile:
             if len(segments) != 2:
                 raise ValueError("Ski file quantity attribute has no units or invalid format: '{}'".format(oldvalue))
             skirtUnit = segments[1]
-        newvalue = _prettyStringForFloat(value.to(su.unit(skirtUnit)).value) + " " + skirtUnit
+        newvalue = _prettyStringForFloat(value.to(smunit(skirtUnit)).value) + " " + skirtUnit
         self.setStringAttribute(xpath, attribute, newvalue)
 
      # ---------- Specific functions -----------------------------

@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.band.do.plot_bands Plot built-in broadband transmission curves
+## \package pts.visual.do.plot_bands Plot built-in broadband transmission curves
 #
 # This script creates a plot of the transmission curves for all built-in broadbands that satisfy the
 # all of the specified selection criteria:
@@ -25,9 +25,9 @@ def do( wmin : (float,"smallest pivot wavelength to be plotted, in micron") = 0.
         ) -> "plot built-in broadbands in a given wavelength range":
 
     import astropy.units as u
-    import pts.band.plot
-    pts.band.plot.plotBuiltinBands(plotFilePath="FigBands.pdf",
-                                   minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
-                                   nameSegments=names.split(',') if len(names)>0 else None)
+    import pts.visual as vis
+    vis.plotBuiltinBands(plotFilePath="FigBands.pdf",
+                         minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
+                         nameSegments=names.split(',') if len(names)>0 else None)
 
 # ----------------------------------------------------------------------

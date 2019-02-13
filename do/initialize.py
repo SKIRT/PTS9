@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.admin.initialize Initialize PTS logging and matplotlib backend depending on use case
+## \package pts.do.initialize Initialize PTS logging and matplotlib backend depending on use case
 #
 # This module offers facilities for initializing the PTS package depending on the way it is being invoked.
 # Specifically, the logging and matplotlib backend are configured appropriately.
@@ -13,7 +13,7 @@
 
 # -----------------------------------------------------------------
 
-# This function configures the PTS package depending on the way it will be invoked.
+## This function configures the PTS package depending on the way it will be invoked.
 # Specifically, the logging and matplotlib backend are configured appropriately.
 #
 # By default, logging is configured for terminal command line use, i.e. including a time stamp.

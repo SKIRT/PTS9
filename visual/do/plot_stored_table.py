@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.storedtable.do.plot_stored_table Plot a selected curve from data in a SKIRT stored table file
+## \package pts.visual.do.plot_stored_table Plot a selected curve from data in a SKIRT stored table file
 #
 # This script plots a particular 1D curve from the data in a specified SKIRT stored table file.
 #
@@ -34,10 +34,10 @@ def do( filepath : (str,"name or path of SKIRT stored table file"),
         ax4 : (float,"ordinate value for the table axis with index 4") = None,
         ) -> "plot a curve from data in a SKIRT stored table file":
 
-    import pts.storedtable.plot
+    import pts.visual as vis
 
-    pts.storedtable.plot.plotStoredTableCurve(tableFilePath=filepath, horAxis=hor, verAxis=ver,
-                                              axis0=ax0, axis1=ax1, axis2=ax2, axis3=ax3, axis4=ax4,
-                                              plotFilePath="FigStoredTable.pdf")
+    vis.plotStoredTableCurve(tableFilePath=filepath, horAxis=hor, verAxis=ver,
+                             axis0=ax0, axis1=ax1, axis2=ax2, axis3=ax3, axis4=ax4,
+                             plotFilePath="FigStoredTable.pdf")
 
 # -----------------------------------------------------------------

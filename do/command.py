@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.admin.command Execute one of the PTS command scripts from the command line
+## \package pts.do.command Execute one of the PTS command scripts from the command line
 #
 # This module enables command scripts to be executed from the command line to expose PTS functionality
 # to a terminal session. The doWithCommandLineArguments() function is invoked from the \_\_main\_\_ module in the
@@ -127,9 +127,7 @@ import importlib
 import inspect
 import logging
 import sys
-
-import pts.utils.error as pe
-import pts.utils.path as pp
+import pts.utils as ut
 
 # -----------------------------------------------------------------
 
@@ -152,7 +150,7 @@ def doWithCommandLineArguments(arguments = None):
         return
 
     # get the path to the top-level pts directory
-    ptsdir = pp.pts()
+    ptsdir = ut.ptsPath()
 
     # make a list of all pts package directories containing a "do" directory
     packagenames = [ x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]
@@ -187,7 +185,7 @@ def doWithCommandLineArguments(arguments = None):
 ## This public function lists all available PTS commands, per package.
 def listCommands():
     # get the path to the top-level pts directory
-    ptsdir = pp.pts()
+    ptsdir = ut.ptsPath()
 
     # loop over all pts package directories containing a "do" directory
     for pname in sorted([ x.name for x in ptsdir.iterdir() if x.is_dir() and (x/"do").is_dir() ]):
@@ -277,7 +275,7 @@ class CommandScript:
         logging.info("Starting {}..." .format(self._name))
         try:
             self._dofunction(**args)
-        except pe.UserError as error:
+        except ut.UserError as error:
             logging.error(error.message)
             logging.info(parser.format_help())
             return

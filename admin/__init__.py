@@ -11,6 +11,6 @@
 
 ## \package pts.admin Administrative facilities
 #
-# This package contains facilities to perform administrative duties, such as performing and listing pts commands,
+# This package offers facilities to perform administrative duties, such as performing and listing pts commands,
 # creating backup archives, and removing compiled Python files.
 #

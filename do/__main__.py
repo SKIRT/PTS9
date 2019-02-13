@@ -24,11 +24,11 @@
 # -----------------------------------------------------------------
 
 # initialize PTS for use from the Terminal command line
-import pts.admin.initialize
-pts.admin.initialize.initializePTS()
+from .initialize import initializePTS
+initializePTS()
 
 # invoke the do() function
-import pts.admin.command
-pts.admin.command.doWithCommandLineArguments()
+from .command import doWithCommandLineArguments
+doWithCommandLineArguments()
 
 # -----------------------------------------------------------------

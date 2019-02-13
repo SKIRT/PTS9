@@ -16,8 +16,7 @@ import glob
 import gzip
 import numpy as np
 import scipy.io
-import pts.storedtable.io
-import pts.storedtable.tokenizedfile
+import pts.storedtable as stab
 
 # -----------------------------------------------------------------
 
@@ -49,8 +48,8 @@ def createQuasarSED(inFilePaths, outFilePaths):
     L[4] = L[3] * (w[4]/w[3])**-4.0
 
     # write stored table
-    pts.storedtable.io.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w*1e-6],
-                                        ['Llambda'], ['W/m'], ['log'], [L])
+    stab.writeStoredTable(outFilePaths[0], ['lambda'], ['m'], ['log'], [w*1e-6],
+                                           ['Llambda'], ['W/m'], ['log'], [L])
 
 # -----------------------------------------------------------------
 
@@ -60,8 +59,8 @@ def createQuasarSED(inFilePaths, outFilePaths):
 def convertTextSEDinWattsPerMicron(inFilePaths, outFilePaths):
     for inFilePath, outFilePath in zip(inFilePaths, outFilePaths):
         w, L = np.loadtxt(inFilePath, unpack=True)
-        pts.storedtable.io.writeStoredTable(outFilePath, ['lambda'], ['m'], ['log'], [w*1e-6],
-                                            ['Llambda'], ['W/m'], ['log'], [L*1e6])
+        stab.writeStoredTable(outFilePath, ['lambda'], ['m'], ['log'], [w*1e-6],
+                                           ['Llambda'], ['W/m'], ['log'], [L*1e6])
 
 # -----------------------------------------------------------------
 
@@ -78,7 +77,7 @@ def convertBruzualCharlotSEDFamily(inFilePaths, outFilePaths):
 
         # read the age and wavelength grids from one of the files
         with gzip.open(inFilePath.replace("MM","22"), 'rt') as infile:
-            tokens = pts.storedtable.tokenizedfile.TokenizedFile(infile)
+            tokens = stab.TokenizedFile(infile)
             Nt = int(tokens.next())
             t = np.array([ float(tokens.next()) for p in range(Nt) ])
             while tokens.next()!="Padova": pass
@@ -97,7 +96,7 @@ def convertBruzualCharlotSEDFamily(inFilePaths, outFilePaths):
         # read the luminosities from each of the files
         for m in range(NZ):
             with gzip.open(inFilePath.replace("MM",Zcode[m]), 'rt') as infile:
-                tokens = pts.storedtable.tokenizedfile.TokenizedFile(infile)
+                tokens = stab.TokenizedFile(infile)
                 # skip the ages and wavelengths
                 while tokens.next()!="Padova": pass
                 for i in range(3): tokens.skipLine()
@@ -117,9 +116,9 @@ def convertBruzualCharlotSEDFamily(inFilePaths, outFilePaths):
         Angstrom = 1e-10
         Lsun = 3.839e26
         t[0] = 1  # avoid zero values in a logarithmically scaled axis
-        pts.storedtable.io.writeStoredTable(outFilePath,
-                                            ['lambda','Z','t'], ['m','1','yr'], ['log','log','log'], [w*Angstrom,Z,t],
-                                            ['Llambda'], ['W/m'], ['log'], [L*(Lsun/Angstrom)])
+        stab.writeStoredTable(outFilePath,
+                              ['lambda','Z','t'], ['m','1','yr'], ['log','log','log'], [w*Angstrom,Z,t],
+                              ['Llambda'], ['W/m'], ['log'], [L*(Lsun/Angstrom)])
 
 # -----------------------------------------------------------------
 
@@ -156,9 +155,9 @@ def convertMarastonSEDFamily(inFilePaths, outFilePaths):
         L *= 1e3
 
         # write stored table
-        pts.storedtable.io.writeStoredTable(outFilePath,
-                                            ['lambda','Z','t'], ['m','1','yr'], ['log','log','log'], [w,Z,t],
-                                            ['Llambda'], ['W/m'], ['log'], [L])
+        stab.writeStoredTable(outFilePath,
+                              ['lambda','Z','t'], ['m','1','yr'], ['log','log','log'], [w,Z,t],
+                              ['Llambda'], ['W/m'], ['log'], [L])
 
 # -----------------------------------------------------------------
 
@@ -184,9 +183,9 @@ def convertStarburst99SEDFamily(inFilePaths, outFilePaths):
     L = 10**hdul['SED'].data
 
     # write stored table
-    pts.storedtable.io.writeStoredTable(outFilePaths[0],
-                                        ['lambda','Z','t'], ['m','1','yr'], ['log','log','log'], [w,Z,t],
-                                        ['Llambda'], ['W/m'], ['log'], [L])
+    stab.writeStoredTable(outFilePaths[0],
+                          ['lambda','Z','t'], ['m','1','yr'], ['log','log','log'], [w,Z,t],
+                          ['Llambda'], ['W/m'], ['log'], [L])
 
 # -----------------------------------------------------------------
 
@@ -227,7 +226,7 @@ def convertMappingsSEDFamily(inFilePaths, outFilePaths):
     L = np.flip(L,0)
 
     # write stored table
-    pts.storedtable.io.writeStoredTable(outFilePaths[0],
+    stab.writeStoredTable(outFilePaths[0],
           ['lambda','Z','logC','P','fPDR'], ['m','1','1','Pa','1'], ['log','log','lin','log','lin'], [w,Z,logC,P,fPDR],
           ['Llambda'], ['W/m'], ['lin'], [L])   # use linear interpolation to make fPDR interpolation work
 
@@ -290,8 +289,8 @@ def convertCastelliKuruczSEDFamily(inFilePaths, outFilePaths):
     F *= 1e7            # from erg/s/cm2/A to W/m2/m
 
     # write stored table
-    pts.storedtable.io.writeStoredTable(outFilePaths[0],
-                            ['lambda','Z','Teff','g'], ['m','1','K','m/s2'], ['log','log','log','log'], [w,Z,T,g],
-                            ['Flambda'], ['W/m2/m'], ['log'], [F])
+    stab.writeStoredTable(outFilePaths[0],
+                          ['lambda','Z','Teff','g'], ['m','1','K','m/s2'], ['log','log','log','log'], [w,Z,T,g],
+                          ['Flambda'], ['W/m2/m'], ['log'], [F])
 
 # -----------------------------------------------------------------

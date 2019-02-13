@@ -41,15 +41,16 @@ import functools
 import logging
 import numpy as np
 import struct
-import pts.simulation.units as su
-import pts.utils.path as pp
+import pts.simulation as sm
+import pts.utils as ut
 
 # -----------------------------------------------------------------
 
 ## This function lists relevant metadata about the specified SKIRT stored table file. The printed information
 # includes the names, units and ranges for each of the axes, and the names and units for each of the quantities.
-def listStoredTableInfo(inFilePath):
-    inpath = pp.absolute(inFilePath)
+# The table file path is interpreted as described for the pts.utils.absPath() function.
+def listStoredTableInfo(tableFilePath):
+    inpath = ut.absPath(tableFilePath)
 
     # open the file
     with open(inpath, 'rb') as infile:
@@ -94,9 +95,10 @@ def listStoredTableInfo(inFilePath):
 #  - quantityScales: list of corresponding scales
 #  - for each axis name: array with grid points as an astropy quantity with the appropriate unit
 #  - for each quantity name: array with values as an astropy quantity with the appropriate unit
+# The table file path is interpreted as described for the pts.utils.absPath() function.
 #
-def readStoredTable(inFilePath):
-    inpath = pp.absolute(inFilePath)
+def readStoredTable(tableFilePath):
+    inpath = ut.absPath(tableFilePath)
 
     # open the file
     with open(inpath, 'rb') as infile:
@@ -131,11 +133,11 @@ def readStoredTable(inFilePath):
 
     # add axis grids
     for i in range(numAxes):
-        d[axisNames[i]] = axisGrids[i] << su.unit(axisUnits[i])
+        d[axisNames[i]] = axisGrids[i] << sm.unit(axisUnits[i])
 
     # add quantities information
     for i in range(numQuantities):
-        d[quantityNames[i]] = values[i] << su.unit(quantityUnits[i])
+        d[quantityNames[i]] = values[i] << sm.unit(quantityUnits[i])
 
     return d
 
@@ -160,10 +162,11 @@ def readStoredTable(inFilePath):
 #
 # The sequences must be nonempty and have the same number of items within each group (axis and quantity).
 # A name or unit string must contain 1 to 8 printable and non-whitespace 7-bit ASCII characters.
+# The output table file path is interpreted as described for the pts.utils.absPath() function.
 #
 def writeStoredTable(outFilePath, axisNames, axisUnits, axisScales, axisGrids,
                                   quantityNames, quantityUnits, quantityScales, quantityValues):
-    outpath = pp.absolute(outFilePath)
+    outpath = ut.absPath(outFilePath)
 
     # verify some of the requirements/restrictions on the specified data
     if outpath.suffix != ".stab":

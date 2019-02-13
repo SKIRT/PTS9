@@ -19,17 +19,22 @@
 # Developer Guidelines
 # --------------------
 #
-# This information will move elsewhere over time...
+# This information may be moved elsewhere over time...
 #
-# PTS code uses one of three import styles:
+# __Organization of PTS packages__
 #
-# import style           | comments
-# -----------------------|---------
-# import module          | default style; each reference must include full module name
-# import module as local | style with local name for frequently-used modules as listed below
-# from module import *   | exceptional style for pulling all symbols into the local namespace
+# Each PTS package (directory just inside the top-level pts directory) exposes all public functions and classes
+# (i.e. those intended for use outside of the package) at the package level. The functionality is implemented
+# in various modules (python source files) residing inside the package. The initialization file for each package
+# explicitly places the public names into the package namespace using explicit imports.
 #
-# The following frequently-used modules are imported with a local name:
+# __Import styles used in PTS code__
+#
+# Default style for importing external packages (including standard-library packages):
+#
+#     import some.package           # each reference must include full package name
+#
+# External packages imported with a local name:
 #
 #     import astropy.io.fits as fits
 #     import astropy.units as u
@@ -37,13 +42,20 @@
 #     import matplotlib.pyplot as plt
 #     import numpy as np
 #
-#     import pts.band.broadband as bb
-#     import pts.simulation.simulation as sim
-#     import pts.simulation.skifile as ski
-#     import pts.simulation.skirt as sk
-#     import pts.simulation.units as su
-#     import pts.utils.error as pe
-#     import pts.utils.path as pp
+# Importing other PTS packages (or same package from within do subdirectory):
 #
+#     import pts.admin as adm
+#     import pts.band as bnd
+#     import pts.do as do
+#     import pts.simulation as sm
+#     import pts.storedtable as stab
+#     import pts.utils as ut
+#     import pts.visual as vis
 #
+# Importing symbols from within the same package, including initialization file:
+#
+#     from .module import name      # default style is to use explicit import
+#     from .module import *         # exceptional style, for example in conversionspec.py
+#
+
 

@@ -23,7 +23,7 @@
 
 import logging
 import os
-import pts.utils.error as pe
+import pts.utils as ut
 
 # import the modules that implement the conversions
 from .convert_band import *
@@ -74,7 +74,7 @@ def findSubDirectory(rootPath, subDirectory):
                    return os.path.join(dirpath, dirname)
 
     # if no match is found, raise an error
-    raise pe.UserError("{} not found in {}".format(subDirectory, rootPath))
+    raise ut.UserError("{} not found in {}".format(subDirectory, rootPath))
 
 
 # -----------------------------------------------------------------

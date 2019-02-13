@@ -18,8 +18,8 @@
 def do( filepath : (str,"name or path of SKIRT stored table file"),
         ) -> "list basic metadata for a SKIRT stored table file":
 
-    import pts.storedtable.io
+    import pts.storedtable as stab
 
-    pts.storedtable.io.listStoredTableInfo(filepath)
+    stab.listStoredTableInfo(filepath)
 
 # -----------------------------------------------------------------
