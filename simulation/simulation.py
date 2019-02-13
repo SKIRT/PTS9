@@ -15,6 +15,7 @@
 import os
 import pts.utils as ut
 from .skifile import SkiFile
+from .text import loadColumns
 
 # -----------------------------------------------------------------
 
@@ -265,6 +266,48 @@ class _SimulationEntity:
     # not include a unit string, an error is raised.
     def getQuantityAttribute(self, attribute):
         return self._simulation.getQuantityAttribute(self._xpath, attribute)
+
+    ## This function returns the value of the specified entity attribute as an astropy quantity array
+    # with given units, assuming comma-separated values in the attribute value. If the entity does not have
+    # the specified attribute, or if one of the attribute values does not include a unit string, an error is raised.
+    def getQuantityListAttribute(self, attribute):
+        return self._simulation.getQuantityListAttribute(self._xpath, attribute)
+
+    ## This function returns a list of absolute paths to the output files associated with this entity.
+    # If the \em fileType argument is present, the list is limited to files with a name with a final segment
+    # (i.e. the portion after the simulation prefix an entity name) that ends in the specified string.
+    # The returned list is sorted alphabetically on filename. The list may be empty.
+    def outFilePaths(self, fileType=None):
+        pattern = "{}_{}_*".format(self._simulation.prefix(), self.name())
+        if fileType is not None:
+            pattern += fileType
+        return sorted(self._simulation.outDirPath().glob(pattern))
+
+    ## This function returns an astropy quantity array containing the characteristic wavelengths of the
+    # wavelength grid associated with this entity, or raises an error if this information cannot be obtained.
+    # The function uses the following mechanisms for obtaining the wavelength grid, in the order listed,
+    # until one is successful.
+    #
+    #   - If the simulation has an oligochromatic wavelength regime, read the wavelengths from the ski file
+    #     (in this case all wavelength grids in the simulation are identical).
+    #   - Load the "*_wavelengths.dat" file associated with this entity.
+    #   - Load the "*_sed.dat" file associated with this entity.
+    #
+    # If all mechanisms fail, an error is raised.
+    def wavelengths(self):
+        # for oligochromatic simulations, get the wavelengths from the ski file
+        if self._simulation.isOligo():
+            return self._simulation.getQuantityListAttribute("//SourceSystem", "wavelengths")
+        # try to load from "*_wavelengths.dat" file
+        wavefilepaths = self.outFilePaths("wavelengths.dat")
+        if len(wavefilepaths) == 1:
+            return loadColumns(wavefilepaths[0], (0,))[0]
+        # try to load from "*_sed.dat" file
+        sedfilepaths = self.outFilePaths("sed.dat")
+        if len(sedfilepaths) == 1:
+            return loadColumns(sedfilepaths[0], (0,))[0]
+        # failed
+        raise ValueError("Cannot obtain wavelengths for '{}_{}'".format(self._simulation.prefix(), self.name()))
 
 
 ## An instance of the Instrument class can be spawned from a Simulation object to represent an instrument in the

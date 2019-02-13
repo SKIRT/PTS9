@@ -14,6 +14,7 @@
 # -----------------------------------------------------------------
 
 import datetime
+import numpy as np
 import lxml.etree as etree
 import pts.utils as ut
 from .units import unit as smunit
@@ -196,7 +197,26 @@ class SkiFile:
         newvalue = _prettyStringForFloat(value.to(smunit(skirtUnit)).value) + " " + skirtUnit
         self.setStringAttribute(xpath, attribute, newvalue)
 
-     # ---------- Specific functions -----------------------------
+    ## This function returns an attribute value representing a list of comma-separated physical quantities
+    # with given units as an astropy quantity array. If one of the attribute values does not include a unit string,
+    # or the values do not all use the same units, the function raises an error.
+    # The function arguments are the same as those for the getStringAttribute() function.
+    def getQuantityListAttribute(self, xpath, attribute):
+        unit = None
+        purevalues = []
+        for value in self.getStringAttribute(xpath, attribute).split(','):
+            segments = value.split()
+            if len(segments) != 2:
+                raise ValueError("Ski file quantity attribute has no units or invalid format: '{}'".format(value))
+            if unit is None:
+                unit = segments[1]
+            elif unit != segments[1]:
+                raise ValueError("Ski file quantity attribute has multiple units: '{}' and '{}'" \
+                                 .format(unit, segments[1]))
+            purevalues.append(float(segments[0]))
+        return np.array(purevalues) << smunit(unit)
+
+    # ---------- Specific functions -----------------------------
 
     ## This function returns the number of photon packets launched per simulation segment for primary sources
     def numPrimaryPackets(self):
@@ -205,6 +225,10 @@ class SkiFile:
     ## This function sets the number of photon packets launched per simulation segment for primary sources
     def setNumPrimaryPackets(self, value):
         self.setFloatAttribute("//MonteCarloSimulation", "numPackets", value)
+
+    ## This function returns True if the simulation mode is oligochromatic, False if it is panchromatic
+    def isOligo(self):
+        return "Oligo" in self.getStringAttribute("//MonteCarloSimulation", "simulationMode")
 
     ## This function returns the names of the instruments in the instrument system as a list of strings,
     # in their order of appearance in the ski file.
