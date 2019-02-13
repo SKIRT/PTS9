@@ -14,6 +14,7 @@
 
 import os
 import pts.utils as ut
+import numpy as np
 from .skifile import SkiFile
 from .text import loadColumns
 
@@ -292,6 +293,7 @@ class _SimulationEntity:
     #     (in this case all wavelength grids in the simulation are identical).
     #   - Load the "*_wavelengths.dat" file associated with this entity.
     #   - Load the "*_sed.dat" file associated with this entity.
+    #   - Load any "*.dat" file associated with this entity that has an unambiguous "wavelength" column.
     #
     # If all mechanisms fail, an error is raised.
     def wavelengths(self):
@@ -306,6 +308,35 @@ class _SimulationEntity:
         sedfilepaths = self.outFilePaths("sed.dat")
         if len(sedfilepaths) == 1:
             return loadColumns(sedfilepaths[0], (0,))[0]
+        # try to load from any "*.dat" file with a "wavelength" column
+        for filepath in self.outFilePaths(".dat"):
+            try:
+                return loadColumns(filepath, "wavelength")[0]
+            except ValueError:
+                pass
+        # failed
+        raise ValueError("Cannot obtain wavelengths for '{}_{}'".format(self._simulation.prefix(), self.name()))
+
+    ## This function returns an astropy quantity array containing the wavelength bin widths of the
+    # wavelength grid associated with this entity, or raises an error if this information cannot be obtained.
+    # The function uses the following mechanisms for obtaining the wavelength bin widths, in the order listed,
+    # until one is successful.
+    #
+    #   - Load the "*_wavelengths.dat" file associated with this entity.
+    #   - If the simulation has an oligochromatic wavelength regime, read the wavelengths from the ski file
+    #     and determine the fixed bin width as 1/500 of the shortest wavelength in the list (in this case all
+    #     wavelength grids in the simulation are identical, and the bin widths are determined as here described).
+    #
+    # If all mechanisms fail, an error is raised.
+    def wavelengthBinWidths(self):
+        # try to load from "*_wavelengths.dat" file
+        wavefilepaths = self.outFilePaths("wavelengths.dat")
+        if len(wavefilepaths) == 1:
+            return loadColumns(wavefilepaths[0], (1,))[0]
+        # for oligochromatic simulations, get the wavelengths from the ski file
+        if self._simulation.isOligo():
+            waves = self._simulation.getQuantityListAttribute("//SourceSystem", "wavelengths")
+            return np.repeat(waves.min()/500., len(waves))
         # failed
         raise ValueError("Cannot obtain wavelengths for '{}_{}'".format(self._simulation.prefix(), self.name()))
 
