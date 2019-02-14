@@ -69,7 +69,7 @@ def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, na
     plt.grid(True, axis='y')
 
     # add axis labels and a legend
-    plt.xlabel(r"$\lambda$" + sm.latex(wavelengths), fontsize='large')
+    plt.xlabel(r"$\lambda$" + sm.latexForUnit(wavelengths), fontsize='large')
     plt.ylabel("Transmission", fontsize='large')
 
     # if a filepath is provided, save the figure; otherwise leave it open

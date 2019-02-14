@@ -20,4 +20,4 @@ from .simulation import createSimulation, Simulation, Instrument, Probe
 from .skifile import SkiFile
 from .skirt import Skirt
 from .text import getQuantityFromFile, loadColumns, saveColumns
-from .units import unit, latex
+from .units import unit, latexForUnit, latexForSpectralFlux, latexForSpectralRadiance, latexForSpectralLuminosity

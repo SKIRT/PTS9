@@ -71,8 +71,8 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
     if horScale == 'log': plt.xscale('log')
     if verScale == 'log': plt.yscale('log')
     plt.plot(horGrid, verValues)
-    plt.xlabel(horName + sm.latex(horUnit))
-    plt.ylabel(verName + sm.latex(verUnit))
+    plt.xlabel(horName + sm.latexForUnit(horUnit))
+    plt.ylabel(verName + sm.latexForUnit(verUnit))
 
     # if a filepath is provided, save the figure; otherwise leave it open
     if plotFilePath is not None:
@@ -133,8 +133,8 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
         if verScale == 'log': plt.yscale('log')
         plt.plot(horGrid, verValues)
         plt.vlines([args[horName]], verValues.min(), verValues.max(), linestyle='--')
-        plt.xlabel(horName + sm.latex(horUnit))
-        plt.ylabel(verName + sm.latex(verUnit))
+        plt.xlabel(horName + sm.latexForUnit(horUnit))
+        plt.ylabel(verName + sm.latexForUnit(verUnit))
         plt.show()
 
     # load the complete stored table
