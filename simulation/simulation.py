@@ -12,11 +12,13 @@
 
 # -----------------------------------------------------------------
 
+import astropy.units as u
 import os
 import pts.utils as ut
 import numpy as np
 from .skifile import SkiFile
 from .text import loadColumns
+from .fits import getFitsAxes
 
 # -----------------------------------------------------------------
 
@@ -294,6 +296,7 @@ class _SimulationEntity:
     #   - Load the "*_wavelengths.dat" file associated with this entity.
     #   - Load the "*_sed.dat" file associated with this entity.
     #   - Load any "*.dat" file associated with this entity that has an unambiguous "wavelength" column.
+    #   - Load from any "*.fits" file associated with this entity that has a wavelength-compatible table extension.
     #
     # If all mechanisms fail, an error is raised.
     def wavelengths(self):
@@ -314,6 +317,11 @@ class _SimulationEntity:
                 return loadColumns(filepath, "wavelength")[0]
             except ValueError:
                 pass
+        # try to load from any "*.fits" file with a wavelength table extension
+        for filepath in self.outFilePaths(".fits"):
+            grids = getFitsAxes(filepath)
+            if len(grids) > 2 and grids[2].unit.is_equivalent(u.m):
+                return grids[2]
         # failed
         raise ValueError("Cannot obtain wavelengths for '{}_{}'".format(self._simulation.prefix(), self.name()))
 
