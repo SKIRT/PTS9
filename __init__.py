@@ -36,6 +36,7 @@
 #
 # External packages imported with a local name:
 #
+#     import astropy.constants as const
 #     import astropy.io.fits as fits
 #     import astropy.units as u
 #     import lxml.etree as etree

@@ -29,7 +29,7 @@ from .units import unit as smunit
 def loadFits(path):
     path = ut.absPath(path)
     data, header = fits.getdata(path, header=True)
-    return data.T << smunit(header['BUNIT'])
+    return data.T.astype(float) << smunit(header['BUNIT'])
 
 # -----------------------------------------------------------------
 
@@ -54,7 +54,7 @@ def getFitsAxes(path):
 
         # if there are three axis, read the z grid from the table extension
         hdu = hdul["Z-axis coordinate values"]
-        z = hdu.data["GRID_POINTS"] << smunit(hdu.header["TUNIT1"])
+        z = hdu.data["GRID_POINTS"].astype(float) << smunit(hdu.header["TUNIT1"])
         return x,y,z
 
 ## This helper function constructs a regular linear grid based on the information for an axis in the FITS header

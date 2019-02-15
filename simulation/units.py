@@ -13,6 +13,7 @@
 
 # -----------------------------------------------------------------
 
+import astropy.constants as const
 import astropy.units as u
 import warnings
 
@@ -41,6 +42,71 @@ def unit(unitlike):
     if isinstance(unitlike, u.UnitBase):
         return unitlike
     raise ValueError("Unsupported unit-like type: {}".format(type(unitlike)))
+
+# -----------------------------------------------------------------
+
+## This function accepts a flux density, surface brightness, spectral radiance, or spectral luminosity
+# (generically called "flux" for the purposes of this function), converts this flux from an arbitrary unit
+# in any "flavor" (neutral, per wavelength, or per frequency) to an equivalent unit in the specified flavor,
+# and returns the result.
+#
+# Both the flux and the wavelength must be astropy quantities in one of the following shape combinations:
+#  - The wavelength is a scalar: this wavelength is used to convert all values in the flux argument, which can be a
+#    scalar or an array of arbitrary shape (e.g. a 2D data frame) containing flux values at the same wavelength.
+#  - The wavelength is a 1D array: the length of this array must match the last (or only) axis of the flux argument
+#    which can be, for example an 1D spectrum or a 3D data cube. The wavelengths are broad-casted to the other axes.
+#
+# The target flavor can be specified in one of two ways:
+#  - As one of the strings "neutral", "wavelength", or "frequency"; the result will have the somewhat arbitrary unit
+#    that follows from the conversion calculation and thus depends on the incoming units of both flux and wavelength.
+#    This option is useful in case the incoming flux type (density, brightness, luminosity) is not known a priori.
+#  - As an astropy unit instance (such as the return value of the sm.unit() function): the flavor is derived from
+#    this unit, and the result is explicitly converted to it before being returned. The unit must be compatible
+#    with the incoming flux type (density, brightness, luminosity), after flavor conversion.
+#
+def convertToFlavor(flux, wavelength, flavor):
+    # make a copy because the operations below will happen in place
+    flux = flux.copy()
+
+    # determine the conversion scheme: first digit = input flavor, second digit = output flavor
+    scheme =  _flavor(flux.unit) * 10 + _flavor(flavor)
+
+    # apply the conversion appropriate for each scheme (schemes 11, 22 and 33 require no conversion)
+    if scheme==12:          # neutral to wavelength
+        flux /= wavelength
+    elif scheme==13:          # neutral to frequency
+        flux *= wavelength / const.c
+    elif scheme==21:          # wavelength to neutral
+        flux *= wavelength
+    elif scheme==23:          # wavelength to frequency
+        flux *= wavelength**2 / const.c
+    elif scheme==31:          # frequency to neutral
+        flux *= const.c / wavelength
+    elif scheme==32:          # frequency to wavelength
+        flux *= const.c / wavelength**2
+
+    # if the output flavor is specified as an explicit unit, convert to that unit
+    if isinstance(flavor, u.UnitBase):
+        flux <<= flavor
+    return flux
+
+## This helper function returns a numeric code corresponding to the specified flavor or unit:
+#   - 1 for the string "neutral" and for units that have a neutral flavor.
+#   - 2 for the string "wavelength" and for units that have a per wavelength flavor.
+#   - 3 for the string "frequency" and for units that have a per frequency flavor.
+def _flavor(flavorunit):
+    if isinstance(flavorunit, str):
+        if flavorunit == "neutral": return 1
+        if flavorunit == "wavelength": return 2
+        if flavorunit == "frequency": return 3
+        raise ValueError("Invalid flavor specification: '{}'".format(flavorunit))
+
+    if flavorunit.is_equivalent(( unit("W"), unit("W/m2"), unit("W/m2/sr") )): return 1
+    if flavorunit.is_equivalent(( unit("W/m"), unit("W/m2/m"), unit("W/m2/sr/m") )): return 2
+    if flavorunit.is_equivalent(( unit("W/Hz"), unit("W/m2/Hz"), unit("W/m2/sr/Hz") )): return 3
+    raise ValueError("Not a flux-like unit: '{}'".format(flavorunit))
+
+# -----------------------------------------------------------------
 
 ## This function returns a latex-formatted string representation for the "unit-like" input,
 # enclosed in square brackets and preceded by a short space. The input argument
