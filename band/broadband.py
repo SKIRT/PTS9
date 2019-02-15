@@ -14,6 +14,7 @@
 
 # -----------------------------------------------------------------
 
+import astropy.constants as const
 import astropy.units as u
 import numpy as np
 import xml.etree.ElementTree
@@ -304,9 +305,6 @@ class BroadBand:
         "ALMA_ALMA_10": ("ALMA", "alma-0-2000-02.dat", (320, 380)),
     }
 
-    ## The speed of light in vacuum (m/s)
-    _c = 2.99792458e8
-
     ## The constructor creates a BroadBand instance in one of the following two ways, depending on the type of
     # the \em bandspec argument:
     #
@@ -410,7 +408,7 @@ class BroadBand:
         if "LFI" in self._bandname:
             frequencies, transmissions = np.loadtxt(filepath, skiprows=1, usecols=(0, 1), unpack=True)
             frequencies *= 1e9  # from GHz to Hz
-            wavelengths = self._c / frequencies
+            wavelengths = const.c.si.value / frequencies
             wavelengths *= 1e6  # from m to micron
         else:
             wavenumbers, transmissions, uncertainties = np.loadtxt(filepath, skiprows=3, usecols=(0, 1, 2), unpack=True)
@@ -445,7 +443,7 @@ class BroadBand:
         # load text columns
         frequencies, transmissions = np.loadtxt(filepath, usecols=(0, 1), unpack=True)
         frequencies *= 1e9  # from GHz to Hz
-        wavelengths = self._c / frequencies
+        wavelengths = const.c.si.value / frequencies
         wavelengths *= 1e6  # from m to micron
 
         # only keep the rows inside the wavelength range for this band
