@@ -19,6 +19,7 @@ import astropy.units as u
 import numpy as np
 import xml.etree.ElementTree
 import pts.utils as ut
+import pts.simulation as sm
 
 # -----------------------------------------------------------------
 
@@ -326,8 +327,6 @@ class BroadBand:
     # end of construction, the _normalize() function attaches the appropriate units.
     #
     def __init__(self, bandspec):
-
-
         # construction of built-in band
         if isinstance(bandspec, str):
             # get the built-in band name and format
@@ -511,6 +510,76 @@ class BroadBand:
     # are in micron and the transmissions in 1/micron (because of the normalization to unity).
     def transmissionCurve(self):
         return self._wavelengths.copy(), self._transmissions.copy()
+
+    # -----------------------------------------------------------------
+
+    ## This function calculates and returns the band-averaged value \f$\left<F_\lambda\right>\f$ for a given
+    # spectral energy distribution \f$F_\lambda(\lambda)\f$. For a band with transmission curve \f$T(\lambda)\f$,
+    # \f[ \left<F_\lambda\right> = \frac{ \int F_\lambda(\lambda)T(\lambda) \,\mathrm{d}\lambda }
+    # { \int T(\lambda) \,\mathrm{d}\lambda }. \f]
+    #
+    # The function in fact accepts a distribution (over a range of wavelengths) of various spectral quantities,
+    # including flux density, surface brightness, spectral radiance, or spectral luminosity of any "flavor"
+    # (neutral, per wavelength, or per frequency) and in arbitrary units. For the purposes of this function,
+    # these quantities are generically referred to as "flux". The incoming fluxes are converted to an equivalent
+    # "per-wavelength" flavor, the convolution is calculated according to the equation above, and the result
+    # is converted back to the flavor and units of the incoming fluxes.
+    #
+    # The function accepts the following arguments:
+    # - \em wavelengths: an astropy quantity array specifying the wavelengths \f$\lambda_\ell\f$, in increasing order,
+    #   on which the fluxes are sampled. The convolution is performed on a wavelength grid that combines the grid
+    #   points given here with the grid points on which the band transmission curve is defined.
+    # - \em fluxes: an astropy quantity array specifying the flux distribution(s) \f$F_\lambda(\lambda_\ell)\f$.
+    #   This can be an array with the same length as \em wavelengths, or a multi-dimensional
+    #   array where the last dimension has the same length as \em wavelengths.
+    #   The returned result will have the shape of \em fluxes minus the last (or only) dimension.
+    # - \em numWavelengths: an integer specifying the approximate number of wavelength grid points used in the
+    #   convolution calculation, or None (or omitted) to indicate no limit. The incoming flux distribution is resampled
+    #   to all wavelength points in the combined convolution grid. Convolving large data cubes may thus consume
+    #   a prohibitive amount of memory and/or computation time unless the number of wavelengths is limited.
+    def convolve(self, wavelengths, fluxes, numWavelengths=None):
+
+        # convert fluxes to per-wavelength flavor
+        origunit = fluxes.unit
+        fluxes = sm.convertToFlavor(wavelengths, fluxes, "wavelength")
+
+        # get the involved wavelength grids, in micron, without units
+        wa = wavelengths.to_value(u.micron)
+        wb = self._wavelengths.value
+
+        # create a combined wavelength grid (without units), restricted to the overlapping interval
+        w1 = wa[ (wa>=wb[0]) & (wa<=wb[-1]) ]
+        w2 = wb[ (wb>=wa[0]) & (wb<=wa[-1]) ]
+        w = np.unique(np.hstack((w1, w2)))
+        if len(w) < 2: return 0
+
+        # downsample the grid if so requested
+        if numWavelengths is not None:
+            numWavelengths = max(2, numWavelengths)
+            if len(w) > numWavelengths:
+                downfactor = len(w) // numWavelengths
+                w = w[::downfactor]
+
+        # log-log interpolate transmission and fluxes (without units) on the combined wavelength grid
+        T = np.exp(np.interp(np.log(w), np.log(wb), _log(self._transmissions.value), left=0., right=0.))
+        # use SciPy: NumPy interpolation doesn't support 1D interpolation of multi-dimensional arrays
+        from scipy.interpolate import interp1d
+        F = np.exp(interp1d(np.log(wa), _log(fluxes.value), copy=False, bounds_error=False, fill_value=0.)(np.log(w)))
+
+        # perform integration, re-assign stripped per-wavelength units and convert back to original units
+        convolved = np.trapz(x=w, y=F*T) << fluxes.unit
+        return sm.convertToFlavor(self.pivotWavelength(), convolved, origunit)
+
+# -----------------------------------------------------------------
+
+## This helper function returns the natural logarithm for positive values, and a large negative number
+# (but not infinity) for zero or negative values.
+def _log(X):
+    zeromask = X <= 0
+    logX = np.empty(X.shape)
+    logX[zeromask] = -750.  # the smallest (in magnitude) negative value x for which np.exp(x) returns zero
+    logX[~zeromask] = np.log(X[~zeromask])
+    return logX
 
 # -----------------------------------------------------------------
 

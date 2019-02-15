@@ -50,7 +50,7 @@ def unit(unitlike):
 # in any "flavor" (neutral, per wavelength, or per frequency) to an equivalent unit in the specified flavor,
 # and returns the result.
 #
-# Both the flux and the wavelength must be astropy quantities in one of the following shape combinations:
+# Both the wavelength and the flux must be astropy quantities in one of the following shape combinations:
 #  - The wavelength is a scalar: this wavelength is used to convert all values in the flux argument, which can be a
 #    scalar or an array of arbitrary shape (e.g. a 2D data frame) containing flux values at the same wavelength.
 #  - The wavelength is a 1D array: the length of this array must match the last (or only) axis of the flux argument
@@ -64,7 +64,7 @@ def unit(unitlike):
 #    this unit, and the result is explicitly converted to it before being returned. The unit must be compatible
 #    with the incoming flux type (density, brightness, luminosity), after flavor conversion.
 #
-def convertToFlavor(flux, wavelength, flavor):
+def convertToFlavor(wavelength, flux, flavor):
     # make a copy because the operations below will happen in place
     flux = flux.copy()
 
