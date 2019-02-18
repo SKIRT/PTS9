@@ -91,9 +91,90 @@ def plotSeds(instruments, minWavelength=None, maxWavelength=None, decadesFlux=No
     if maxWavelength is not None:
         plt.xlim(None, (maxWavelength << waveUnit).value)
     if decadesFlux is not None:
-        plt.ylim(fluxMax.value * 10 ** (0.2 - decadesFlux), fluxMax.value * 10 ** 0.2)
+        plt.ylim(fluxMax.value * 10**(-decadesFlux), fluxMax.value * 10**0.2)
     plt.xlabel(r"$\lambda$" + sm.latexForUnit(waveUnit), fontsize='large')
     plt.ylabel(sm.latexForSpectralFlux(fluxUnit) + sm.latexForUnit(fluxUnit), fontsize='large')
+    plt.legend(loc='best')
+
+    # if a filepath is provided, save the figure; otherwise leave it open
+    if plotFilePath is not None:
+        plotpath = ut.absPath(plotFilePath)
+        plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
+        plt.close()
+        logging.info("Created SED plot {}".format(plotpath))
+
+# ----------------------------------------------------------------------
+
+## This function creates a plot of the behavior of the sources in a SKIRT simulations. Specifically, it plots
+# the luminosity of and the number of photon packets launched by each source as a function of wavelength.
+# Both curves are normalized so that their maximum value is equal to one. This allows a user to evaluate
+# whether the photon packet distribution (as a function of wavelength) is appropriate for the source spectra.
+#
+# The function accepts a single Simulation instance and it assumes that the simulation includes exactly one
+# LuminosityProbe and exactly one LaunchedPacketsProbe. If this is not the case, the function does nothing.
+#
+# The plot file path is interpreted as described for the pts.utils.absPath() function.
+# If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
+#
+def plotSources(simulation, minWavelength=None, maxWavelength=None, decadesLuminosity=None,
+             *, plotFilePath=None, figSize=(8, 6)):
+
+    # find the required probes
+    probes = simulation.probes()
+    lumiProbes = [ probe for probe in probes if probe.type() == "LuminosityProbe" ]
+    packProbes = [ probe for probe in probes if probe.type() == "LaunchedPacketsProbe" ]
+    if len(lumiProbes) != 1 or len(packProbes) != 1:
+        return
+    lumiProbe = lumiProbes[0]
+    packProbe = packProbes[0]
+
+    # load the luminosities
+    lumiFilePath = lumiProbe.outFilePaths("luminosities.dat")[0]
+    descriptions = sm.getColumnDescriptions(lumiFilePath)
+    columns = list(range(len(descriptions)))
+    del columns[1]  # remove the "specific luminosity column"
+    lumiWave, lumiTot, *lumiFracs = sm.loadColumns(lumiFilePath, columns)
+
+    # load the number of launched packets
+    packFilePath = packProbe.outFilePaths("launchedpackets.dat")[0]
+    descriptions = sm.getColumnDescriptions(packFilePath)
+    columns = list(range(len(descriptions)))
+    packWave, packTot, *packSplits = sm.loadColumns(packFilePath, columns)
+    packWave <<= lumiWave.unit
+
+    # setup the figure
+    plt.figure(figsize=figSize)
+    label = "{} ".format(simulation.prefix())
+
+    # plot the total
+    lumiMax = lumiTot.max();
+    packMax = packTot.max()
+    plt.plot(lumiWave.value, lumiTot/lumiMax, color='k', ls='solid', label=label + "total")
+    plt.plot(packWave.value, packTot/packMax, color='k', ls='dashed')
+
+    # loop over all sources
+    colors = ('r', 'g', 'b', 'c', 'm', 'y')
+    colorindex = 0
+    sourceindex = 1
+    for lumiFrac, packSplit in zip(lumiFracs, packSplits):
+        plt.plot(lumiWave.value, lumiFrac*lumiTot/lumiMax, color=colors[colorindex], ls='solid',
+                 label=label + str(sourceindex))
+        plt.plot(packWave.value, packSplit/packMax, color=colors[colorindex], ls='dashed')
+        # advance color and source index
+        colorindex = (colorindex + 1) % len(colors)
+        sourceindex += 1
+
+    # set axis details and add a legend
+    plt.xscale('log')
+    plt.yscale('log')
+    if minWavelength is not None:
+        plt.xlim((minWavelength << lumiWave.unit).value, None)
+    if maxWavelength is not None:
+        plt.xlim(None, (maxWavelength << lumiWave.unit).value)
+    if decadesLuminosity is not None:
+        plt.ylim(10**(-decadesLuminosity), 10**0.2)
+    plt.xlabel(r"$\lambda$" + sm.latexForUnit(lumiWave.unit), fontsize='large')
+    plt.ylabel(r"Normalized $L$ and $N_\mathrm{pp}$", fontsize='large')
     plt.legend(loc='best')
 
     # if a filepath is provided, save the figure; otherwise leave it open
