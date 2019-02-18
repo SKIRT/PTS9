@@ -9,8 +9,8 @@
 #
 # This script creates a plot of the transmission curves for all built-in broadbands that satisfy the
 # all of the specified selection criteria:
-#  - \em min (float): if specified, the pivot wavelength must exceed this value
-#  - \em max (float): if specified, the pivot wavelength must be lower than this value
+#  - \em wmin (float): if specified, the pivot wavelength must exceed this value
+#  - \em wmax (float): if specified, the pivot wavelength must be lower than this value
 #  - \em names (string with comma-separated segments): if specified, the band name must contain
 #    at least one of these segments
 #

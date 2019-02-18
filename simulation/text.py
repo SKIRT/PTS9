@@ -67,6 +67,35 @@ def getQuantityFromFile(path, trigger, header):
 
 # -----------------------------------------------------------------
 
+## This function reads the header of a SKIRT column text file, and returns a list of the column descriptions,
+# in order of occurrence. If the specified file does not have a column header in SKIRT format, the function
+# returns an empty list. The file path is interpreted as described for the pts.utils.absPath() function.
+def getColumnDescriptions(path):
+    path = ut.absPath(path)
+
+    # parse the header
+    descriptions = []
+    with open(path) as infile:
+        for line in infile:
+            # skip empty lines
+            line = line.strip()
+            if len(line) > 0:
+                # handle end-of-header
+                if not line.startswith("#"): break;
+                # remove hash character and skip non-column header lines
+                line = line[1:].strip()
+                if line.lower().startswith("column") and ":" in line:
+                    # extract the description
+                    colon = line.find(":")
+                    if line.endswith(')'):
+                        left = line.rfind("(")
+                        description = line[colon+1:left].strip()
+                    else:
+                        description = line[colon+1:].strip()
+                    # add the description to the list
+                    descriptions.append(description)
+    return descriptions
+
 ## This function loads data from a SKIRT column text file, using the metadata in the file's header to assign
 # appropriate units to each column, and optionally, to locate columns by name.
 #

@@ -59,6 +59,66 @@ def createSimulation(outDirPath="", prefix=None):
 
 # -----------------------------------------------------------------
 
+## This function accepts a sequence of Simulation and/or Instrument instances, or a single instance of either of
+# these types. It iterates over these entities looking for associated instrument output files that have a name with
+# a final segment that ends in the specified string (or all output files if the \em fileType argument is omitted).
+# The function returns a list of tuples, each containing an Instrument instance and an associated output file path.
+# The list follows the order of the specified input entities. The list may be empty.
+#
+def instrumentOutFilePaths(entities, fileType=None):
+    # when given a single entity, create a sequence containing it
+    if isinstance(entities, Simulation) or isinstance(entities, Instrument):
+        entities = [ entities ]
+
+    # loop over all entities and assemble the result list
+    result = []
+    for entity in entities:
+        # convert the entity in a list of instruments
+        if isinstance(entity, Simulation):
+            instruments = entity.instruments()
+        elif isinstance(entity, Instrument):
+            instruments = [ entity ]
+        else:
+            raise ValueError("Entity is not a simulation or instrument: {}".format(type(entity)))
+
+        # loop over the instruments
+        for instrument in instruments:
+            filepaths = instrument.outFilePaths(fileType)
+            result += [ (instrument,filepath) for filepath in filepaths ]
+
+    return result
+
+## This function accepts a sequence of Simulation and/or Probe instances, or a single instance of either of
+# these types. It iterates over these entities looking for associated probe output files that have a name with
+# a final segment that ends in the specified string (or all output files if the \em fileType argument is omitted).
+# The function returns a list of tuples, each containing a Probe instance and an associated output file path.
+# The list follows the order of the specified input entities. The list may be empty.
+#
+def probeOutFilePaths(entities, fileType=None):
+    # when given a single entity, create a sequence containing it
+    if isinstance(entities, Simulation) or isinstance(entities, Probe):
+        entities = [ entities ]
+
+    # loop over all entities and assemble the result list
+    result = []
+    for entity in entities:
+        # convert the entity in a list of probes
+        if isinstance(entity, Simulation):
+            probes = entity.probes()
+        elif isinstance(entity, Probe):
+            probes = [ entity ]
+        else:
+            raise ValueError("Entity is not a simulation or probe: {}".format(type(entity)))
+
+        # loop over the probes
+        for probe in probes:
+            filepaths = probe.outFilePaths(fileType)
+            result += [ (probe,filepath) for filepath in filepaths ]
+
+    return result
+
+# -----------------------------------------------------------------
+
 ## An instance of the Simulation class represents all input and output files related to a single performed
 # SKIRT simulation. To create an instance of the class, one specifies the name of the ski file (used as prefix
 # for all output filenames) plus directory paths for the input and output files.
@@ -236,6 +296,11 @@ class _SimulationEntity:
     def __init__(self, simulation, xpath):
         self._simulation = simulation
         self._xpath = xpath
+
+    ## This function returns the prefix for the simulation with which this entity is associated. The prefix
+    # is used as the initial segment of all output file names.
+    def prefix(self):
+        return self._simulation.prefix()
 
     ## This function returns the type of the entity, i.e. the corresponding SKIRT class name, as a string.
     def type(self):

@@ -16,9 +16,10 @@
 #
 
 from .fits import loadFits, getFitsAxes
-from .simulation import createSimulation, Simulation, Instrument, Probe
+from .simulation import createSimulation, createSimulations, instrumentOutFilePaths, probeOutFilePaths, \
+                        Simulation, Instrument, Probe
 from .skifile import SkiFile
 from .skirt import Skirt
-from .text import getQuantityFromFile, loadColumns, saveColumns
-from .units import unit, convertToFlavor
-from .units import latexForUnit, latexForSpectralFlux, latexForSpectralRadiance, latexForSpectralLuminosity
+from .text import getQuantityFromFile, getColumnDescriptions, loadColumns, saveColumns
+from .units import unit, convertToFlavor, \
+                   latexForUnit, latexForSpectralFlux, latexForSpectralRadiance, latexForSpectralLuminosity
