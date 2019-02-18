@@ -17,4 +17,5 @@
 
 from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds
+from .plotgrids import plotGrids
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive

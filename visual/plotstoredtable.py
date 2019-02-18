@@ -37,7 +37,7 @@ import pts.utils as ut
 #
 def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
                          axis0=None, axis1=None, axis2=None, axis3=None, axis4=None,
-                         plotFilePath=None, figsize=(8,6)):
+                         plotFilePath=None, figSize=(8, 6)):
 
     # load the complete stored table
     table = stab.readStoredTable(tableFilePath)
@@ -67,7 +67,7 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
     verValues = table[verName][tuple(index)]
 
     # create the plot
-    plt.figure(figsize=figsize)
+    plt.figure(figsize=figSize)
     if horScale == 'log': plt.xscale('log')
     if verScale == 'log': plt.yscale('log')
     plt.plot(horGrid, verValues)
@@ -95,7 +95,7 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
 # The function returns the stored table dictionary loaded by pts.storedtable.io.readStoredTable so that
 # the interactive user can inspect its contents in further detail if desired.
 #
-def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
+def plotStoredTableInteractive(tableFilePath, *, figSize=(8, 6)):
 
     # import this here so that the dependency is limited to this function
     import ipywidgets
@@ -128,7 +128,7 @@ def plotStoredTableInteractive(tableFilePath, *, figsize=(8,6)):
         verValues = table[verName][tuple(index)].value
 
         # create the plot
-        plt.figure(figsize=figsize)
+        plt.figure(figsize=figSize)
         if horScale == 'log': plt.xscale('log')
         if verScale == 'log': plt.yscale('log')
         plt.plot(horGrid, verValues)

@@ -36,14 +36,14 @@ import pts.utils as ut
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
 def plotSeds(instruments, minWavelength=None, maxWavelength=None, decadesFlux=None,
-             *, plotFilePath=None, figsize=(8, 6)):
+             *, plotFilePath=None, figSize=(8, 6)):
     # get the (instrument, output file path) tuples
     instr_paths = sm.instrumentOutFilePaths(instruments, "sed.dat")
     if len(instr_paths) < 1:
         return
 
     # setup the figure
-    plt.figure(figsize=figsize)
+    plt.figure(figsize=figSize)
 
     # if there is a single output file, and it has components, plot the components
     if len(instr_paths) == 1 and any(["transparent" in col for col in sm.getColumnDescriptions(instr_paths[0][1])]):

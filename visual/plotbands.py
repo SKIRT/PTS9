@@ -33,7 +33,7 @@ import pts.utils as ut
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
 def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, nameSegments=None, *,
-                     plotFilePath=None, figsize=(20,6)):
+                     plotFilePath=None, figSize=(20, 6)):
 
     # load all bands that satisfy the specified criteria
     bands = [ bnd.BroadBand(name) for name in bnd.builtinBandNames() ]
@@ -47,7 +47,7 @@ def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, na
     logging.info("Plotting {} built-in bands...".format(len(bands)))
 
     # setup the figure
-    plt.figure(figsize=figsize)
+    plt.figure(figsize=figSize)
     colors = ('r','g','b','c','m','y')
 
     # loop over bands
