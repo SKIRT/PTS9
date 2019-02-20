@@ -19,3 +19,4 @@ from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources
 from .plotgrids import plotGrids
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
+from .rgbimage import RGBImage
