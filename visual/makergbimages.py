@@ -45,7 +45,7 @@ from .rgbimage import RGBImage
 # \note The function uses the same pixel range scaling for all RGB images created for a particular wavelength tuple,
 # across multiple instruments. To achieve this, the function makes a separate preprocessing pass over all files.
 #
-def makeRGBImages(simulation, *, fileType="total", wavelengthTuples=None, fromPercentile=30, toPercentile=100,
+def makeRGBImages(simulation, wavelengthTuples=None, *, fileType="total", fromPercentile=30, toPercentile=100,
                   imageDirPath=None):
 
     # get the (instrument, output file path) tuples to be handled
@@ -59,7 +59,7 @@ def makeRGBImages(simulation, *, fileType="total", wavelengthTuples=None, fromPe
     elif isinstance(wavelengthTuples, (tuple,list)):
         name_waves = [ ("_" + str(index+1), wavetuple) for index, wavetuple in enumerate(wavelengthTuples) ]
     elif isinstance(wavelengthTuples, dict):
-        name_waves = [ ("_" + str(name), wavetuple) for name, wavetuple in wavelengthTuples.items() ]
+        name_waves = [ ("" if not name else "_" + name, wavetuple) for name, wavetuple in wavelengthTuples.items() ]
     else:
         raise ValueError("Invalid wavelengthTuples type")
 
@@ -132,6 +132,7 @@ def makeConvolvedRGBImages(simulation, contributions, name="", *, fileType="tota
     # get the (instrument, output file path) tuples to be handled
     instr_paths = sm.instrumentOutFilePaths(simulation, fileType+".fits")
     if len(instr_paths) > 0:
+        name = "" if not name else "_" + name
         sbunit = sm.unit("MJy/sr")
 
         # construct an image object with integrated color channels for each output file
@@ -139,9 +140,9 @@ def makeConvolvedRGBImages(simulation, contributions, name="", *, fileType="tota
         images = []
         fmaxes = []
         for instrument, filepath in instr_paths:
-            logging.info("Convolving for RGB image {}_{}".format(filepath.stem, name))
+            logging.info("Convolving for RGB image {}{}".format(filepath.stem, name))
 
-            # get the data cube in per wavelength units
+            # get the data cube in its intrinsic units
             cube = sm.loadFits(filepath)
 
             # initialize an RGB frame
@@ -149,6 +150,7 @@ def makeConvolvedRGBImages(simulation, contributions, name="", *, fileType="tota
 
             # add color for each filter
             for band,w0,w1,w2 in contributions:
+                # convolve and convert to per frequency units
                 data = band.convolve(instrument.wavelengths(), cube, flavor=sbunit)
                 dataRGB[:,:,0] += w0*data
                 dataRGB[:,:,1] += w1*data
@@ -169,7 +171,7 @@ def makeConvolvedRGBImages(simulation, contributions, name="", *, fileType="tota
             image.applyCurve()
 
             # determine output file path
-            imageFilePath = filepath.with_name(filepath.stem+"_"+name+".png")
+            imageFilePath = filepath.with_name(filepath.stem+name+".png")
             if imageDirPath is not None: imageFilePath = ut.absPath(imageDirPath) / imageFilePath.name
             image.saveTo(imageFilePath)
             logging.info("Created convolved RGB image file {}".format(imageFilePath))
