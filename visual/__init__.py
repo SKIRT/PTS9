@@ -15,9 +15,10 @@
 # and images (e.g. data frames).
 #
 
+from .makergbimages import makeRGBImages, makeConvolvedRGBImages
 from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources
+from .plotdensitycuts import plotDefaultMediaDensityCuts
 from .plotgrids import plotGrids
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
 from .rgbimage import RGBImage
-from .makergbimages import makeRGBImages, makeConvolvedRGBImages

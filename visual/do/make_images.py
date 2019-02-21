@@ -21,7 +21,7 @@
 #    color channel of the image; by default the script uses frames with wavelengths as widely apart as possible.
 #
 # In all cases, the image files are is placed next to the "*.fits" file(s) being represented, with the same filename
-# but extended with the specified \en name string and the filename extension replaced by ".png".
+# but extended with the specified \em name string and the filename extension replaced by ".png".
 #
 
 # -----------------------------------------------------------------

@@ -34,10 +34,10 @@ import pts.utils as ut
 # coordinates seperated by whitespace, or is empty. Consecutive nonempty lines represent a sequence of
 # "lineto" commands; an empty line marks a "moveto" command.
 #
-def plotGrids(probes, *, plotDirPath=None, lineWidth=0.1, figSize=(8,8)):
+def plotGrids(simulation, *, lineWidth=0.1, plotDirPath=None, figSize=(8, 8)):
 
     # loop over the (probe, output file path) tuples
-    for probe, gridFilePath in sm.probeOutFilePaths(probes, "grid_*.dat"):
+    for probe, gridFilePath in sm.probeOutFilePaths(simulation, "grid_*.dat"):
 
         # determine output file path
         plotFilePath = gridFilePath.with_suffix(".pdf")

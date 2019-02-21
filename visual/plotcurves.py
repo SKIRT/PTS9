@@ -35,10 +35,10 @@ import pts.utils as ut
 # The plot file path is interpreted as described for the pts.utils.absPath() function.
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotSeds(instruments, minWavelength=None, maxWavelength=None, decadesFlux=None,
+def plotSeds(simulation, minWavelength=None, maxWavelength=None, decadesFlux=None,
              *, plotFilePath=None, figSize=(8, 6)):
     # get the (instrument, output file path) tuples
-    instr_paths = sm.instrumentOutFilePaths(instruments, "sed.dat")
+    instr_paths = sm.instrumentOutFilePaths(simulation, "sed.dat")
     if len(instr_paths) < 1:
         return
 
