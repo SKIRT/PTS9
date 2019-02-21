@@ -413,6 +413,17 @@ class _SimulationEntity:
         # failed
         raise ValueError("Cannot obtain wavelengths for '{}_{}'".format(self._simulation.prefix(), self.name()))
 
+    ## This function uses the wavelengths() function to load the characteristic wavelengths of the
+    # wavelength grid associated with this entity, and then determines the zero-based grid index corresponding
+    # to (i.e. with a characteristic wavelength nearest to) each of the wavelengths specified as an argument.
+    # The \em wavelengths argument must be an iterable of astropy quantities (including an astropy quantity array).
+    # The function returns an iterable of integers with the same length.
+    def wavelengthIndices(self, wavelengths):
+        if wavelengths is not None:
+            grid = self.wavelengths()
+            return [ np.argmin(np.abs(grid-wave)) for wave in wavelengths ]
+        else:
+            return None
 
 ## An instance of the Instrument class can be spawned from a Simulation object to represent an instrument in the
 # simulation, allowing to retrieve its attributes. See the Simulation.instruments() function.

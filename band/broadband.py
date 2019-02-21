@@ -523,7 +523,8 @@ class BroadBand:
     # (neutral, per wavelength, or per frequency) and in arbitrary units. For the purposes of this function,
     # these quantities are generically referred to as "flux". The incoming fluxes are converted to an equivalent
     # "per-wavelength" flavor, the convolution is calculated according to the equation above, and the result
-    # is converted back to the flavor and units of the incoming fluxes.
+    # is converted back to the flavor and units of the incoming fluxes, or to the optionally specified flavor
+    # and/or units.
     #
     # The function accepts the following arguments:
     # - \em wavelengths: an astropy quantity array specifying the wavelengths \f$\lambda_\ell\f$, in increasing order,
@@ -537,10 +538,15 @@ class BroadBand:
     #   convolution calculation, or None (or omitted) to indicate no limit. The incoming flux distribution is resampled
     #   to all wavelength points in the combined convolution grid. Convolving large data cubes may thus consume
     #   a prohibitive amount of memory and/or computation time unless the number of wavelengths is limited.
-    def convolve(self, wavelengths, fluxes, numWavelengths=None):
+    # - \em flavor: the flavor and/or units to which the result must be converted. If missing or None, the result
+    #   is converted back to the flavor and units of the incoming fluxes. If specified, this can be one of the
+    #   strings "neutral", "wavelength", or "frequency", or an explicit astropy unit instance that is compatible
+    #   with the incoming flux type (density, brightness, luminosity), after flavor conversion.
+    #
+    def convolve(self, wavelengths, fluxes, *, numWavelengths=None, flavor):
 
         # convert fluxes to per-wavelength flavor
-        origunit = fluxes.unit
+        if flavor is None: flavor = fluxes.unit
         fluxes = sm.convertToFlavor(wavelengths, fluxes, "wavelength")
 
         # get the involved wavelength grids, in micron, without units
@@ -568,7 +574,7 @@ class BroadBand:
 
         # perform integration, re-assign stripped per-wavelength units and convert back to original units
         convolved = np.trapz(x=w, y=F*T) << fluxes.unit
-        return sm.convertToFlavor(self.pivotWavelength(), convolved, origunit)
+        return sm.convertToFlavor(self.pivotWavelength(), convolved, flavor)
 
 # -----------------------------------------------------------------
 
