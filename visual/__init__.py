@@ -21,4 +21,5 @@ from .plotcurves import plotSeds, plotSources
 from .plotdensitycuts import plotDefaultMediaDensityCuts
 from .plotgrids import plotGrids
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
+from .plottemperaturecuts import plotDefaultDustTemperatureCuts
 from .rgbimage import RGBImage
