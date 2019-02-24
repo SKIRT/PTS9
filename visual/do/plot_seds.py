@@ -21,7 +21,7 @@
 
 # -----------------------------------------------------------------
 
-def do( outDirPath : (str,"SKIRT simulation output directory"),
+def do( simDirPath : (str,"SKIRT simulation output directory"),
         prefix : (str,"SKIRT simulation prefix") = "",
         wmin : (float,"smallest wavelength on the horizontal axis, in micron") = 0.1,
         wmax : (float,"largest wavelength on the horizontal axis, in micron") = 1000.,
@@ -32,9 +32,9 @@ def do( outDirPath : (str,"SKIRT simulation output directory"),
     import pts.simulation as sm
     import pts.visual as vis
 
-    for sim in sm.createSimulations(outDirPath, prefix if len(prefix)>0 else None):
+    for sim in sm.createSimulations(simDirPath, prefix if len(prefix)>0 else None):
         vis.plotSeds(sim, plotFilePath=sim.outFilePath("sed.pdf"),
-                         minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
-                         decadesFlux=dex)
+                     minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
+                     decades=dex)
 
 # ----------------------------------------------------------------------

@@ -26,7 +26,7 @@
 
 # -----------------------------------------------------------------
 
-def do( outDirPath : (str,"SKIRT simulation output directory"),
+def do( simDirPath : (str, "SKIRT simulation output directory"),
         prefix : (str,"SKIRT simulation prefix") = "",
         type : (str,"type of SKIRT instrument output files to be handled") = "total",
         name : (str,"name segment that will be added to the image file names") = "",
@@ -39,7 +39,7 @@ def do( outDirPath : (str,"SKIRT simulation output directory"),
     import pts.visual as vis
 
     # get the simulations to be handled
-    sims = sm.createSimulations(outDirPath, prefix if len(prefix)>0 else None)
+    sims = sm.createSimulations(simDirPath, prefix if len(prefix) > 0 else None)
 
     # parse the colors and handle accordingly
 

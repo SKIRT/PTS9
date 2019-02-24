@@ -25,14 +25,14 @@
 
 # -----------------------------------------------------------------
 
-def do( outDirPath : (str,"SKIRT simulation output directory"),
+def do( simDirPath : (str,"SKIRT simulation output directory"),
         prefix : (str,"SKIRT simulation prefix") = "",
         ) -> "plot the planar cuts through the temperature in one or more SKIRT simulations":
 
     import pts.simulation as sm
     import pts.visual as vis
 
-    for sim in sm.createSimulations(outDirPath, prefix if len(prefix)>0 else None):
+    for sim in sm.createSimulations(simDirPath, prefix if len(prefix)>0 else None):
         probes = [probe for probe in sim.probes() if probe.type() == "DefaultDustTemperatureCutsProbe"]
         if len(probes) == 1:
             probe = probes[0]

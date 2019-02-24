@@ -35,7 +35,7 @@ import pts.utils as ut
 # The plot file path is interpreted as described for the pts.utils.absPath() function.
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotSeds(simulation, minWavelength=None, maxWavelength=None, decadesFlux=None,
+def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None,
              *, plotFilePath=None, figSize=(8, 6)):
     # get the (instrument, output file path) tuples
     instr_paths = sm.instrumentOutFilePaths(simulation, "sed.dat")
@@ -90,8 +90,8 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decadesFlux=Non
         plt.xlim((minWavelength << waveUnit).value, None)
     if maxWavelength is not None:
         plt.xlim(None, (maxWavelength << waveUnit).value)
-    if decadesFlux is not None:
-        plt.ylim(fluxMax.value * 10**(-decadesFlux), fluxMax.value * 10**0.2)
+    if decades is not None:
+        plt.ylim(fluxMax.value * 10 ** (-decades), fluxMax.value * 10 ** 0.2)
     plt.xlabel(r"$\lambda$" + sm.latexForUnit(waveUnit), fontsize='large')
     plt.ylabel(sm.latexForSpectralFlux(fluxUnit) + sm.latexForUnit(fluxUnit), fontsize='large')
     plt.legend(loc='best')
@@ -116,8 +116,8 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decadesFlux=Non
 # The plot file path is interpreted as described for the pts.utils.absPath() function.
 # If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotSources(simulation, minWavelength=None, maxWavelength=None, decadesLuminosity=None,
-             *, plotFilePath=None, figSize=(8, 6)):
+def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None,
+                *, plotFilePath=None, figSize=(8, 6)):
 
     # find the required probes
     probes = simulation.probes()
@@ -171,8 +171,8 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decadesLumin
         plt.xlim((minWavelength << lumiWave.unit).value, None)
     if maxWavelength is not None:
         plt.xlim(None, (maxWavelength << lumiWave.unit).value)
-    if decadesLuminosity is not None:
-        plt.ylim(10**(-decadesLuminosity), 10**0.2)
+    if decades is not None:
+        plt.ylim(10 ** (-decades), 10 ** 0.2)
     plt.xlabel(r"$\lambda$" + sm.latexForUnit(lumiWave.unit), fontsize='large')
     plt.ylabel(r"Normalized $L$ and $N_\mathrm{pp}$", fontsize='large')
     plt.legend(loc='best')

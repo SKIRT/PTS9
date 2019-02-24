@@ -19,14 +19,14 @@
 
 # -----------------------------------------------------------------
 
-def do( outDirPath : (str,"SKIRT simulation output directory"),
+def do( simDirPath : (str,"SKIRT simulation output directory"),
         prefix : (str,"SKIRT simulation prefix") = "",
         ) -> "plot the spatial grids used in one or more SKIRT simulations":
 
     import pts.simulation as sm
     import pts.visual as vis
 
-    for sim in sm.createSimulations(outDirPath, prefix if len(prefix)>0 else None):
+    for sim in sm.createSimulations(simDirPath, prefix if len(prefix)>0 else None):
         vis.plotGrids(sim)
 
 # ----------------------------------------------------------------------
