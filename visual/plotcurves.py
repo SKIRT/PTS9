@@ -105,7 +105,7 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None, *
         # use the first instrument output path; if there are multiple instruments, remove the instrument name
         defSaveFilePath = instr_paths[0][1]
         if len(instr_paths) > 1:
-            defSaveFilePath = defSaveFilePath.with_name(instr_paths[0][0].prefix() + "sed.pdf")
+            defSaveFilePath = defSaveFilePath.with_name(instr_paths[0][0].prefix() + "_sed.pdf")
         saveFilePath = ut.savePath(defSaveFilePath, (".pdf",".png"),
                                    outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
         plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
