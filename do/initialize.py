@@ -59,4 +59,8 @@ def initializePTS(prompt = False):
     import matplotlib
     matplotlib.use("pdf")
 
+    # set the PTS interactive mode
+    import pts.utils as ut
+    ut.setInteractive(prompt)
+
 # -----------------------------------------------------------------

@@ -15,6 +15,7 @@
 # and that are likely shared between multiple packages.
 #
 
+from .config import setInteractive, interactive
 from .error import UserError
 from .path import dataPath, ptsPath, projectParentPath, skirtPath, absPath
 from .time import timestamp
