@@ -11,7 +11,7 @@
 # a SKIRT simulation. The R,G,B color channels can be specified as wavelength values or as broadbands.
 #
 # The function takes the following arguments:
-#  - \em outDirPath (positional string argument): the path to the SKIRT simulation output directory,
+#  - \em simDirPath (positional string argument): the path to the SKIRT simulation output directory,
 #                                                 or "." for the current directory.
 #  - \em prefix (string): the prefix of the simulation to handle; by default handles all simulations in the directory.
 #  - \em type (string): the final segment of the name of the instrument output files to be handled, excluding the

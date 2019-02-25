@@ -8,7 +8,7 @@
 ## \package pts.visual.do.plot_seds Plot the SEDs produced by one or more SKIRT simulations
 #
 # This script creates plots of the SEDs produced by one or more SKIRT simulations. It takes the following arguments:
-#  - \em outDirPath (positional string argument): the path to the SKIRT simulation output directory,
+#  - \em simDirPath (positional string argument): the path to the SKIRT simulation output directory,
 #                                                 or "." for the current directory
 #  - \em prefix (string): the prefix of the simulation to handle; by default handles all simulations in the directory
 #  - \em wmin (float): smallest wavelength on the horizontal axis, in micron; default is 0.1 micron
@@ -33,8 +33,6 @@ def do( simDirPath : (str,"SKIRT simulation output directory"),
     import pts.visual as vis
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix)>0 else None):
-        vis.plotSeds(sim, plotFilePath=sim.outFilePath("sed.pdf"),
-                     minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
-                     decades=dex)
+        vis.plotSeds(sim, minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron, decades=dex)
 
 # ----------------------------------------------------------------------

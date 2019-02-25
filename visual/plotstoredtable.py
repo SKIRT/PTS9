@@ -22,8 +22,7 @@ import pts.utils as ut
 # -----------------------------------------------------------------
 
 ## This function creates a plot of a particular 1D curve from the data in a specified SKIRT stored table file.
-# In addition to the file path of a SKIRT stored table file, the function accepts the following optional arguments
-# to configure the plot:
+# The function accepts the following optional arguments to configure the plot:
 #  - horAxis: zero-based index of the table axis on the horizontal plot axis (default = 0)
 #  - verAxis: zero-based index of the table quantity on the vertical plot axis (default = 0)
 #  - axis0, axis1, axis2, axis3, axis4: ordinate value for the table axis with the indicated zero-based index
@@ -32,12 +31,14 @@ import pts.utils as ut
 # Thus, by default, the script plots the first table quantity as a function of the first table axis,
 # with half-way values for the other axes, if any.
 #
-# The table file path and the plot file path are interpreted as described for the pts.utils.absPath() function.
-# If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
+# The table file path is interpreted as described for the pts.utils.absPath() function. By default, the figure
+# is saved as FigStoredTable.pdf in the current directory. This can be overridden with the out* arguments
+# as described for the pts.utils.savePath() function. In interactive mode (see the pts.utils.interactive() function),
+# the figure is not saved and it is left open so that is displayed in notebooks.
 #
 def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
                          axis0=None, axis1=None, axis2=None, axis3=None, axis4=None,
-                         plotFilePath=None, figSize=(8, 6)):
+                         outDirPath=None, outFileName=None, outFilePath=None, figSize=(8, 6), interactive=None):
 
     # load the complete stored table
     table = stab.readStoredTable(tableFilePath)
@@ -74,12 +75,13 @@ def plotStoredTableCurve(tableFilePath, horAxis=0, verAxis=0, *,
     plt.xlabel(horName + sm.latexForUnit(horUnit))
     plt.ylabel(verName + sm.latexForUnit(verUnit))
 
-    # if a filepath is provided, save the figure; otherwise leave it open
-    if plotFilePath is not None:
-        plotpath = ut.absPath(plotFilePath)
-        plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
+    # if not in interactive mode, save the figure; otherwise leave it open
+    if not ut.interactive(interactive):
+        saveFilePath = ut.savePath("FigStoredTable.pdf", (".pdf",".png"),
+                                   outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
+        plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
-        logging.info("Created {}".format(plotpath))
+        logging.info("Created {}".format(saveFilePath))
 
 # -----------------------------------------------------------------
 

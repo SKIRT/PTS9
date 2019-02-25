@@ -17,5 +17,5 @@
 
 from .config import setInteractive, interactive
 from .error import UserError
-from .path import dataPath, ptsPath, projectParentPath, skirtPath, absPath
+from .path import dataPath, ptsPath, projectParentPath, skirtPath, absPath, savePath
 from .time import timestamp

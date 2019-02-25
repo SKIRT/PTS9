@@ -14,7 +14,7 @@
 #  - \em names (string with comma-separated segments): if specified, the band name must contain
 #    at least one of these segments
 #
-# The plot file is named "FigBands.pdf" and is placed in the current working directory.
+# The plot file is named "FigBuiltinBands.pdf" and is placed in the current working directory.
 #
 
 # -----------------------------------------------------------------
@@ -26,8 +26,7 @@ def do( wmin : (float,"smallest pivot wavelength to be plotted, in micron") = 0.
 
     import astropy.units as u
     import pts.visual as vis
-    vis.plotBuiltinBands(plotFilePath="FigBands.pdf",
-                         minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
+    vis.plotBuiltinBands(minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
                          nameSegments=names.split(',') if len(names)>0 else None)
 
 # ----------------------------------------------------------------------

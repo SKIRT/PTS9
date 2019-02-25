@@ -15,7 +15,7 @@
 # If this is not the case, the script does nothing.
 #
 # The script takes the following arguments:
-#  - \em outDirPath (positional string argument): the path to the SKIRT simulation output directory,
+#  - \em simDirPath (positional string argument): the path to the SKIRT simulation output directory,
 #                                                 or "." for the current directory
 #  - \em prefix (string): the prefix of the simulation to handle; by default handles all simulations in the directory
 #
@@ -33,11 +33,6 @@ def do( simDirPath : (str,"SKIRT simulation output directory"),
     import pts.visual as vis
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix)>0 else None):
-        probes = [probe for probe in sim.probes() if probe.type() == "DefaultDustTemperatureCutsProbe"]
-        if len(probes) == 1:
-            probe = probes[0]
-
-            plotFileName = "{}_dust_T.pdf".format(probe.name())
-            vis.plotDefaultDustTemperatureCuts(sim, plotFilePath=sim.outFilePath(plotFileName))
+        vis.plotDefaultDustTemperatureCuts(sim)
 
 # ----------------------------------------------------------------------

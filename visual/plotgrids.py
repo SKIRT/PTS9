@@ -34,14 +34,10 @@ import pts.utils as ut
 # coordinates seperated by whitespace, or is empty. Consecutive nonempty lines represent a sequence of
 # "lineto" commands; an empty line marks a "moveto" command.
 #
-def plotGrids(simulation, *, lineWidth=0.1, plotDirPath=None, figSize=(8, 8)):
+def plotGrids(simulation, *, lineWidth=0.1, outDirPath=None, figSize=(8, 8)):
 
     # loop over the (probe, output file path) tuples
     for probe, gridFilePath in sm.probeOutFilePaths(simulation, "grid_*.dat"):
-
-        # determine output file path
-        plotFilePath = gridFilePath.with_suffix(".pdf")
-        if plotDirPath is not None: plotFilePath = ut.absPath(plotDirPath) / plotFilePath.name
 
         # determine the format type from the first nonempty line (3D format has 3 columns, 2D format has 2 columns)
         with open(gridFilePath) as gridfile:
@@ -49,22 +45,25 @@ def plotGrids(simulation, *, lineWidth=0.1, plotDirPath=None, figSize=(8, 8)):
                 form = len(line.split())
                 if form > 0: break
 
+        # determine save file path
+        saveFilePath = ut.savePath(gridFilePath, ".pdf", outDirPath=outDirPath)
+
         # use 2D or 3D version
         if form == 2:
-            _plotGrid2D(gridFilePath, plotFilePath, lineWidth, figSize)
+            _plotGrid2D(gridFilePath, saveFilePath, lineWidth, figSize)
         else:
-            _plotGrid3D(gridFilePath, plotFilePath, lineWidth, figSize)
+            _plotGrid3D(gridFilePath, saveFilePath, lineWidth, figSize)
 
 
 # -----------------------------------------------------------------
 
-def _createFigure(plotFilePath, lineWidth, figSize):
+def _createFigure(saveFilePath, lineWidth, figSize):
 
     # setup the figure with the appropriate size (in points)
     figwidth = 72 * figSize[0]
     figheight = 72 * figSize[1]
     if figwidth == figheight: figheight += 2  # to ensure portrait orientation when printed
-    fig = reportlab.pdfgen.canvas.Canvas(str(plotFilePath), pagesize=(figwidth, figheight))
+    fig = reportlab.pdfgen.canvas.Canvas(str(saveFilePath), pagesize=(figwidth, figheight))
     fig.setAuthor("Python toolkit for SKIRT")
     fig.setLineWidth(lineWidth)
 
@@ -73,10 +72,10 @@ def _createFigure(plotFilePath, lineWidth, figSize):
 
 # -----------------------------------------------------------------
 
-def _plotGrid2D(gridFilePath, plotFilePath, lineWidth, figSize):
+def _plotGrid2D(gridFilePath, saveFilePath, lineWidth, figSize):
 
     # create the reportlab canvas
-    fig, figwidth, figheight = _createFigure(plotFilePath, lineWidth, figSize)
+    fig, figwidth, figheight = _createFigure(saveFilePath, lineWidth, figSize)
 
     # determine the extent of the grid being plotted
     xmin, ymin, xmax, ymax = float('Inf'), float('Inf'), float('-Inf'), float('-Inf')
@@ -112,14 +111,14 @@ def _plotGrid2D(gridFilePath, plotFilePath, lineWidth, figSize):
     # save the figure
     fig.showPage()
     fig.save()
-    logging.info("Created grid plot {}".format(plotFilePath))
+    logging.info("Created grid plot {}".format(saveFilePath))
 
 # -----------------------------------------------------------------
 
-def _plotGrid3D(gridFilePath, plotFilePath, lineWidth, figSize):
+def _plotGrid3D(gridFilePath, saveFilePath, lineWidth, figSize):
 
     # create the reportlab canvas
-    fig, figwidth, figheight = _createFigure(plotFilePath, lineWidth, figSize)
+    fig, figwidth, figheight = _createFigure(saveFilePath, lineWidth, figSize)
 
     # determine the extent of the grid being plotted (largest half-width in all directions)
     extent = 0.
@@ -163,6 +162,6 @@ def _plotGrid3D(gridFilePath, plotFilePath, lineWidth, figSize):
     # save the figure
     fig.showPage()
     fig.save()
-    logging.info("Created grid plot {}".format(plotFilePath))
+    logging.info("Created {}".format(saveFilePath))
 
 # -----------------------------------------------------------------

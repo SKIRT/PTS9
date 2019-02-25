@@ -25,10 +25,13 @@ import pts.utils as ut
 # The function accepts a single Simulation instance and it assumes that the simulation includes exactly one
 # DefaultDustTemperatureCutsProbe. If this is not the case, the function does nothing.
 #
-# The plot file path is interpreted as described for the pts.utils.absPath() function.
-# If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
+# By default, the figure is saved in the simulation output directory with a filename that includes the simulation
+# prefix, the probe name, and the medium indicator, and has the ".pdf" filename extension. This can be overridden
+# with the out* arguments as described for the pts.utils.savePath() function. In interactive mode (see the
+# pts.utils.interactive() function), the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotDefaultDustTemperatureCuts(simulation, *, plotFilePath=None, figSize=None):
+def plotDefaultDustTemperatureCuts(simulation, *, outDirPath=None, outFileName=None, outFilePath=None,
+                                   figSize=None, interactive=None):
 
     # find the relevant probe
     probes = [ probe for probe in simulation.probes() if probe.type() == "DefaultDustTemperatureCutsProbe" ]
@@ -68,11 +71,12 @@ def plotDefaultDustTemperatureCuts(simulation, *, plotFilePath=None, figSize=Non
     # add a color bar
     fig.colorbar(im, ax=axes).ax.set_ylabel("T" + sm.latexForUnit(frame.unit), fontsize='large')
 
-    # if a filepath is provided, save the figure; otherwise leave it open
-    if plotFilePath is not None:
-        plotpath = ut.absPath(plotFilePath)
-        plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
+    # if not in interactive mode, save the figure; otherwise leave it open
+    if not ut.interactive(interactive):
+        saveFilePath = ut.savePath(simulation.outFilePath("{}_dust_T.pdf".format(probe.name())), (".pdf",".png"),
+                                   outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
+        plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
-        logging.info("Created dust temperature plot {}".format(plotpath))
+        logging.info("Created {}".format(saveFilePath))
 
 # ----------------------------------------------------------------------

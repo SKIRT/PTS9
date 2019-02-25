@@ -58,4 +58,40 @@ def absPath(inpath):
     if not path.is_absolute(): path = pathlib.Path.cwd() / path
     return path.resolve()
 
+## This function returns the absolute canonical path corresponding to the file path that will be used to save
+# a result to file, such as a PDF plot or a PNG image. The returned path is derived from the input arguments:
+#  - \em defFilePath: required argument; specifies the default save file path and is used in case the other arguments
+#    do not fully specify the path. This path is typically constructed by the immediate caller, e.g. a plot function.
+#  - \em outDirPath: optional argument; overrides the directory path in \em defFilePath.
+#  - \em outFileName: optional argument; overrides the filename portion of the path in \em defFilePath. It is valid
+#    for both \em outDirPath and \em outFileName to be specified, in which case \em defFilePath is ignored. However,
+#    in this case it may be more natural to use the \em outFilePath argument instead.
+#  - \em outFilePath: optional argument; overrides the complete path, which means that \em defFilePath, \em outDirPath
+#    and \em outFileName are ignored. The three optional arguments are typically (but not necessarily) supplied by
+#    the caller of the immediate caller.
+#  - \em suffix: required argument; string or sequence of strings listing the allowed suffixes for the returned path
+#    (including the leading "." in each suffix).
+#    If the path resulting from the above rules does not already has one of the specified suffixes, the suffix
+#    of the path will be replaced by the first (or only) specified suffix.
+#
+# The three input paths may be specified as a string or as a pathlib.Path object. If the input path is relative,
+# it is interpreted relative to the current working directory. If it starts with a tilde, the tilde is expanded
+# to the home directory of the current user.
+def savePath(defFilePath, suffix, *, outDirPath=None, outFileName=None, outFilePath=None):
+
+    # construct the path based on defFilePath, outDirPath, outFileName, and outFilePath
+    result = None
+    if outFilePath is not None: result = absPath(outFilePath)
+    elif outDirPath is not None and outFileName is not None: result = absPath(outDirPath) / outFileName
+    elif outFileName is not None: result = absPath(defFilePath).with_name(outFileName)
+    elif outDirPath is not None: result = absPath(outDirPath) / absPath(defFilePath).name
+    else: result = absPath(defFilePath)
+
+    # adjust the suffix as requested
+    if isinstance(suffix, str): suffix = [ suffix ]
+    if not (result.suffix in suffix):
+        result = result.with_suffix(suffix[0])
+
+    return result
+
 # -----------------------------------------------------------------

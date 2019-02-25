@@ -29,11 +29,12 @@ import pts.utils as ut
 #  - \em nameSegments (string or iterable of strings): if specified, the band name must contain
 #    at least one of these segments
 #
-# The plot file path is interpreted as described for the pts.utils.absPath() function.
-# If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
+# By default, the figure is saved as FigBuiltinBands.pdf in the current directory. This can be overridden with the
+# out* arguments as described for the pts.utils.savePath() function. In interactive mode (see the
+# pts.utils.interactive() function), the figure is not saved and it is left open so that is displayed in notebooks.
 #
 def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, nameSegments=None, *,
-                     plotFilePath=None, figSize=(20, 6)):
+                     outDirPath=None, outFileName=None, outFilePath=None, figSize=(20, 6), interactive=None):
 
     # load all bands that satisfy the specified criteria
     bands = [ bnd.BroadBand(name) for name in bnd.builtinBandNames() ]
@@ -72,11 +73,12 @@ def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, na
     plt.xlabel(r"$\lambda$" + sm.latexForUnit(wavelengths), fontsize='large')
     plt.ylabel("Transmission", fontsize='large')
 
-    # if a filepath is provided, save the figure; otherwise leave it open
-    if plotFilePath is not None:
-        plotpath = ut.absPath(plotFilePath)
-        plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
+    # if not in interactive mode, save the figure; otherwise leave it open
+    if not ut.interactive(interactive):
+        saveFilePath = ut.savePath("FigBuiltinBands.pdf", (".pdf",".png"),
+                                   outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
+        plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
-        logging.info("Created {}".format(plotpath))
+        logging.info("Created {}".format(saveFilePath))
 
 # ----------------------------------------------------------------------

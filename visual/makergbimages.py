@@ -46,7 +46,7 @@ from .rgbimage import RGBImage
 # across multiple instruments. To achieve this, the function makes a separate preprocessing pass over all files.
 #
 def makeRGBImages(simulation, wavelengthTuples=None, *, fileType="total", fromPercentile=30, toPercentile=100,
-                  imageDirPath=None):
+                  outDirPath=None):
 
     # get the (instrument, output file path) tuples to be handled
     instr_paths = sm.instrumentOutFilePaths(simulation, fileType+".fits")
@@ -82,10 +82,9 @@ def makeRGBImages(simulation, wavelengthTuples=None, *, fileType="total", fromPe
             image.applyCurve()
 
             # determine output file path
-            imageFilePath = filepath.with_name(filepath.stem+name+".png")
-            if imageDirPath is not None: imageFilePath = ut.absPath(imageDirPath) / imageFilePath.name
-            image.saveTo(imageFilePath)
-            logging.info("Created RGB image file {}".format(imageFilePath))
+            saveFilePath = ut.savePath(filepath.with_name(filepath.stem+name+".png"), ".png", outDirPath=outDirPath)
+            image.saveTo(saveFilePath)
+            logging.info("Created {}".format(saveFilePath))
 
 # -----------------------------------------------------------------
 
@@ -127,7 +126,7 @@ def makeRGBImages(simulation, wavelengthTuples=None, *, fileType="total", fromPe
 #  as an astropy quantity with per-frequency surface brightness units (MJy/sr).
 #
 def makeConvolvedRGBImages(simulation, contributions, name="", *, fileType="total", decades=3,
-                           fmax=None, fmin=None, imageDirPath=None):
+                           fmax=None, fmin=None, outDirPath=None):
 
     # get the (instrument, output file path) tuples to be handled
     instr_paths = sm.instrumentOutFilePaths(simulation, fileType+".fits")
@@ -171,10 +170,9 @@ def makeConvolvedRGBImages(simulation, contributions, name="", *, fileType="tota
             image.applyCurve()
 
             # determine output file path
-            imageFilePath = filepath.with_name(filepath.stem+name+".png")
-            if imageDirPath is not None: imageFilePath = ut.absPath(imageDirPath) / imageFilePath.name
-            image.saveTo(imageFilePath)
-            logging.info("Created convolved RGB image file {}".format(imageFilePath))
+            saveFilePath = ut.savePath(filepath.with_name(filepath.stem+name+".png"), ".png", outDirPath=outDirPath)
+            image.saveTo(saveFilePath)
+            logging.info("Created convolved RGB image file {}".format(saveFilePath))
 
         # return the surface brightness range used for these images
         return fmin,fmax

@@ -37,7 +37,6 @@ def do( filepath : (str,"name or path of SKIRT stored table file"),
     import pts.visual as vis
 
     vis.plotStoredTableCurve(tableFilePath=filepath, horAxis=hor, verAxis=ver,
-                             axis0=ax0, axis1=ax1, axis2=ax2, axis3=ax3, axis4=ax4,
-                             plotFilePath="FigStoredTable.pdf")
+                             axis0=ax0, axis1=ax1, axis2=ax2, axis3=ax3, axis4=ax4)
 
 # -----------------------------------------------------------------

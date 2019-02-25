@@ -32,11 +32,15 @@ import pts.utils as ut
 #
 # If there is no SED in the list, the function does nothing.
 #
-# The plot file path is interpreted as described for the pts.utils.absPath() function.
-# If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
+# By default, the figure is saved in the output directory of the first instrument in the list,
+# using a name starting with the corresponding simulation prefix, possibly including the instrument name,
+# and ending with ".pdf". This can be overridden with the out* arguments as described for the
+# pts.utils.savePath() function. In interactive mode (see the pts.utils.interactive() function),
+# the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None,
-             *, plotFilePath=None, figSize=(8, 6)):
+def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None, *,
+             outDirPath=None, outFileName=None, outFilePath=None, figSize=(8, 6), interactive=None):
+
     # get the (instrument, output file path) tuples
     instr_paths = sm.instrumentOutFilePaths(simulation, "sed.dat")
     if len(instr_paths) < 1:
@@ -96,12 +100,17 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None,
     plt.ylabel(sm.latexForSpectralFlux(fluxUnit) + sm.latexForUnit(fluxUnit), fontsize='large')
     plt.legend(loc='best')
 
-    # if a filepath is provided, save the figure; otherwise leave it open
-    if plotFilePath is not None:
-        plotpath = ut.absPath(plotFilePath)
-        plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
+    # if not in interactive mode, save the figure; otherwise leave it open
+    if not ut.interactive(interactive):
+        # use the first instrument output path; if there are multiple instruments, remove the instrument name
+        defSaveFilePath = instr_paths[0][1]
+        if len(instr_paths) > 1:
+            defSaveFilePath = defSaveFilePath.with_name(instr_paths[0][0].prefix() + "sed.pdf")
+        saveFilePath = ut.savePath(defSaveFilePath, (".pdf",".png"),
+                                   outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
+        plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
-        logging.info("Created SED plot {}".format(plotpath))
+        logging.info("Created {}".format(saveFilePath))
 
 # ----------------------------------------------------------------------
 
@@ -113,11 +122,13 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None,
 # The function accepts a single Simulation instance and it assumes that the simulation includes exactly one
 # LuminosityProbe and exactly one LaunchedPacketsProbe. If this is not the case, the function does nothing.
 #
-# The plot file path is interpreted as described for the pts.utils.absPath() function.
-# If no plot path is given, the figure is not saved and it is left open so that is displayed in notebooks.
+# By default, the figure is saved in the simulation output directory, using a name starting with the simulation prefix
+# and ending with "sources.pdf". This can be overridden with the out* arguments as described for the
+# pts.utils.savePath() function. In interactive mode (see the pts.utils.interactive() function),
+# the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None,
-                *, plotFilePath=None, figSize=(8, 6)):
+def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None, *,
+                outDirPath=None, outFileName=None, outFilePath=None, figSize=(8, 6), interactive=None):
 
     # find the required probes
     probes = simulation.probes()
@@ -147,7 +158,7 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
     label = "{} ".format(simulation.prefix())
 
     # plot the total
-    lumiMax = lumiTot.max();
+    lumiMax = lumiTot.max()
     packMax = packTot.max()
     plt.plot(lumiWave.value, lumiTot/lumiMax, color='k', ls='solid', label=label + "total")
     plt.plot(packWave.value, packTot/packMax, color='k', ls='dashed')
@@ -177,11 +188,12 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
     plt.ylabel(r"Normalized $L$ and $N_\mathrm{pp}$", fontsize='large')
     plt.legend(loc='best')
 
-    # if a filepath is provided, save the figure; otherwise leave it open
-    if plotFilePath is not None:
-        plotpath = ut.absPath(plotFilePath)
-        plt.savefig(plotpath, bbox_inches='tight', pad_inches=0.25)
+    # if not in interactive mode, save the figure; otherwise leave it open
+    if not ut.interactive(interactive):
+        saveFilePath = ut.savePath(simulation.outFilePath("sources.pdf"), (".pdf",".png"),
+                                   outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
+        plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
-        logging.info("Created SED plot {}".format(plotpath))
+        logging.info("Created {}".format(saveFilePath))
 
 # ----------------------------------------------------------------------

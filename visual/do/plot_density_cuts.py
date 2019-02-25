@@ -14,7 +14,7 @@
 # If this is not the case, the function does nothing.
 #
 # The script takes the following arguments:
-#  - \em outDirPath (positional string argument): the path to the SKIRT simulation output directory,
+#  - \em simDirPath (positional string argument): the path to the SKIRT simulation output directory,
 #                                                 or "." for the current directory
 #  - \em prefix (string): the prefix of the simulation to handle; by default handles all simulations in the directory
 #  - \em dex (float): if specified, the number of decades to be included in the density range (color bar); default is 5
@@ -34,14 +34,6 @@ def do( simDirPath : (str, "SKIRT simulation output directory"),
     import pts.visual as vis
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix) > 0 else None):
-        probes = [probe for probe in sim.probes() if probe.type() == "DefaultMediaDensityCutsProbe"]
-        if len(probes) == 1:
-            probe = probes[0]
-
-            for medium in ("dust", "elec", "gas"):
-                for cut in ("xy", "xz", "yz"):
-                    plotFileName = "{}_{}_{}.pdf".format(probe.name(), medium, cut)
-                    vis.plotDefaultMediaDensityCuts(sim, medium=medium, cut=cut, decades=dex,
-                                                    plotFilePath=sim.outFilePath(plotFileName))
+        vis.plotDefaultMediaDensityCuts(sim, decades=dex)
 
 # ----------------------------------------------------------------------
