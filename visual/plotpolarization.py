@@ -36,10 +36,10 @@ import pts.utils as ut
 #
 # The function takes the following arguments:
 #   - simulation: a sequence of Simulation and/or Instrument instances, or a single instance of either of these types.
-#   - plotLinear: whether to plot a linear polarization map; True or False.
-#   - plotPolDegMap: whether to plot a linear polarization degree map; True or False.
-#   - plotPolDegAvY: whether to plot the y-axis averaged linear polarization degree for all x pixels; True or False.
-#   - plotCircular: whether to plot a circular polarization map; True, False or None for automatic.
+#   - plotLinMap: whether to plot a linear polarization map (binned degree and angle); True or False.
+#   - plotDegMap: whether to plot a linear polarization degree map; True or False.
+#   - plotDegAvg: whether to plot the y-axis averaged linear polarization degree for all x pixels; True or False.
+#   - plotCirMap: whether to plot a circular polarization map; True, False or None for automatic.
 #   - wavelength: an astropy quantity or a sequence of astropy quantities specifying the wavelength(s) for which to
 #     create the plot, or the string 'all' to create a plot for all wavelengths in the data cube, or None to use the
 #     first frame in the data cube.
@@ -50,7 +50,7 @@ import pts.utils as ut
 #   - figSize: the horizontal and vertical size of the output figure in inch; default is 6x6 inch.
 #   - interactive: whether to leave figures open (True) or save them to file (False).
 #
-def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPolDegAvY=False, plotCircular=False,
+def plotPolarization(simulation, *, plotLinMap=True, plotDegMap=False, plotDegAvg=False, plotCirMap=False,
                      wavelength=None, binSize=(7,7), polScale=(None,None), decades=5,
                      outDirPath=None, figSize=(8, 6), interactive=None):
 
@@ -77,6 +77,7 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
         xmax = xgrid[-1].value
         ymin = ygrid[0].value
         ymax = ygrid[-1].value
+        extent = (xmin, xmax, ymin, ymax)
 
         # determine binning configuration
         binX = binSize[0]
@@ -115,8 +116,8 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
             U = Us[:,:,index].T.value
             V = Vs[:,:,index].T.value
 
-            # if plotCircular is None, we'll detect circular polarization for this frame during binning
-            plotCircularThis = plotCircular
+            # if plotCirMap is None, we'll detect circular polarization for this frame during binning
+            plotCirMapThis = plotCirMap
 
             # perform the actual binning
             binnedI = np.zeros((len(posY),len(posX)))
@@ -132,17 +133,23 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
                     # we only need circular polarization relative to total Intensity
                     binnedV[y,x] /= binnedI[y,x]
                     # if needed, detect circular polarization
-                    if plotCircularThis is None:
+                    if plotCirMapThis is None:
                         stdV = np.nanstd(V[startY+binY*y : startY+binY*(y+1) , startX+binX*x : startX+binX*(x+1)]/
                                          I[startY+binY*y : startY+binY*(y+1) , startX+binX*x : startX+binX*(x+1)])
                         if stdV == 0: stdV = 1 # if we only have one polarized pixel in the bins, stdV is undefined
-                        if np.abs(binnedV[y,x])/stdV > 2: plotCircularThis = True
+                        if np.abs(binnedV[y,x])/stdV > 2: plotCirMapThis = True
 
             # -----------------------------------------------------------------
 
             # plot a linear polarization map
-            if plotLinear:
+            if plotLinMap:
                 fig, ax = plt.subplots(ncols=1, nrows=1, figsize=figSize)
+
+                # configure the axes
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.set_xlabel("x" + sm.latexForUnit(xgrid), fontsize='large')
+                ax.set_ylabel("y" + sm.latexForUnit(ygrid), fontsize='large')
 
                 # determine intensity range for the background image, ignoring pixels with outrageously high flux
                 Ib = I.copy()
@@ -155,17 +162,10 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
                 normalizer = matplotlib.colors.LogNorm(vmin, vmax)
                 cmap = plt.get_cmap('PuRd')
                 cmap.set_under('w')
-                extent = (xgrid[0].value, xgrid[-1].value, ygrid[0].value, ygrid[-1].value)
                 backPlot = ax.imshow(Ib, norm=normalizer, cmap=cmap, extent=extent,
                                      aspect='equal', interpolation='bicubic', origin='lower')
                 cbarlabel = sm.latexForSpectralFlux(Is) + sm.latexForUnit(Is) + " @ " +  wavelatex
-                plt.colorbar(backPlot, ax=ax).ax.set_ylabel(cbarlabel, fontsize='large')
-
-                # configure the axes
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.set_xlabel("x" + sm.latexForUnit(xgrid), fontsize='large')
-                ax.set_ylabel("y" + sm.latexForUnit(ygrid), fontsize='large')
+                plt.colorbar(backPlot, ax=ax).set_label(cbarlabel, fontsize='large')
 
                 # compute the linear polarization degree
                 degreeLD = np.sqrt(binnedQ**2 + binnedU**2)
@@ -205,7 +205,7 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
                 # if not in interactive mode, save the figure; otherwise leave it open
                 if not ut.interactive(interactive):
                     saveFilePath = ut.savePath(filepath, ".pdf", outDirPath=outDirPath,
-                                               outFileName = "{}_{}_linpol.pdf".format(insname, wavename))
+                                               outFileName = "{}_{}_pollinmap.pdf".format(insname, wavename))
                     plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
                     plt.close()
                     logging.info("Created {}".format(saveFilePath))
@@ -213,13 +213,43 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
             # -----------------------------------------------------------------
 
             # plot a linear polarization degree map
-            if plotPolDegMap:
-                pass
+            if plotDegMap:
+                fig, ax = plt.subplots(ncols=1, nrows=1, figsize=figSize)
+
+                # configure the axes
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.set_xlabel("x" + sm.latexForUnit(xgrid), fontsize='large')
+                ax.set_ylabel("y" + sm.latexForUnit(ygrid), fontsize='large')
+
+                # calculate polarization degree for each pixel, in percent
+                degreeHD = np.sqrt(Q**2 + U**2)
+                degreeHD[degreeHD>0] /= I[degreeHD>0]
+                degreeHD *= 100
+
+                # set degree to zero for pixels with very low intensity
+                Icutoff = np.nanmax(I[I < 1e6*np.nanmedian(np.unique(I))]) / 10**decades
+                degreeHD[I < Icutoff] = 0
+
+                # plot the image and the corresponding color bar
+                normalizer = matplotlib.colors.Normalize(vmin=0, vmax=np.percentile(degreeHD, 99))
+                backPlot = ax.imshow(degreeHD, norm=normalizer, cmap='plasma', extent=extent,
+                                     aspect='equal', interpolation='bicubic', origin='lower')
+                plt.colorbar(backPlot, ax=ax).set_label("Linear polarization degree (%)" + " @ " +  wavelatex,
+                                                        fontsize='large')
+
+                # if not in interactive mode, save the figure; otherwise leave it open
+                if not ut.interactive(interactive):
+                    saveFilePath = ut.savePath(filepath, ".pdf", outDirPath=outDirPath,
+                                               outFileName = "{}_{}_poldegmap.pdf".format(insname, wavename))
+                    plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
+                    plt.close()
+                    logging.info("Created {}".format(saveFilePath))
 
             # -----------------------------------------------------------------
 
             # plot the y-axis averaged linear polarization degree
-            if plotPolDegAvY:
+            if plotDegAvg:
                 # construct the plot
                 fig, ax = plt.subplots(ncols=1, nrows=1, figsize=figSize)
                 degreeHD = np.sqrt(np.average(Q, axis = 0)**2 + np.average(U, axis=0)**2)
@@ -233,7 +263,7 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
                 # if not in interactive mode, save the figure; otherwise leave it open
                 if not ut.interactive(interactive):
                     saveFilePath = ut.savePath(filepathI, ".pdf", outDirPath=outDirPath,
-                                               outFileName = "{}_{}_poldegavy.pdf".format(insname, wavename))
+                                               outFileName = "{}_{}_poldegavg.pdf".format(insname, wavename))
                     plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
                     plt.close()
                     logging.info("Created {}".format(saveFilePath))
@@ -241,7 +271,7 @@ def plotPolarization(simulation, *, plotLinear=True, plotPolDegMap=False, plotPo
             # -----------------------------------------------------------------
 
             # plot a circular polarization map
-            if plotCircularThis:
+            if plotCirMapThis:
                 pass
 
 # -----------------------------------------------------------------
