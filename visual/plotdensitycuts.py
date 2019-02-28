@@ -65,11 +65,11 @@ def plotDefaultMediaDensityCuts(simulation, decades=5, *, outDirPath=None, figSi
                 # plot the cuts and a color bar
                 normalizer = matplotlib.colors.LogNorm(vmin.value, vmax.value)
                 extent = (xgrid[0].value, xgrid[-1].value, ygrid[0].value, ygrid[-1].value)
-                im = ax1.imshow(tFrame.value, norm=normalizer, cmap='gnuplot', extent=extent,
-                                aspect='equal', interpolation='bicubic', origin='lower')
+                im = ax1.imshow(tFrame.value.T, norm=normalizer, cmap='gnuplot', extent=extent,
+                                aspect='auto', interpolation='bicubic', origin='lower')
                 fig.colorbar(im, ax=(ax1,ax2)).ax.set_ylabel("density" + sm.latexForUnit(tFrame.unit), fontsize='large')
-                ax2.imshow(gFrame.value, norm=normalizer, cmap='gnuplot', extent=extent,
-                           aspect='equal', interpolation='bicubic', origin='lower')
+                ax2.imshow(gFrame.value.T, norm=normalizer, cmap='gnuplot', extent=extent,
+                           aspect='auto', interpolation='bicubic', origin='lower')
 
                 # set axis details
                 ax1.set_xlim(xgrid[0].value, xgrid[-1].value)
