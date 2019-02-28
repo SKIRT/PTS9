@@ -20,6 +20,7 @@ from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources
 from .plotdensitycuts import plotDefaultMediaDensityCuts
 from .plotgrids import plotGrids
+from .plotpolarization import plotPolarization
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
 from .plottemperaturecuts import plotDefaultDustTemperatureCuts
 from .rgbimage import RGBImage
