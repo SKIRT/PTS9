@@ -49,6 +49,16 @@ class Skirt:
     def path(self):
         return self._path
 
+    ## This function returns a string with version information on the SKIRT executable represented by this
+    # object. The function invokes SKIRT with an incorrect command line argument to obtain this information.
+    def version(self):
+        # execute skirt with incorrect argument list and get its output
+        process = subprocess.run([str(self._path), "--version"], capture_output=True, text=True)
+        output = process.stdout
+
+        # return the relevant portion of the output
+        return "SKIRT" + output.splitlines()[0].partition("SKIRT")[2]
+
     ## This function invokes the SKIRT executable with the simulation and command line options corresponding to the
     #  values of the function arguments, as described below. The function returns a pts.simulation.simulation.Simulation
     #  instance corresponding to the simulation being performed (or attempted, in case of failure). The function

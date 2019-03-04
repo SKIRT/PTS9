@@ -213,11 +213,18 @@ class Simulation:
 
     # -----------------------------------------------------------------
 
+    ## This function returns True if the simulation instance has been created from an asynchronous Skirt.execute()
+    # invocation (with "wait=False") and the asynchronous process is still executing. Otherwise, the function
+    # returns False. Note that this is not always exactly the same as the result of "status() == 'Running'".
+    def isRunning(self):
+        # if we were given a process object, and we still have it, query it
+        return self._process is not None and self._process.poll() is None
+
     ## This function returns the status of the simulation, based on its process completion state (if available)
     # and the contents of its log file, as one of the following strings:
     #  - 'NotStarted': the simulation has not (yet) been started.
     #  - 'Running': the simulation is still running, or at least it seems to be so (for example, the simulation
-    #    crashed without logging an error message and the Simulation was constructed without a project object).
+    #    crashed without logging an error message and the Simulation was constructed without a process object).
     #  - 'Crashed': the simulation ended with a fatal error.
     #  - 'Finished': the simulation completed properly.
     def status(self):
