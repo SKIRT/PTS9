@@ -62,12 +62,14 @@
 #
 # By default, the script creates backup archives for all three characterizations. Specifying the \c --derived
 # and/or --repos options to have a zero value on the command line suppresses creation of the corresponding archives.
+# Specifying the \c --name=dirname restricts backup creation to the project folders starting with the specified string.
 #
 
 # -----------------------------------------------------------------
 
 def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
         repos : (int,"backup repositories (specify zero to skip)") = 1,
+        name : (str,"backup only project subdirectories starting with this name") = "",
         ) -> "create backup archives for the SKIRT/PTS parent project":
 
     import logging
@@ -98,6 +100,10 @@ def do( derived : (int,"backup derived data (specify zero to skip)") = 1,
                 if not datatype in ["original", "derived", "repository"]:
                     raise ut.UserError("Unsupported backup instruction data characterization: '{}'".format(datatype))
                 sourcedir = tokens[1]
+
+                # skip source directories that don't match the specified name
+                if len(name)>0 and not sourcedir.lower().startswith(name.lower()):
+                    continue
 
                 # for original and derived, create regular backup archive
                 if (datatype=="original") or (datatype=="derived" and derived!=0):
