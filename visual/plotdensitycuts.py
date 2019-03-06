@@ -62,8 +62,11 @@ def plotDefaultMediaDensityCuts(simulation, decades=5, *, outDirPath=None, figSi
                 # setup the figure
                 fig, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=figSize)
 
-                # plot the cuts and a color bar
-                normalizer = matplotlib.colors.LogNorm(vmin.value, vmax.value)
+                # plot the cuts and a color bar (logarithmic normalizer crashes if all values are zero)
+                if vmax>0:
+                    normalizer = matplotlib.colors.LogNorm(vmin.value, vmax.value)
+                else:
+                    normalizer = matplotlib.colors.Normalize(vmin.value, vmax.value)
                 extent = (xgrid[0].value, xgrid[-1].value, ygrid[0].value, ygrid[-1].value)
                 im = ax1.imshow(tFrame.value.T, norm=normalizer, cmap='gnuplot', extent=extent,
                                 aspect='auto', interpolation='bicubic', origin='lower')
