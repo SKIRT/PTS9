@@ -17,6 +17,7 @@ import filecmp
 import logging
 import multiprocessing
 import time
+import pts.do
 import pts.simulation as sm
 import pts.utils as ut
 
@@ -127,10 +128,14 @@ class SkirtTestSuite:
                 if path.is_file(): path.unlink()
 
     ## This function performs all tests in the test suite, verifies the results, and prepares a summary test report.
-    # The function accepts an optional arguments specifying the path to the skirt executable. If specified, the path
-    # is interpreted as described for the pts.utils.absPath() function. If omitted, the default path is used as
-    # described for the constructor of the pts.simulation.skirt.Skirt class.
-    def perform(self, skirtPath=None):
+    # The function accepts two optional arguments:
+    #  - \em skirtPath: the path to the skirt executable. If specified, the path is interpreted as described for
+    #    the pts.utils.absPath() function. If omitted, the default path is used as described for the constructor
+    #    of the pts.simulation.skirt.Skirt class.
+    #  - \em visual: a string describing the visualizations to be created for the output of each test case, if any.
+    #    If specified, the string is a semicolon-separated list of PTS visualization commands as they would be entered
+    #    at the command line, omitting the simulation output path argument (which will be inserted automatically).
+    def perform(self, *, skirtPath=None, visual=None):
         # create a SKIRT execution context for each core on the host computer
         numCores = min(len(self._skiPaths), max(multiprocessing.cpu_count(), 1))
         skirts = [ sm.Skirt(skirtPath) for core in range(numCores) ]
@@ -176,6 +181,14 @@ class SkirtTestSuite:
                     testname = sim.skiFilePath().relative_to(self._suitePath).parent
                     logging.info("{:3d} -- {}: {}".format(numDone, testname, status))
                     del sims[simindex]
+
+                    # create visualizations if requested
+                    if visual is not None and status != "Crashed":
+                        for command in visual.split(";"):
+                            arguments = command.split()
+                            if len(arguments)>0:
+                                arguments.insert(1, str(sim.outDirPath()))
+                                pts.do.doWithCommandLineArguments(arguments)
                     break
 
             if numDone == numTotal:

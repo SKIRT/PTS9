@@ -17,4 +17,4 @@
 # without having to specify the exact location.
 #
 
-from .command import listCommands, CommandScript
+from .command import doWithCommandLineArguments, listCommands, CommandScript
