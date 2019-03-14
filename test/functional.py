@@ -179,7 +179,8 @@ class SkirtTestSuite:
                     if not status in statistics: statistics[status] = 0
                     statistics[status] += 1
                     testname = sim.skiFilePath().relative_to(self._suitePath).parent
-                    logging.info("{:3d} -- {}: {}".format(numDone, testname, status))
+                    level = logging.INFO if status == "Succeeded" else logging.WARNING
+                    logging.log(level, "{:3d} -- {}: {}".format(numDone, testname, status))
                     del sims[simindex]
 
                     # create visualizations if requested
@@ -201,10 +202,14 @@ class SkirtTestSuite:
         # log test summary
         logging.info("Summary for {} test case(s):".format(numTotal))
         for status in sorted(statistics.keys()):
-            logging.info("  {}: {}".format(status, statistics[status]))
+            level = logging.INFO if status == "Succeeded" else logging.WARNING
+            logging.log(level, "  {}: {}".format(status, statistics[status]))
 
         # create a consolidated test report at the top suite level
-        with open(self._suitePath / (ut.timestamp()+"_testreport.txt"), "wt") as confile:
+        reportdir = self._suitePath / "_testreports"
+        reportname = "{}_testreport_{}.txt".format(ut.timestamp(), numTotal)
+        reportdir.mkdir(exist_ok=True)
+        with open(reportdir / reportname, "wt") as confile:
             # write header and summary
             confile.write("Using {}\n".format(skirtversion))
             confile.write("With path {}\n".format(skirtpath))
