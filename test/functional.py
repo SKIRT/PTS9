@@ -100,8 +100,8 @@ class SkirtTestSuite:
         # find all valid test cases in any of the sub-suite paths and remember the paths to the corresponding ski files
         skiPathSet = set()
         for subSuitePath in subSuitePaths:
-            for skiPath in subSuitePath.rglob("*.ski"):
-                if len(list(skiPath.parent.glob("*.ski"))) == 1:
+            for skiPath in subSuitePath.rglob("[!.]*.ski"):
+                if len(list(skiPath.parent.glob("[!.]*.ski"))) == 1:
                     skiPathSet.add(skiPath)
         self._skiPaths = sorted(skiPathSet)
 
