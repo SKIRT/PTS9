@@ -137,7 +137,7 @@ class SkirtTestSuite:
     #    at the command line, omitting the simulation output path argument (which will be inserted automatically).
     def perform(self, *, skirtPath=None, visual=None):
         # create a SKIRT execution context for each core on the host computer
-        numCores = min(len(self._skiPaths), max(multiprocessing.cpu_count(), 1))
+        numCores = min(24, len(self._skiPaths), max(multiprocessing.cpu_count(), 1))
         skirts = [ sm.Skirt(skirtPath) for core in range(numCores) ]
 
         # inform the user of the fact that the tests are being initiated
