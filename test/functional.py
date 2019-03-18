@@ -109,6 +109,10 @@ class SkirtTestSuite:
         if len(self._skiPaths) == 0:
             raise ut.UserError("No valid test cases found for sub-suite specification: '{}'".format(subSuite))
 
+    ## This function returns the number of test cases in this test suite
+    def size(self):
+        return len(self._skiPaths)
+
     ## This function prepares the contents of all test case directories in the sub-suite for performing the tests.
     # Specifically, it creates \c in, \c out and \c ref directories next to the ski file, if they don't exist,
     # and it removes all files from the \c out directory (without touching any of its subdirectories, which should
@@ -126,6 +130,24 @@ class SkirtTestSuite:
             # remove files from the "out" subdirectory
             for path in (casedir/"out").glob("*"):
                 if path.is_file(): path.unlink()
+
+    ## This function "endorses" the current output of all test case directories in the sub-suite by
+    # replacing the contents of the "ref" directory by the contents of the "out" directory.
+    # \note This function destroys the current reference output for test cases; USE WITH CARE!
+    def endorse(self):
+        # loop over all ski files in the sub-suite
+        for skipath in self._skiPaths:
+            casedir = skipath.parent
+
+            # remove the contents of the ref directory
+            for path in (casedir/"ref").glob("*"):
+                if path.is_file(): path.unlink()
+
+            # move the contents of the out directory to the ref directory
+            for path in (casedir/"out").glob("*"):
+                if path.is_file():
+                    target = casedir/"ref"/path.name
+                    path.replace(target)
 
     ## This function performs all tests in the test suite, verifies the results, and prepares a summary test report.
     # The function accepts two optional arguments:
