@@ -143,8 +143,8 @@ class SkirtTestSuite:
             for path in (casedir/"ref").glob("*"):
                 if path.is_file(): path.unlink()
 
-            # move the contents of the out directory to the ref directory
-            for path in (casedir/"out").glob("*"):
+            # move the contents of the out directory to the ref directory, except for hidden files and test reports
+            for path in (casedir/"out").glob("[!._]*"):
                 if path.is_file():
                     target = casedir/"ref"/path.name
                     path.replace(target)
