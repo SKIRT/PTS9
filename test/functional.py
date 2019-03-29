@@ -13,9 +13,11 @@
 
 # -----------------------------------------------------------------
 
+import astropy.io.fits as fits
 import filecmp
 import logging
 import multiprocessing
+import numpy as np
 import time
 import pts.do
 import pts.simulation as sm
@@ -284,7 +286,8 @@ def reportTestCase(sim):
             if len(differing)>0:
                 reportfile.write("  Differing files:\n")
                 for name in differing:
-                    reportfile.write("    {}\n".format(name))
+                    statistics = getDifferenceStatistics(sim, name)
+                    reportfile.write("    {:<40s} -- {}\n".format(name, statistics))
     return status
 
 ## This function looks for relevant differences between the contents of the output and reference directories of the
@@ -328,6 +331,44 @@ def findDifferences(sim):
 
     # return the lists of extra, missing, and differing files
     return extra, missing, differing
+
+## This function ...
+def getDifferenceStatistics(sim, name):
+
+    # get the file paths
+    refpath = sim.outDirPath().parent / "ref" / name
+    outpath = sim.outDirPath() / name
+
+    # load data
+    if name.endswith(".dat"):
+        try:
+            ref = np.loadtxt(refpath)
+            out = np.loadtxt(outpath)
+        except ValueError:
+            return "text file has non-numeric contents"
+    elif name.endswith(".fits"):
+        ref = fits.getdata(refpath)
+        out = fits.getdata(outpath)
+    else:
+        return "unsupported file format"
+
+    # verify shape
+    if ref.shape != out.shape:
+        return "data shape differs"
+
+    # get statistics
+    nonzero = ref != 0
+    numNonzero = np.count_nonzero(nonzero)
+    relDiff = np.abs((out[nonzero] - ref[nonzero]) / ref[nonzero])
+    numDiff = np.count_nonzero(relDiff > 0)
+    numDiff10 = np.count_nonzero(relDiff > 0.10)
+    numDiff50 = np.count_nonzero(relDiff > 0.50)
+
+    # format statistics into a string
+    #return "tot: {:6d}  dif: {:6d}  >10: {:6d}  >50: {:6d}".format(numNonzero, numDiff, numDiff10, numDiff50)
+    return "{:6d} ({:6.2f}%) >0   {:6d} ({:6.2f}%) >10   {:6d} ({:6.2f}%) >50" \
+                    .format(numDiff, 100*numDiff/numNonzero, numDiff10, 100*numDiff10/numNonzero,
+                            numDiff50, 100*numDiff50/numNonzero)
 
 ## This helper function returns True if the specified FITS files are equal except for the information
 #  in a single header record, and False otherwise.
