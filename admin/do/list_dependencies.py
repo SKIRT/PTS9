@@ -62,7 +62,7 @@ def do() -> "list external package dependencies for PTS":
 
     # build a set of available package names
     available = set([ module.name for module in pkgutil.iter_modules() ])
-    available.add("sys")   # add "sys" as a special case
+    available.update(("sys","time"))   # add these as special packages that are always installed
 
     # output a sorted list of packages with their availability
     logging.info("PTS depends on {} packages:".format(len(packages)))
