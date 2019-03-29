@@ -18,3 +18,4 @@
 #
 
 from .command import doWithCommandLineArguments, listCommands, CommandScript
+from .initialize import initializePTS

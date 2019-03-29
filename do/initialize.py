@@ -48,7 +48,7 @@ def initializePTS(prompt = False):
         formatter = CommandLineLoggingFormatter(fmt=' <%(levelname)s> %(message)s')
     else:
         formatter = CommandLineLoggingFormatter(fmt='%(asctime)s.%(msecs)03d <%(levelname)s> %(message)s',
-                                                datefmt='%m/%d/%Y %H:%M:%S')
+                                                datefmt='%d/%m/%Y %H:%M:%S')
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     logging.root.addHandler(handler)
