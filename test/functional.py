@@ -167,6 +167,7 @@ class SkirtTestSuite:
         skirtpath = skirts[0].path()
         logging.info("Using {}".format(skirtversion))
         logging.info("With path {}".format(skirtpath))
+        logging.info("Running on {} for {}".format(ut.hostname(), ut.username()))
         logging.info("Performing {} functional test case(s) in {} parallel processes..." \
                      .format(len(self._skiPaths), numCores))
 
@@ -235,6 +236,7 @@ class SkirtTestSuite:
             # write header and summary
             confile.write("Using {}\n".format(skirtversion))
             confile.write("With path {}\n".format(skirtpath))
+            confile.write("Running on {} for {}\n".format(ut.hostname(), ut.username()))
             confile.write("Summary for {} test case(s):\n".format(numTotal))
             for status in sorted(statistics.keys()):
                 confile.write("  {}: {}\n".format(status, statistics[status]))
