@@ -332,7 +332,10 @@ def findDifferences(sim):
     # return the lists of extra, missing, and differing files
     return extra, missing, differing
 
-## This function ...
+## This function returns a string describing some basic statistics on the difference between the reference and
+# output files of the specified name in the specified simulation. It supports text columns files and FITS files.
+# Essentially, the string shows the number of nonzero values that don't match, that differ by more than 10
+# percent, and that differ by more than 50% between the files.
 def getDifferenceStatistics(sim, name):
 
     # get the file paths
