@@ -19,6 +19,7 @@ import logging
 import multiprocessing
 import numpy as np
 import time
+import warnings
 import pts.do
 import pts.simulation as sm
 import pts.utils as ut
@@ -360,18 +361,20 @@ def getDifferenceStatistics(sim, name):
         return "data shape differs"
 
     # get statistics
-    nonzero = ref != 0
-    numNonzero = np.count_nonzero(nonzero)
-    relDiff = np.abs((out[nonzero] - ref[nonzero]) / ref[nonzero])
-    numDiff = np.count_nonzero(relDiff > 0)
-    numDiff10 = np.count_nonzero(relDiff > 0.10)
-    numDiff50 = np.count_nonzero(relDiff > 0.50)
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message="invalid value encountered in")
+        nonzero = ref != 0
+        numNonzero = np.count_nonzero(nonzero)
+        relDiff = np.abs((out[nonzero] - ref[nonzero]) / ref[nonzero])
+        numDiff = np.count_nonzero(relDiff > 0)
+        numDiff10 = np.count_nonzero(relDiff > 0.10)
+        numDiff50 = np.count_nonzero(relDiff > 0.50)
 
     # format statistics into a string
-    #return "tot: {:6d}  dif: {:6d}  >10: {:6d}  >50: {:6d}".format(numNonzero, numDiff, numDiff10, numDiff50)
     return "{:6d} ({:6.2f}%) >0   {:6d} ({:6.2f}%) >10   {:6d} ({:6.2f}%) >50" \
-                    .format(numDiff, 100*numDiff/numNonzero, numDiff10, 100*numDiff10/numNonzero,
-                            numDiff50, 100*numDiff50/numNonzero)
+                    .format(numDiff, 100*numDiff/numNonzero if numNonzero>0 else 100 if numDiff>0 else 0,
+                            numDiff10, 100*numDiff10/numNonzero if numNonzero>0 else 100 if numDiff10>0 else 0,
+                            numDiff50, 100*numDiff50/numNonzero if numNonzero>0 else 100 if numDiff50>0 else 0)
 
 ## This helper function returns True if the specified FITS files are equal except for the information
 #  in a single header record, and False otherwise.
