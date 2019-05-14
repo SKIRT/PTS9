@@ -112,7 +112,10 @@ def _flavor(flavorunit):
 # enclosed in square brackets and preceded by a short space. The input argument
 # is interpreted as described for the unit() function in this module.
 def latexForUnit(unitlike):
-    return r"$\,$[" + unit(unitlike).to_string("latex_inline") + r"]"
+    latex = unit(unitlike).to_string("latex_inline")
+    # Work around for bug in astropy 3.1.2: put parentheses around LaTeX for arcsec if it carries an exponent
+    latex = latex.replace("{}^{\prime\prime}^","({}^{\prime\prime})^")
+    return r"$\,$[" + latex + r"]"
 
 ## This function returns a latex-formatted string representation for a flux density (\f$\lambda F_\lambda\f$,
 # \f$F_\lambda\f$, or \f$F_\nu\f$) or a surface brightness (\f$\lambda f_\lambda\f$, \f$f_\lambda\f$, or \f$f_\nu\f$)
