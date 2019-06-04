@@ -83,7 +83,7 @@ def findSubDirectory(rootPath, subDirectory):
 
 ## An instance of this class aggregates a set of ConversionSpec instances with
 # facilities to perform them as a group.
-class ConversionSpecs(object):
+class ConversionSpecs:
 
     ## The constructor remembers the given name for the set and initializes an empty list of conversion specs
     def __init__(self, name):
@@ -119,7 +119,7 @@ class ConversionSpecs(object):
 #
 # Because the filename arguments are separated by spaces, individual file names cannot contain spaces.
 #
-class ConversionSpec(object):
+class ConversionSpec:
 
     ## The constructor remembers the specified input and output paths. The input path specifies the directory in
     # which the "ConversionSpec.txt" file resides. The output path specifies the global root of the output hierarchy.
