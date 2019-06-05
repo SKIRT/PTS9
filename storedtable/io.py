@@ -6,7 +6,7 @@
 # *****************************************************************
 
 ## \package pts.storedtable.io Input/output functions for files in the SKIRT stored table format
-
+#
 # The functions in this module allow reading and writing data and metadata from and to a disk file
 # in SKIRT stored table format.
 #

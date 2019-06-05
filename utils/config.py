@@ -19,7 +19,7 @@ _interactive = False
 
 # -----------------------------------------------------------------
 
-# This function sets the PTS interactive mode to the specified \em mode value (i.e. True or False).
+## This function sets the PTS interactive mode to the specified \em mode value (i.e.\ True or False).
 def setInteractive(mode):
     global _interactive
     _interactive = bool(mode)  # guarantee that the value is either True or False
