@@ -144,8 +144,15 @@ class Skirt:
 
         if wait:
             self._process = None
-            subprocess.run(arguments, stdout=subprocess.DEVNULL if console=='silent' else sys.stdout,
-                                      stderr=subprocess.DEVNULL if console=='silent' else sys.stderr)
+            if console=='silent':
+                subprocess.run(arguments, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                # we pipe the SKIRT output to the console ourselves because this also works in Jupyter notebooks
+                popen = subprocess.Popen(arguments, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                         universal_newlines=True)
+                for line in iter(popen.stdout.readline, ""): print(line, end="")
+                popen.stdout.close()
+                popen.wait()
         else:
             self._process = subprocess.Popen(arguments, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
