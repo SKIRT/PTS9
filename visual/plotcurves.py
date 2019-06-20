@@ -15,6 +15,7 @@
 
 import logging
 import matplotlib.pyplot as plt
+import numpy as np
 import pts.simulation as sm
 import pts.utils as ut
 
@@ -41,6 +42,16 @@ import pts.utils as ut
 def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None, *,
              outDirPath=None, outFileName=None, outFilePath=None, figSize=(8, 6), interactive=None):
 
+    # private function to get the maximum flux within the wavelength range passed to the plotSeds function
+    def maxFluxInRange(flux, wave):
+        wmin = minWavelength if minWavelength is not None else wave[0]
+        wmax = maxWavelength if maxWavelength is not None else wave[-1]
+        mask = (wave>=wmin) & (wave<=wmax)
+        if np.count_nonzero(mask) > 0:
+            return flux[mask].max()
+        else:
+            return flux.max()
+
     # get the (instrument, output file path) tuples
     instr_paths = sm.instrumentOutFilePaths(simulation, "sed.dat")
     if len(instr_paths) < 1:
@@ -56,7 +67,7 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None, *
         wave, tot, tra, dirpri, scapri, dirsec, scasec = sm.loadColumns(filepath, (0, 1, 2, 3, 4, 5, 6))
         waveUnit = wave.unit
         fluxUnit = tot.unit
-        fluxMax = max(tot.max(), tra.max())
+        fluxMax = max(maxFluxInRange(tot, wave), maxFluxInRange(tra, wave))
         # plot the various components
         label = "{} {} ".format(instrument.prefix(), instrument.name())
         plt.plot(wave.value, tot.value, color='k', ls='solid', label=label + "total")
@@ -75,12 +86,12 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None, *
             if first:
                 waveUnit = wave.unit
                 fluxUnit = flux.unit
-                fluxMax = flux.max()
+                fluxMax = maxFluxInRange(flux, wave)
                 first = False
             else:
                 wave <<= waveUnit
                 flux = sm.convertToFlavor(wave, flux, fluxUnit)
-                fluxMax = max(fluxMax, flux.max())
+                fluxMax = max(fluxMax, maxFluxInRange(flux, wave))
             # plot
             plt.plot(wave.value, flux.value, color=colors[colorindex],
                      label="{} {} total".format(instrument.prefix(), instrument.name()))
