@@ -16,6 +16,7 @@
 #
 
 from .makergbimages import makeRGBImages, makeConvolvedRGBImages
+from .moviefile import MovieFile
 from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources
 from .plotdensitycuts import plotDefaultMediaDensityCuts
