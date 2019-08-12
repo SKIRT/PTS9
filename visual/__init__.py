@@ -16,6 +16,7 @@
 #
 
 from .makergbimages import makeRGBImages, makeConvolvedRGBImages
+from .makewavelengthmovie import makeWavelengthMovie
 from .moviefile import MovieFile
 from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources

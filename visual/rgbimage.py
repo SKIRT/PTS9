@@ -259,6 +259,12 @@ class RGBImage:
         else:
             return self._darr
 
+    ## This function returns the image's pixel data as a bytes object in the rgba format that can also be
+    # obtained from mtplotlib (3 RGB channels plus a dummy alpha channel, 8 bits each).
+    def bytesArray(self):
+        self._ensureBuf(invalidate=False)
+        return self._dbuf
+
     # ---------- Adjusting the image ----------------------------------
 
     ## This function applies the natural logarithm function to the pixel values of the image, and adjusts

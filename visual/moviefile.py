@@ -19,7 +19,7 @@ import subprocess
 # -----------------------------------------------------------------
 
 ## An instance of the MovieFile class allows creating a movie file from a sequence of still images. Use the constructor
-# to specify the filename and the frame size, then insert the frames one at a time with one of the addXxx() functions,
+# to specify the filename and the frame size, then insert the frames one at a time with the addFrame() function,
 # and finally flush all movie information to the file with the close() function. The resulting movie file uses MPEG-4
 # encoding and must have the .mp4 filename extension.
 #
@@ -39,8 +39,8 @@ class MovieFile:
         outFilePath = ut.absPath(outFilePath)
         assert outFilePath.suffix.lower() == ".mp4"
 
-        # remember total number of bytes in pixel buffer for a single frame encoded as rgb24
-        self._buflen = 3*shape[0]*shape[1]
+        # remember the frame shape
+        self._shape = shape
 
         # ensure that we have access rights to create the output file (since we ignore any messages from ffmpeg)
         open(outFilePath,'w').close()
@@ -50,7 +50,7 @@ class MovieFile:
                     '-v', 'quiet',          # be less verbose
                     '-y',                   # overwrite output file if it exists
                     '-f', 'rawvideo',       # input format: raw, uncompressed data stream
-                    '-pix_fmt', 'rgb24',    # input pixel format (3 channels, 8 bits each)
+                    '-pix_fmt', 'rgba',     # input pixel format (3 channels plus dummy alpha channel, 8 bits each)
                     '-s', '{:1d}x{:1d}'.format(*shape), # frame size (pixels)
                     '-r', '{:1d}'.format(rate),         # frame rate (frames per second)
                     '-i', '-',              # the input comes from a pipe
@@ -63,11 +63,11 @@ class MovieFile:
                                    #stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
     # This function writes a byte sequence containing the pixel data for a single movie frame to \c ffmpeg.
-    # Each pixel must be encoded as rgb24 (one byte for each R,G,B channel).
-    # The length of the buffer must match <tt>3*shape[0]*shape[1]</tt>.
-    def addFrameFromBytes(self, frameAsBytes):
-        assert len(frameAsBytes) == self._buflen
-        self._p.stdin.write(frameAsBytes)
+    # The frame must be specified as a pts.visual.rgbimage.RGBImage instance.
+    # The shape of the image must match the shape specified when constructing the movie.
+    def addFrame(self, image):
+        assert image.shape() == self._shape
+        self._p.stdin.write(image.bytesArray())
 
    # This function flushes all movie information to the file.
    # The function \em must be called for the movie file to be playable.
