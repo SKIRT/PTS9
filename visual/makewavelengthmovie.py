@@ -53,14 +53,14 @@ from matplotlib.figure import Figure
 #  - outDirPath:    when specified, overrides the default output directory path.
 #  - outFileName:   when specified, overrides the filename portion of the default output path.
 #  - outFilePath:   when specified, overrides the the complete output file path.
-#  - rate:          the frame rate of the movie, in frames per second. The default value is 10.
+#  - rate:          the frame rate of the movie, in frames per second. The default value is 7.
 #
 # By default, the movie is saved in the output directory of the first instrument, using a name starting with the
 # corresponding simulation prefix and ending with ".mp4". This can be overridden with the out* arguments as described
 # for the pts.utils.savePath() function.
 #
 def makeWavelengthMovie(simulation, *, maxPercentile=100, minPercentile=10, decades=None, renormalize=False,
-                        outDirPath=None, outFileName=None, outFilePath=None, rate=10):
+                        outDirPath=None, outFileName=None, outFilePath=None, rate=7):
 
     # get the list of instruments and corresponding output file paths
     instrA, sedPaths = zip(*sm.instrumentOutFilePaths(simulation, "sed.dat"))
@@ -81,13 +81,14 @@ def makeWavelengthMovie(simulation, *, maxPercentile=100, minPercentile=10, deca
     nlambda = len(wavelengths)
 
     # load the data
-    logging.info("Creating movie for {} wavelengths with {} instruments...".format(nlambda, len(instruments)))
+    logging.info("Creating movie for {} ({} wavelengths and {} instruments)..." \
+                 .format(instruments[0].prefix(), nlambda, len(instruments)))
     sedData = [ sm.loadColumns(sedPath, "total flux")[0] for sedPath in sedPaths ]
     cubData = [ sm.loadFits(cubPath) for cubPath in cubPaths ]
 
     # determine the shape (assume that frames in all fits files have the same shape)
     imgShape = cubData[0].shape[:2]
-    sedShape = (max(len(cubData)*imgShape[0], 600), max(imgShape[1]//2, 300))
+    sedShape = (len(cubData)*imgShape[0], max(imgShape[1]//2, 300))
     totalShape = (sedShape[0], imgShape[1]+sedShape[1])
 
     # determine the global surface brightness range
@@ -138,9 +139,10 @@ def makeWavelengthMovie(simulation, *, maxPercentile=100, minPercentile=10, deca
         for sed, instrument, color in zip(sedData, instruments, colors):
              ax.loglog(wavelengths.value, sed.value, color=color, label=instrument.name())
         ax.axvline(wavelengths[frame].value, color='m')
-        ax.set_ylabel(sm.unit(sedData[0]))
+        ax.set_ylabel(sm.latexForSpectralFlux(sedData[0]) + sm.latexForUnit(sedData[0]))
         ax.set_ylim(Fmin.value/1.1, Fmax.value*1.1)
-        ax.legend(loc='lower right', title=r"$\lambda={0:.4g}\,\mu\mathrm{{m}}$".format(wavelengths[frame].value))
+        ax.legend(loc='lower right',
+                  title=r"$\lambda={0:.4g}\,$".format(wavelengths[frame].value)+sm.latexForUnit(wavelengths))
         canvas.draw()
         im = RGBImage(figure)
         image.addBelow(im)
