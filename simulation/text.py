@@ -206,15 +206,17 @@ def _indexForDescriptionInHeader(spec, header):
 # The function expects the following arguments:
 #  - \em path: the file path to the output file, interpreted as described for the pts.utils.absPath() function.
 #  - \em quantities: a sequence of astropy quantity arrays of the same length, one for each column
-#    (if the output has only a single row, each item in sequence is a scalar scalar astropy quantity).
+#    (if the output has only a single row, each item in sequence is a scalar astropy quantity).
 #  - \em units: a string containing a comma-separated list of valid SKIRT unit strings.
 #  - \em descriptions: a string containing a comma-separated list of quantity descriptions.
+#  - \em title: an optional title string written as the first line of the file; default is no title
+#  - \em fmt: an optional format string; the default format is "%1.9e".
 #
 # The arguments must specify the same number of quantities, units, and descriptions. The units and descriptions
 # will appear in the header of the output file. The quantities are converted to the requested units before being
 # written to the file.
 #
-def saveColumns(path, quantities, units, descriptions):
+def saveColumns(path, quantities, units, descriptions, *, title=None, fmt="%1.9e"):
 
     # split descriptions and units into segments
     descriptions = [ s.strip() for s in descriptions.split(",") ]
@@ -232,10 +234,12 @@ def saveColumns(path, quantities, units, descriptions):
     with open(path, 'wt') as outfile:
 
         # write the header
+        if title:
+            outfile.write("# {}\n".format(title))
         for col, (description, unit) in enumerate(zip(descriptions, units)):
             outfile.write("# column {}: {} ({})\n".format(col+1, description, unit))
 
         # write the data
-        np.savetxt(outfile, np.stack(quantities).T, fmt="%1.9e")
+        np.savetxt(outfile, np.stack(quantities).T, fmt=fmt)
 
 # -----------------------------------------------------------------
