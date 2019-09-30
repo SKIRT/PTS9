@@ -35,5 +35,6 @@ def do( simDirPath : (str, "SKIRT simulation output directory"),
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix) > 0 else None):
         vis.plotDefaultMediaDensityCuts(sim, decades=dex)
+        vis.plotPlanarMediaDensityCuts(sim, decades=dex)
 
 # ----------------------------------------------------------------------
