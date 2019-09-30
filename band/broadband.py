@@ -543,7 +543,7 @@ class BroadBand:
     #   strings "neutral", "wavelength", or "frequency", or an explicit astropy unit instance that is compatible
     #   with the incoming flux type (density, brightness, luminosity), after flavor conversion.
     #
-    def convolve(self, wavelengths, fluxes, *, numWavelengths=None, flavor):
+    def convolve(self, wavelengths, fluxes, *, numWavelengths=None, flavor=None):
 
         # convert fluxes to per-wavelength flavor
         if flavor is None: flavor = fluxes.unit
