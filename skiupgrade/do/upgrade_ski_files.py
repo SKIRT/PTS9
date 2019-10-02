@@ -31,7 +31,7 @@ def do( skiDirPath : (str,"directory containing the ski files to be upgraded"),
     import pts.skiupgrade
     import pts.utils as ut
 
-    for skipath in ut.absPath(skiDirPath).glob("*.ski"):
+    for skipath in sorted(ut.absPath(skiDirPath).glob("*.ski")):
         pts.skiupgrade.upgradeSkiFile(skipath)
 
 # -----------------------------------------------------------------

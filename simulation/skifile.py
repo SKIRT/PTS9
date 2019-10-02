@@ -43,12 +43,12 @@ class SkiFile:
 
     ## The constructor loads the contents of the specified ski file into a new SkiFile instance.
     # The file path is interpreted as described for the pts.utils.absPath() function.
-    # The filename of the ski file \em must end with ".ski" or with "_parameters.xml".
+    # The filename extension of the ski file \em must be ".ski" or ".xml".
     #
     def __init__(self, skiFilePath):
         # get the absolute path and verify the file name
         self._path = ut.absPath(skiFilePath)
-        if not self._path.name.lower().endswith((".ski", "_parameters.xml")):
+        if self._path.suffix.lower() not in (".ski", ".xml"):
             raise ValueError("Invalid filename extension for ski file")
 
         # load the XML tree from the ski file (remove blank text to avoid confusing the pretty printer when saving)
@@ -60,13 +60,13 @@ class SkiFile:
 
     ## This function saves the (possibly updated) contents of the SkiFile instance into the specified file.
     # The file path is interpreted as described for the pts.utils.absPath() function.
-    # The name of the file \em must end with ".ski" or with "_parameters.xml".
+    # The filename extension of the file \em must be ".ski" or ".xml".
     # Saving to and thus replacing the ski file from which this
     # SkiFile instance was originally constructed is allowed, but often not the intention.
     def saveTo(self, saveFilePath):
         # get the absolute path and verify the file name
         path = ut.absPath(saveFilePath)
-        if not path.name.lower().endswith(".ski"):
+        if self._path.suffix.lower() not in (".ski", ".xml"):
             raise ValueError("Invalid filename extension for ski file")
 
         # update the producer and time attributes on the root element

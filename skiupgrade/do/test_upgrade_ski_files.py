@@ -18,7 +18,7 @@
 # - if the file is a SKIRT 9 parameter file and it is up to date with the latest version of SKIRT 9, an informational
 #   message is issued and the file is otherwise ignored.
 # - if the file is a SKIRT 9 parameter file that needs upgrading, the version upgraded to the latest version of SKIRT 9
-#   is placed in a file with the same name as the original file extended with the string "_upgraded".
+#   is placed in a file with a name similar to the original including the string "upgraded".
 #
 # The script takes a single positional string argument specifying the path to the directory containing the ski files to
 # be upgraded, or "." (a single period) for the current directory.
@@ -34,7 +34,7 @@ def do( skiDirPath : (str,"directory containing the ski files to be upgraded"),
     import pts.skiupgrade
     import pts.utils as ut
 
-    for skipath in ut.absPath(skiDirPath).glob("*.ski"):
+    for skipath in sorted(ut.absPath(skiDirPath).glob("*.ski")):
         pts.skiupgrade.upgradeSkiFile(skipath, backup=False, replace=False)
 
 # -----------------------------------------------------------------
