@@ -216,6 +216,28 @@ class SkiFile:
             purevalues.append(float(segments[0]))
         return np.array(purevalues) << smunit(unit)
 
+    ## This function applies an XSLT transform to the ski file if an XPath condition evaluates to true.
+    # The first argument is a string specifying an XPath 1.0 expression to be evaluated in the context of the XML
+    # document representing the ski file; the expression value is converted to boolean according to XPath semantics.
+    # If the value is true, the XSLT 1.0 transform specified in the second argument is applied to the XML document,
+    # and the result replaces the original document. The second argument is a string containing one or more
+    # \<xsl:template\> elements that specify the changes to be applied to the document. The \<xsl:stylesheet\>
+    # element and the identity template are automatically added and must not be contained in the argument string.
+    # The function returns true if the transform was applied, and false if it was not (i.e. the document is unchanged).
+    def transformIf(self, condition, templates):
+        needed = self._tree.xpath("boolean(" + condition + ")")
+        if needed:
+            prefix  = '''<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+                           <xsl:template match="@*|node()">
+                             <xsl:copy>
+                               <xsl:apply-templates select="@*|node()"/>
+                             </xsl:copy>
+                           </xsl:template>'''
+            postfix = '''</xsl:stylesheet>'''
+            transform = etree.XSLT(etree.XML(prefix + templates + postfix))
+            self._tree = transform(self._tree)
+        return needed
+
     # ---------- Specific functions -----------------------------
 
     ## This function returns the number of photon packets launched per simulation segment for primary sources

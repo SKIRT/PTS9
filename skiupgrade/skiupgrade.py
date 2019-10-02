@@ -50,8 +50,10 @@ def upgradeSkiFile(inpath, *, backup=True, replace=True):
         logging.error("Ski file is older than version 9: {}".format(inpath))
         return
 
-    # perform the upgrade in the XML tree in memory, keeping track of whether the contents was actually changed
-    changed = "up" in inpath.name  ## stub
+    # perform the upgrade in the XML tree in memory, keeping track of whether the contents has actually changed
+    changed = False
+    for condition,templates in _getUpgradeDefinitions():
+        changed |= ski.transformIf(condition, templates)
 
     # save the upgraded version if needed
     if changed:
@@ -66,5 +68,68 @@ def upgradeSkiFile(inpath, *, backup=True, replace=True):
             logging.warning("Ski file UPGRADED:  {} --> {}".format(inpath, outpath.name))
     else:
         logging.info("Ski file unchanged: {}".format(inpath))
+
+# -----------------------------------------------------------------
+
+## This private function returns a sequence of 2-tuples, each defining the XPath condition and XSLT templates
+# for a single modification to the ski file format.
+#
+# Using XSLT is extremely flexible, but unfortunately the XSLT language is fairly obscure (at the very least,
+# there is a steep learning curve). To help alleviate this problem, we provide a set of functions that generate
+# upgrade definitions for specific types of changes, such as, for example, changing the name of a property.
+# That way, as soon as the XSLT sheet for a particular type of change has been developed, it can be more easily
+# reused for other, similar changes.
+#
+# As a result, this function consists of a sequence of calls to these primitive generators. The git hash listed
+# for each (set of) calls identifies the change in the SKIRT code requiring the ski file modification(s).
+#
+def _getUpgradeDefinitions():
+    return [
+
+        # git xxxx (date): change some stuff
+        _addScalarProperty("PlanarMediaDensityCutsProbe", "centerX", "0"),
+        _addScalarProperty("PlanarMediaDensityCutsProbe", "centerY", "0"),
+        _addScalarProperty("PlanarMediaDensityCutsProbe", "centerZ", "0"),
+
+    ]
+
+# -----------------------------------------------------------------
+
+## This private function generates the definition for unconditionally adding a scalar property to a given type.
+def _addScalarProperty(typeName, propName, propStringValue):
+    return ('''//{0}[not(@{1})]'''.format(typeName, propName),
+            '''
+            <xsl:template match="//{0}[not(@{1})]">
+                <xsl:element name="{0}">
+                    <xsl:apply-templates select="@*"/>
+                    <xsl:attribute name="{1}">
+                        <xsl:value-of select="{2}"/>
+                    </xsl:attribute>
+                    <xsl:apply-templates select="node()"/>
+                </xsl:element>
+            </xsl:template>
+            '''.format(typeName, propName, propStringValue))
+
+## This private function generates the definition for changing the name of a scalar property for a given type.
+def _changeScalarPropertyName(typeName, oldPropName, newPropName):
+    return ('''//{0}/@{1}'''.format(typeName, oldPropName),
+            '''
+            <xsl:template match="//{0}/@{1}">
+                <xsl:attribute name="{2}">
+                    <xsl:value-of select="."/>
+                </xsl:attribute>
+            </xsl:template>
+            '''.format(typeName, oldPropName, newPropName))
+
+## This private function generates the definition for changing the name of a compound property for a given type.
+def _changeCompoundPropertyName(typeName, oldPropName, newPropName):
+    return ('''//{0}/{1}'''.format(typeName, oldPropName),
+            '''
+            <xsl:template match="//{0}/{1}">
+                <xsl:element name="{2}">
+                    <xsl:apply-templates select="@*|node()"/>
+                </xsl:element>
+            </xsl:template>
+            '''.format(typeName, oldPropName, newPropName))
 
 # -----------------------------------------------------------------
