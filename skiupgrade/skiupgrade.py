@@ -22,6 +22,7 @@ import pts.utils as ut
 # latest SKIRT 9 version. The upgrade process supports all ski files created by the SKIRT project version 9 tools
 # (including the SKIRT command line Q&A and the graphical MakeUp wizard) since SKIRT 9 was publicly released.
 # Ski files created for older SKIRT versions (such as SKIRT 7 and 8) cannot be upgraded to SKIRT 9 automatically.
+# The function logs an appropriate error message when an unsupported file is specified.
 #
 # The function accepts three arguments:
 # - inpath: the absolute or relative path to the ski file to be handled; the filename extension should be ".ski"
@@ -71,31 +72,33 @@ def upgradeSkiFile(inpath, *, backup=True, replace=True):
 
 # -----------------------------------------------------------------
 
-## This private function returns a sequence of 2-tuples, each defining the XPath condition and XSLT templates
+## This private function returns a sequence of 2-tuples, each defining the XPath condition and XSLT template
 # for a single modification to the ski file format.
 #
-# Using XSLT is extremely flexible, but unfortunately the XSLT language is fairly obscure (at the very least,
-# there is a steep learning curve). To help alleviate this problem, we provide a set of functions that generate
+# Using XSLT is extremely flexible, but unfortunately the XSLT language is fairly obscure an thus has a steep
+# learning curve. To alleviate this problem to some extent, we provide a set of functions that generate
 # upgrade definitions for specific types of changes, such as, for example, changing the name of a property.
 # That way, as soon as the XSLT sheet for a particular type of change has been developed, it can be more easily
-# reused for other, similar changes.
+# reused for other, similar changes. As a result, this function consists of a sequence of calls to definition
+# generators. The git hash and date listed for each (set of) calls identifies the change in the SKIRT 9 code
+# requiring the corresponding ski file modification(s).
 #
-# As a result, this function consists of a sequence of calls to these primitive generators. The git hash listed
-# for each (set of) calls identifies the change in the SKIRT code requiring the ski file modification(s).
+# New generators will have to be added as the need arises. Examples of specific XSLT templates can be found
+# in the previous version of PTS in the source file <tt>~/PTS/pts/core/prep/upgradeskifile.py</tt>.
 #
 def _getUpgradeDefinitions():
     return [
 
         # git xxxx (date): change some stuff
-        _addScalarProperty("PlanarMediaDensityCutsProbe", "centerX", "0"),
-        _addScalarProperty("PlanarMediaDensityCutsProbe", "centerY", "0"),
-        _addScalarProperty("PlanarMediaDensityCutsProbe", "centerZ", "0"),
+        #_addScalarProperty("PlanarMediaDensityCutsProbe", "centerX", "0"),
+        #_addScalarProperty("PlanarMediaDensityCutsProbe", "centerY", "0"),
+        #_addScalarProperty("PlanarMediaDensityCutsProbe", "centerZ", "0"),
 
     ]
 
 # -----------------------------------------------------------------
 
-## This private function generates the definition for unconditionally adding a scalar property to a given type.
+## Generates the definition for unconditionally adding a scalar property to a given type.
 def _addScalarProperty(typeName, propName, propStringValue):
     return ('''//{0}[not(@{1})]'''.format(typeName, propName),
             '''
@@ -110,7 +113,7 @@ def _addScalarProperty(typeName, propName, propStringValue):
             </xsl:template>
             '''.format(typeName, propName, propStringValue))
 
-## This private function generates the definition for changing the name of a scalar property for a given type.
+## Generates the definition for changing the name of a scalar property for a given type.
 def _changeScalarPropertyName(typeName, oldPropName, newPropName):
     return ('''//{0}/@{1}'''.format(typeName, oldPropName),
             '''
@@ -121,7 +124,7 @@ def _changeScalarPropertyName(typeName, oldPropName, newPropName):
             </xsl:template>
             '''.format(typeName, oldPropName, newPropName))
 
-## This private function generates the definition for changing the name of a compound property for a given type.
+## Generates the definition for changing the name of a compound property for a given type.
 def _changeCompoundPropertyName(typeName, oldPropName, newPropName):
     return ('''//{0}/{1}'''.format(typeName, oldPropName),
             '''

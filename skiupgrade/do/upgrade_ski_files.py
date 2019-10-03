@@ -10,12 +10,13 @@
 # This script upgrades all SKIRT 9 ski files in a given directory to be appropriate for the latest version of SKIRT 9.
 # Specifically, the script iterates over all files in the directory with the .ski filename extension and performs
 # as follows for each:
-# - if the file is not a SKIRT parameter file, or it is intended for a SKIRT version before version 9, a warning
-#   is issued and the file is otherwise ignored.
+# - if the file is not a SKIRT parameter file, or it is intended for a SKIRT version before version 9, an error
+#   message is logged and the file is otherwise ignored.
 # - if the file is a SKIRT 9 parameter file and it is up to date with the latest version of SKIRT 9, an informational
-#   message is issued and the file is otherwise ignored.
+#   message is logged and the file is otherwise ignored.
 # - if the file is a SKIRT 9 parameter file that needs upgrading, it is first copied to a backup version with a
-#   filename including a time stamp, and it is then replaced by a version upgraded to the latest version of SKIRT 9.
+#   filename including a time stamp, it is then replaced by a version upgraded to the latest version of SKIRT 9,
+#   and a warning message is logged.
 #
 # The script takes a single positional string argument specifying the path to the directory containing the ski files to
 # be upgraded, or "." (a single period) for the current directory.

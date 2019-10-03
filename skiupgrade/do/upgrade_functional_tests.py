@@ -19,10 +19,10 @@
 #    that reside immediately inside the indicated parent sub-suite; this can disambiguate items with the same name.
 #
 # For each of the selected test cases, the script performs as follows:
-# - if the ski file is up to date with the latest version of SKIRT 9, an informational message is issued and the
+# - if the ski file is up to date with the latest version of SKIRT 9, an informational message is logged and the
 #   file is otherwise ignored.
 # - if the ski file needs upgrading, it is first copied to a backup version with a filename including a time stamp,
-#   and it is then replaced by a version upgraded to the latest version of SKIRT 9.
+#   it is then replaced by a version upgraded to the latest version of SKIRT 9, and a warning message is logged.
 #
 # See the pts.test.functional module for more information about test cases and test (sub-)suites.
 # See the pts.skiupgrade.skiupgrade module for more information on the ski file upgrade process.
