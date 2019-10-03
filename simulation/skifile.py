@@ -43,12 +43,12 @@ class SkiFile:
 
     ## The constructor loads the contents of the specified ski file into a new SkiFile instance.
     # The file path is interpreted as described for the pts.utils.absPath() function.
-    # The filename of the ski file \em must end with ".ski" or with "_parameters.xml".
+    # The filename extension of the ski file \em must be ".ski" or ".xml".
     #
     def __init__(self, skiFilePath):
         # get the absolute path and verify the file name
         self._path = ut.absPath(skiFilePath)
-        if not self._path.name.lower().endswith((".ski", "_parameters.xml")):
+        if self._path.suffix.lower() not in (".ski", ".xml"):
             raise ValueError("Invalid filename extension for ski file")
 
         # load the XML tree from the ski file (remove blank text to avoid confusing the pretty printer when saving)
@@ -60,13 +60,13 @@ class SkiFile:
 
     ## This function saves the (possibly updated) contents of the SkiFile instance into the specified file.
     # The file path is interpreted as described for the pts.utils.absPath() function.
-    # The name of the file \em must end with ".ski" or with "_parameters.xml".
+    # The filename extension of the file \em must be ".ski" or ".xml".
     # Saving to and thus replacing the ski file from which this
     # SkiFile instance was originally constructed is allowed, but often not the intention.
     def saveTo(self, saveFilePath):
         # get the absolute path and verify the file name
         path = ut.absPath(saveFilePath)
-        if not path.name.lower().endswith(".ski"):
+        if self._path.suffix.lower() not in (".ski", ".xml"):
             raise ValueError("Invalid filename extension for ski file")
 
         # update the producer and time attributes on the root element
@@ -215,6 +215,28 @@ class SkiFile:
                                  .format(unit, segments[1]))
             purevalues.append(float(segments[0]))
         return np.array(purevalues) << smunit(unit)
+
+    ## This function applies an XSLT transform to the ski file if an XPath condition evaluates to true.
+    # The first argument is a string specifying an XPath 1.0 expression to be evaluated in the context of the XML
+    # document representing the ski file; the expression value is converted to boolean according to XPath semantics.
+    # If the value is true, the XSLT 1.0 transform specified in the second argument is applied to the XML document,
+    # and the result replaces the original document. The second argument is a string containing one or more
+    # \<xsl:template\> elements that specify the changes to be applied to the document. The \<xsl:stylesheet\>
+    # element and the identity template are automatically added and must not be contained in the argument string.
+    # The function returns true if the transform was applied, and false if it was not (i.e. the document is unchanged).
+    def transformIf(self, condition, templates):
+        needed = self._tree.xpath("boolean(" + condition + ")")
+        if needed:
+            prefix  = '''<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+                           <xsl:template match="@*|node()">
+                             <xsl:copy>
+                               <xsl:apply-templates select="@*|node()"/>
+                             </xsl:copy>
+                           </xsl:template>'''
+            postfix = '''</xsl:stylesheet>'''
+            transform = etree.XSLT(etree.XML(prefix + templates + postfix))
+            self._tree = transform(self._tree)
+        return needed
 
     # ---------- Specific functions -----------------------------
 

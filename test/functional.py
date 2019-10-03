@@ -116,6 +116,10 @@ class SkirtTestSuite:
     def size(self):
         return len(self._skiPaths)
 
+    ## This function returns a list of the paths to the ski files for the test cases in this test suite
+    def skiPaths(self):
+        return self._skiPaths
+
     ## This function prepares the contents of all test case directories in the sub-suite for performing the tests.
     # Specifically, it creates \c in, \c out and \c ref directories next to the ski file, if they don't exist,
     # and it removes all files from the \c out directory (without touching any of its subdirectories, which should
