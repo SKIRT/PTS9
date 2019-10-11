@@ -17,7 +17,7 @@
 # this script.
 #
 # Users who need one or more FSPS SED families generated with other settings than the built-in families can use the
-# SKIRT \c CustomSSPSEDFamily class, after following the workflow described below to create the appropriate resources.
+# SKIRT \c FileSSPSEDFamily class, after following the workflow described below to create the appropriate resources.
 #
 #  - Download the FSPS code from https://github.com/cconroy20/fsps and follow the installation instructions.
 #
@@ -48,11 +48,11 @@
 #
 #  - Run this script to convert the set of ".spec" files into a single SKIRT stored table file (".stab").
 #
-#  - Place the stored table file inside the \c resources directory next to the SKIRT \c git and \c release directories.
-#    The file can be inside a subdirectory (perhaps named \c FSPS) but it should \em not be placed inside any of the
-#    directories containing the built-in SKIRT resources (to avoid problems when you next update these resources).
+#  - Place the stored table file in the SKIRT input directory or in some common location.
 #
-#  - Configure a CustomSSPSEDFamily instance in the SKIRT parameter file, specifying the name of the stored table.
+#  - Configure a FileSSPSEDFamily instance in the SKIRT parameter file, specifying the name of the stored table
+#    (if it resides in the SKIRT input directory) or the absolute path to the stored table (if it resides in a
+#    common location).
 #
 # This script expects two arguments:
 #
