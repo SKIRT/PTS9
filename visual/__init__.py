@@ -19,7 +19,7 @@ from .makergbimages import makeRGBImages, makeConvolvedRGBImages
 from .makewavelengthmovie import makeWavelengthMovie
 from .moviefile import MovieFile
 from .plotbands import plotBuiltinBands
-from .plotcurves import plotSeds, plotSources
+from .plotcurves import plotSeds, plotSources, plotSpectralResolution
 from .plotdensitycuts import plotDefaultMediaDensityCuts, plotPlanarMediaDensityCuts
 from .plotgrids import plotGrids
 from .plotpolarization import plotPolarization

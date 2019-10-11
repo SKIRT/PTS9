@@ -17,6 +17,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pts.simulation as sm
+import pts.storedtable as stab
 import pts.utils as ut
 
 # -----------------------------------------------------------------
@@ -206,5 +207,36 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
         plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
         logging.info("Created {}".format(saveFilePath))
+
+# ----------------------------------------------------------------------
+
+## This function creates a plot of the spectral resolution \f$R=\lambda/\Delta\lambda\f$ of a wavelength grid
+# loaded from a SKIRT stored table (".stab") or a SKIRT text column file (".dat") that includes a wavelength axis.
+#
+# By default, the figure is saved in the simulation output directory, using the name of the input file but
+# with the ".pdf" filename extension. This can be overridden with the out* arguments as described for the
+# pts.utils.savePath() function. In interactive mode (see the pts.utils.interactive() function),
+# the figure is not saved and it is left open so that is displayed in notebooks.
+#
+def plotSpectralResolution(inFilePath, minWavelength=None, maxWavelength=None, *, minR=None, maxR=None, title=None,
+                outDirPath=None, outFileName=None, outFilePath=None, figSize=(8, 6), interactive=None):
+
+    # load the wavelength grid
+    inFilePath = ut.absPath(inFilePath)
+    if inFilePath.suffix.lower() == ".stab":
+        table = stab.readStoredTable(inFilePath)
+        if "lambda" not in table:
+            raise ValueError("No wavelength axis in stored table: {}".format(inFilePath))
+        grid = table["lambda"]
+    elif inFilePath.suffix.lower() == ".dat":
+        if sm.getColumnDescriptions(inFilePath)[0].lower() != "wavelength":
+            raise ValueError("First text column is not labeled 'wavelength': {}".format(inFilePath))
+        grid = sm.loadColumns(inFilePath, "1")[0]
+    else:
+        raise ValueError("Filename does not have the .stab or .dat extension: {}".format(inFilePath))
+
+    print (grid.shape)
+    print (grid[0])
+    print (grid[-1])
 
 # ----------------------------------------------------------------------
