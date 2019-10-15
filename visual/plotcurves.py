@@ -17,6 +17,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pts.simulation as sm
+import pts.storedtable as stab
 import pts.utils as ut
 
 # -----------------------------------------------------------------
@@ -202,6 +203,69 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
     # if not in interactive mode, save the figure; otherwise leave it open
     if not ut.interactive(interactive):
         saveFilePath = ut.savePath(simulation.outFilePath("sources.pdf"), (".pdf",".png"),
+                                   outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
+        plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
+        plt.close()
+        logging.info("Created {}".format(saveFilePath))
+
+# ----------------------------------------------------------------------
+
+## This function creates a plot of the spectral resolution \f$R=\lambda/\Delta\lambda\f$ of a wavelength grid
+# loaded from a SKIRT stored table (".stab") or a SKIRT text column file (".dat") that includes a wavelength axis.
+#
+# By default, the figure is saved in the current directory, using the name of the input file but
+# with the ".pdf" filename extension. This can be overridden with the out* arguments as described for the
+# pts.utils.savePath() function. In interactive mode (see the pts.utils.interactive() function),
+# the figure is not saved and it is left open so that is displayed in notebooks.
+#
+def plotSpectralResolution(inFilePath, minWavelength=None, maxWavelength=None, decades=None, *, title=None,
+                outDirPath=None, outFileName=None, outFilePath=None, figSize=(8, 5), interactive=None):
+
+    # load the wavelength grid
+    inFilePath = ut.absPath(inFilePath)
+    if inFilePath.suffix.lower() == ".stab":
+        table = stab.readStoredTable(inFilePath)
+        if "lambda" not in table:
+            raise ValueError("No wavelength axis in stored table: {}".format(inFilePath))
+        grid = table["lambda"]
+    elif inFilePath.suffix.lower() == ".dat":
+        if sm.getColumnDescriptions(inFilePath)[0].lower() != "wavelength":
+            raise ValueError("First text column is not labeled 'wavelength': {}".format(inFilePath))
+        grid = sm.loadColumns(inFilePath, "1")[0]
+    else:
+        raise ValueError("Filename does not have the .stab or .dat extension: {}".format(inFilePath))
+
+    # calculate the spectral resolution
+    R = grid[:-1] / (grid[1:] - grid[:-1])
+    Rmax = R.max()
+
+    # choose wavelength units from range arguments or grid
+    if minWavelength is not None: wunit = minWavelength.unit
+    elif maxWavelength is not None: wunit = maxWavelength.unit
+    else: wunit = grid.unit
+
+    # setup the plot
+    plt.figure(figsize=figSize)
+    plt.xlabel(r"$\lambda$" + sm.latexForUnit(wunit), fontsize='large')
+    plt.ylabel(r"$R=\frac{\lambda}{\Delta\lambda}$", fontsize='large')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.grid(which='major', axis='both', ls=":")
+    if minWavelength is not None and maxWavelength is not None:
+        plt.xlim(minWavelength.to_value(wunit), maxWavelength.to_value(wunit))
+    if decades is not None:
+        plt.ylim(Rmax* 10 ** (-decades), Rmax * 10 ** 0.2)
+
+    # plot the spectral resolution
+    if title is None or len(title)==0: title = inFilePath.stem
+    label = "{}\n{} pts from {:g} to {:g} {}".format(title, len(grid), grid[0].to_value(wunit), grid[-1].to_value(wunit),
+                                              sm.latexForUnit(wunit))
+    plt.plot(grid[:-1].to_value(wunit), R, label=label)
+    plt.legend()
+
+    # if not in interactive mode, save the figure; otherwise leave it open
+    if not ut.interactive(interactive):
+        saveFilePath = ut.savePath(inFilePath.stem+".pdf", (".pdf",".png"),
                                    outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
         plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
