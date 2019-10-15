@@ -14,6 +14,8 @@
 # as the single required argument, and use optional arguments to further configure the plot:
 #  - \em wmin (float): smallest wavelength on the horizontal axis, in micron; default is 0.1 micron
 #  - \em wmax (float): largest wavelength on the horizontal axis, in micron; default is 1000 micron
+#  - \em dex (float): if specified, the number of decades to be plotted on the vertical axis; default is 3
+#  - \em title (string): the title used in the plot legend; default is the name of the input file
 #
 # The plot file has the same name as the input file but with the ".pdf" filename extension and is placed
 # in the current working directory.
@@ -24,11 +26,14 @@
 def do( filepath : (str,"name or path of SKIRT stored table or text column file"),
         wmin : (float,"smallest wavelength on the horizontal axis, in micron") = 0.1,
         wmax : (float,"largest wavelength on the horizontal axis, in micron") = 1000.,
+        dex : (float,"number of decades to be plotted on the vertical axis") = 3,
+        title : (str,"title used in plot legend") = "",
         ) -> "plot the spectral resolution of a wavelength axis":
 
     import astropy.units as u
     import pts.visual as vis
 
-    vis.plotSpectralResolution(inFilePath=filepath, minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron)
+    vis.plotSpectralResolution(inFilePath=filepath, minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
+                               decades=dex, title=title)
 
 # -----------------------------------------------------------------
