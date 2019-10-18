@@ -20,7 +20,7 @@ from .makewavelengthmovie import makeWavelengthMovie
 from .moviefile import MovieFile
 from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources, plotSpectralResolution
-from .plotdensitycuts import plotDefaultMediaDensityCuts, plotPlanarMediaDensityCuts
+from .plotdensitycuts import plotMediaDensityCuts
 from .plotgrids import plotGrids
 from .plotpolarization import plotPolarization
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
