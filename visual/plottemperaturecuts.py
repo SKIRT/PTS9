@@ -63,7 +63,7 @@ def plotDefaultDustTemperatureCuts(simulation, *, outDirPath=None, outFileName=N
         for ax, cut, frame, (xgrid, ygrid) in zip(axes, cuts, frames, grids):
             extent = (xgrid[0].value, xgrid[-1].value, ygrid[0].value, ygrid[-1].value)
             im = ax.imshow(frame.value.T, vmin=0, vmax=Tmax.value, cmap='gnuplot', extent=extent,
-                           aspect='auto', interpolation='bicubic', origin='lower')
+                           aspect='equal', interpolation='bicubic', origin='lower')
             ax.set_xlim(xgrid[0].value, xgrid[-1].value)
             ax.set_ylim(ygrid[0].value, ygrid[-1].value)
             ax.set_xlabel(cut[0] + sm.latexForUnit(xgrid.unit), fontsize='large')

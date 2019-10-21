@@ -71,11 +71,11 @@ def plotMediaDensityCuts(simulation, decades=5, *, outDirPath=None, figSize=(18,
                         normalizer = matplotlib.colors.Normalize(vmin.value, vmax.value)
                     extent = (xgrid[0].value, xgrid[-1].value, ygrid[0].value, ygrid[-1].value)
                     im = ax1.imshow(tFrame.value.T, norm=normalizer, cmap='gnuplot', extent=extent,
-                                    aspect='auto', interpolation='bicubic', origin='lower')
+                                    aspect='equal', interpolation='bicubic', origin='lower')
                     fig.colorbar(im, ax=(ax1,ax2)).ax.set_ylabel("density" + sm.latexForUnit(tFrame.unit),
                                                                  fontsize='large')
                     ax2.imshow(gFrame.value.T, norm=normalizer, cmap='gnuplot', extent=extent,
-                               aspect='auto', interpolation='bicubic', origin='lower')
+                               aspect='equal', interpolation='bicubic', origin='lower')
 
                     # set axis details
                     ax1.set_xlim(xgrid[0].value, xgrid[-1].value)
