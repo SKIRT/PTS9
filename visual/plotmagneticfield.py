@@ -29,6 +29,12 @@ import pts.utils as ut
 # includes one or more DefaultMagneticFieldCutsProbe or PlanarMagneticFieldCutsProbe instances. If this is not the
 # case, the function does nothing.
 #
+# The figure displays an arrow for each bin of Nx by Ny pixels. The bin size can be specified as an argument.
+# The orientation and length of the arrow indicate resepctively the direction and strength of the magnetic
+# field projected on the cut plane and averaged over the bin. The color of the arrow scales with the magnetic
+# field component orthogonal to the cut plane, also averaged over the bin. Vectors pointing away from the
+# observer and are red-ish and vectors pointing towards the observer and are blue-ish.
+#
 # By default, the figures are saved in the simulation output directory with a filename that includes the simulation
 # prefix and the probe name, and has the ".pdf" filename extension. The output directory can be overridden as
 # described for the pts.utils.savePath() function. In interactive mode (see the pts.utils.interactive() function),
@@ -107,9 +113,13 @@ def plotMagneticFieldCuts(simulation, *, binSize=(32,32), outDirPath=None, figSi
                 lengthScale = 2 * Bmax * max(float(len(posX))/figSize[0], float(len(posY))/figSize[1])
                 key = "{:.3g}{}".format(Bmax, sm.latexForUnit(Bs))
 
+                # determine the color scheme for the component orthogonal to cut plane
+                Bzmax = np.abs(Bz).max()
+                normalizer = matplotlib.colors.Normalize(-Bzmax, Bzmax)
+
                 # plot the vector field (scale positions to data coordinates)
                 X,Y = np.meshgrid(xmin + posX * (xmax - xmin) / orLenX, ymin + posY * (ymax - ymin) / orLenY, indexing='ij')
-                quiverPlot = ax.quiver(X,Y, Bx, By, pivot='middle', units='inches',
+                quiverPlot = ax.quiver(X,Y, Bx, By, Bz, cmap='jet', norm=normalizer, pivot='middle', units='inches',
                                        angles='xy', scale=lengthScale, scale_units='inches',
                                        width=0.015, headwidth=2.5, headlength=2, headaxislength=2, minlength=0.8)
                 ax.quiverkey(quiverPlot, 0.8, -0.08, Bmax, key, coordinates='axes', labelpos='E')
