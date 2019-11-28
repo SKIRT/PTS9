@@ -102,8 +102,8 @@ def plotMagneticFieldCuts(simulation, *, binSize=(32,32), outDirPath=None, figSi
                 # configure the axes
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
-                ax.set_xlabel("x" + sm.latexForUnit(xgrid), fontsize='large')
-                ax.set_ylabel("y" + sm.latexForUnit(ygrid), fontsize='large')
+                ax.set_xlabel(cut[0] + sm.latexForUnit(xgrid), fontsize='large')
+                ax.set_ylabel(cut[-1] + sm.latexForUnit(ygrid), fontsize='large')
                 ax.set_aspect('equal')
 
                 # determine a characteristic 'large' field strength in the cut plane
