@@ -116,6 +116,7 @@ def plotMagneticFieldCuts(simulation, *, binSize=(32,32), outDirPath=None, figSi
 
                 # determine the color scheme for the component orthogonal to cut plane
                 Bzmax = np.abs(Bz).max()
+                if Bzmax==0: Bzmax=1      # guard against all zeros
                 normalizer = matplotlib.colors.Normalize(-Bzmax, Bzmax)
 
                 # plot the vector field (scale positions to data coordinates)
