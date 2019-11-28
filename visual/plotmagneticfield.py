@@ -108,6 +108,7 @@ def plotMagneticFieldCuts(simulation, *, binSize=(32,32), outDirPath=None, figSi
 
                 # determine a characteristic 'large' field strength in the cut plane
                 Bmax = np.percentile(np.sqrt(Bx**2 + By**2), 99.0)
+                if Bmax==0: Bmax=1      # guard against all zeros
 
                 # determine the scaling so that the longest arrows do not to overlap with neighboring arrows
                 lengthScale = 2 * Bmax * max(float(len(posX))/figSize[0], float(len(posY))/figSize[1])
