@@ -14,7 +14,7 @@
 
 import astropy.units as u
 import pts.band as bnd
-import pts.storedtable as stab
+from .io import writeStoredTable
 
 # -----------------------------------------------------------------
 
@@ -34,7 +34,7 @@ def writeBroadBands(inFilePaths, outFilePaths):
         w, T = band.transmissionCurve()
 
         # write stored table
-        stab.writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [w.to_value(u.m)],
+        writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [w.to_value(u.m)],
                                            ['T'], ['1'], ['lin'], [T.to_value(u.m**(-1))])
 
 # -----------------------------------------------------------------
