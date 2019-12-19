@@ -22,6 +22,7 @@ from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources, plotSpectralResolution
 from .plotdensitycuts import plotMediaDensityCuts
 from .plotgrids import plotGrids
+from .plotmagneticfield import plotMagneticFieldCuts
 from .plotpolarization import plotPolarization
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
 from .plottemperaturecuts import plotDefaultDustTemperatureCuts
