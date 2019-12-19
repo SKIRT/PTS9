@@ -22,7 +22,8 @@
 
 import glob
 import numpy as np
-import pts.storedtable as stab
+from .io import writeStoredTable
+from .tokenizedfile import TokenizedFile
 
 # -----------------------------------------------------------------
 
@@ -57,7 +58,7 @@ def convertGenericOpticalProps(inFilePaths, outFilePaths):
     reverse, skip1, skip2, skip3 = [ b.lower().endswith("/true") for b in inFilePaths[1:5] ]
 
     # open the input file and skip the header
-    infile = stab.TokenizedFile(open(inFilePaths[0]))
+    infile = TokenizedFile(open(inFilePaths[0]))
     infile.skipHeaderLines()
 
     # read the grid size
@@ -96,7 +97,7 @@ def convertGenericOpticalProps(inFilePaths, outFilePaths):
         g = np.flip(g, 1)
 
     # write stored table
-    stab.writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a*1e-6,w*1e-6],
+    writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a*1e-6,w*1e-6],
                                            ['Qabs','Qsca','g'], ['1','1','1'], ['log','log','lin'], [Qabs,Qsca,g])
 
 # -----------------------------------------------------------------
@@ -138,7 +139,7 @@ def convertDustemOpticalProps(inFilePaths, outFilePaths):
 
     # ------------ read wavelengths file ------------
 
-    infile = stab.TokenizedFile(open(inFilePaths[0]))
+    infile = TokenizedFile(open(inFilePaths[0]))
 
     # skip header lines, read the wavelength grid size, and read the wavelengths
     infile.skipHeaderLines()
@@ -147,7 +148,7 @@ def convertDustemOpticalProps(inFilePaths, outFilePaths):
 
     # ------------ read efficiencies file ------------
 
-    infile = stab.TokenizedFile(open(inFilePaths[1]))
+    infile = TokenizedFile(open(inFilePaths[1]))
 
     # first block: skip header lines, read the grain size grid size, and read the grain sizes
     infile.skipHeaderLines()
@@ -164,7 +165,7 @@ def convertDustemOpticalProps(inFilePaths, outFilePaths):
 
     # ------------ read scattering asymmetry file ------------
 
-    infile = stab.TokenizedFile(open(inFilePaths[2]))
+    infile = TokenizedFile(open(inFilePaths[2]))
 
     # first block: skip header lines, read the grain size grid size, and skip the grain sizes
     infile.skipHeaderLines()
@@ -178,7 +179,7 @@ def convertDustemOpticalProps(inFilePaths, outFilePaths):
 
     # ------------ write stored table ------------
 
-    stab.writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a*1e-6,w*1e-6],
+    writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a*1e-6,w*1e-6],
                                            ['Qabs','Qsca','g'], ['1','1','1'], ['log','log','lin'], [Qabs,Qsca,g])
 
 # -----------------------------------------------------------------
@@ -218,7 +219,7 @@ def convertMinOpticalProps(inFilePaths, outFilePaths):
     Qsca *= 0.1 * (4./3.*a*rhobulk)
 
     # write stored table
-    stab.writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a,w],
+    writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a,w],
                                            ['Qabs','Qsca','g'], ['1','1','1'], ['log','log','lin'], [Qabs.T,Qsca.T,g.T])
 
 # -----------------------------------------------------------------
@@ -233,7 +234,7 @@ def convertMinOpticalProps(inFilePaths, outFilePaths):
 #
 def convertStokesPolarizedOpticalProps(inFilePaths, outFilePaths):
     # open the input file
-    infile = stab.TokenizedFile(open(inFilePaths[0]))
+    infile = TokenizedFile(open(inFilePaths[0]))
 
     # skip header lines and read the grid sizes (sizes are given as n-1 in input file)
     for h in range(int(infile.next())): infile.skipLine()
@@ -284,11 +285,11 @@ def convertStokesPolarizedOpticalProps(inFilePaths, outFilePaths):
     theta *= np.pi / 180.
 
     # write stored table with absorption and scattering coefficients (plus dummy anisotropy parameter)
-    stab.writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a,w],
+    writeStoredTable(outFilePaths[0], ['a','lambda'], ['m','m'], ['log','log'], [a,w],
                                            ['Qabs','Qsca','g'], ['1','1','1'], ['log','log','lin'], [Qabs,Qsca,g])
 
     # write stored table with Mueller matrix coeffients
-    stab.writeStoredTable(outFilePaths[1],
+    writeStoredTable(outFilePaths[1],
                           ['a','lambda','theta'], ['m','m','rad'], ['log','log','lin'], [a,w,theta],
                           ['S11','S12','S33','S34'], ['1','1','1','1'], ['lin','lin','lin','lin'], [S11,S12,S33,S34])
 
