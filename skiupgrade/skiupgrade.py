@@ -89,11 +89,12 @@ def upgradeSkiFile(inpath, *, backup=True, replace=True):
 def _getUpgradeDefinitions():
     return [
 
-        # git xxxx (date): change some stuff
-        #_addScalarProperty("PlanarMediaDensityCutsProbe", "centerX", "0"),
-        #_addScalarProperty("PlanarMediaDensityCutsProbe", "centerY", "0"),
-        #_addScalarProperty("PlanarMediaDensityCutsProbe", "centerZ", "0"),
-
+        # SKIRT 9 master git xxxx (14 jan 2020): replace single bulk velocity with velocity field
+        # !!! We just remove the zero-velocity components without upgrading non-zero velocities
+        # !!! A true upgrade is hard to implement and would be applicable to very few ski files
+        _removeScalarPropertyWithValue("GeometricMedium", "velocityX", "0 "),
+        _removeScalarPropertyWithValue("GeometricMedium", "velocityY", "0 "),
+        _removeScalarPropertyWithValue("GeometricMedium", "velocityZ", "0 "),
     ]
 
 # -----------------------------------------------------------------
@@ -112,6 +113,14 @@ def _addScalarProperty(typeName, propName, propStringValue):
                 </xsl:element>
             </xsl:template>
             '''.format(typeName, propName, propStringValue))
+
+## Generates the definition for removing a scalar property with a value starting with a given string from a given type.
+def _removeScalarPropertyWithValue(typeName, oldPropName, oldValue):
+    return ('''//{0}[starts-with(@{1},'{2}')]'''.format(typeName, oldPropName, oldValue),
+            '''
+            <xsl:template match="//{0}[starts-with(@{1},'{2}')]/@{1}">
+            </xsl:template>
+            '''.format(typeName, oldPropName, oldValue))
 
 ## Generates the definition for changing the name of a scalar property for a given type.
 def _changeScalarPropertyName(typeName, oldPropName, newPropName):
