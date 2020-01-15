@@ -88,8 +88,7 @@ def upgradeSkiFile(inpath, *, backup=True, replace=True):
 #
 def _getUpgradeDefinitions():
     return [
-
-        # SKIRT 9 master git xxxx (15 jan 2020): replace single bulk velocity with velocity field
+        # SKIRT update (15 jan 2020): replace single bulk velocity with velocity field for geometric sources and media
         # !!! We just remove the zero-velocity components without upgrading non-zero velocities
         # !!! A true upgrade is hard to implement and would be applicable to very few ski files
         _removeScalarPropertyWithValue("GeometricSource", "velocityX", "0 "),
