@@ -62,7 +62,7 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
             if len(paths) == 1:
 
                 # load data cube with shape (nx, ny, 3)
-                Bs = sm.loadFits(paths[0])
+                vs = sm.loadFits(paths[0])
 
                 # load the axes grids
                 xgrid, ygrid, dummygrid = sm.getFitsAxes(paths[0])
@@ -74,11 +74,11 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
 
                 # determine binning configuration
                 binX = binSize[0]
-                orLenX = Bs.shape[0]
+                orLenX = vs.shape[0]
                 dropX =  orLenX % binX
                 startX = dropX//2
                 binY = binSize[1]
-                orLenY = Bs.shape[1]
+                orLenY = vs.shape[1]
                 dropY = orLenY % binY
                 startY = dropY//2
 
@@ -87,14 +87,14 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
                 posY = np.arange(startY - 0.5 + binY / 2.0, orLenY - dropY + startY - 0.5, binY)
 
                 # perform the actual binning, while splitting in vector components
-                Bx = np.zeros((len(posX),len(posY)))
-                By = np.zeros((len(posX),len(posY)))
-                Bz = np.zeros((len(posX),len(posY)))
+                vx = np.zeros((len(posX),len(posY)))
+                vy = np.zeros((len(posX),len(posY)))
+                vz = np.zeros((len(posX),len(posY)))
                 for x in range(len(posX)):
                     for y in range(len(posY)):
-                        Bx[x,y] = np.mean(Bs[startX+binX*x : startX+binX*(x+1), startY+binY*y : startY+binY*(y+1) , 0].value)
-                        By[x,y] = np.mean(Bs[startX+binX*x : startX+binX*(x+1), startY+binY*y : startY+binY*(y+1) , 1].value)
-                        Bz[x,y] = np.mean(Bs[startX+binX*x : startX+binX*(x+1), startY+binY*y : startY+binY*(y+1) , 2].value)
+                        vx[x,y] = np.mean(vs[startX+binX*x : startX+binX*(x+1), startY+binY*y : startY+binY*(y+1) , 0].value)
+                        vy[x,y] = np.mean(vs[startX+binX*x : startX+binX*(x+1), startY+binY*y : startY+binY*(y+1) , 1].value)
+                        vz[x,y] = np.mean(vs[startX+binX*x : startX+binX*(x+1), startY+binY*y : startY+binY*(y+1) , 2].value)
 
                 # start the figure
                 fig, ax = plt.subplots(ncols=1, nrows=1, figsize=figSize)
@@ -107,24 +107,24 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
                 ax.set_aspect('equal')
 
                 # determine a characteristic 'large' field strength in the cut plane
-                Bmax = np.percentile(np.sqrt(Bx**2 + By**2), 99.0)
-                if Bmax==0: Bmax=1      # guard against all zeros
+                vmax = np.percentile(np.sqrt(vx**2 + vy**2), 99.0)
+                if vmax==0: vmax=1      # guard against all zeros
 
                 # determine the scaling so that the longest arrows do not to overlap with neighboring arrows
-                lengthScale = 2 * Bmax * max(float(len(posX))/figSize[0], float(len(posY))/figSize[1])
-                key = "{:.3g}{}".format(Bmax, sm.latexForUnit(Bs))
+                lengthScale = 2 * vmax * max(float(len(posX))/figSize[0], float(len(posY))/figSize[1])
+                key = "{:.3g}{}".format(vmax, sm.latexForUnit(vs))
 
                 # determine the color scheme for the component orthogonal to cut plane
-                Bzmax = np.abs(Bz).max()
-                if Bzmax==0: Bzmax=1      # guard against all zeros
-                normalizer = matplotlib.colors.Normalize(-Bzmax, Bzmax)
+                vzmax = np.abs(vz).max()
+                if vzmax==0: vzmax=1      # guard against all zeros
+                normalizer = matplotlib.colors.Normalize(-vzmax, vzmax)
 
                 # plot the vector field (scale positions to data coordinates)
                 X,Y = np.meshgrid(xmin + posX * (xmax - xmin) / orLenX, ymin + posY * (ymax - ymin) / orLenY, indexing='ij')
-                quiverPlot = ax.quiver(X,Y, Bx, By, Bz, cmap='jet', norm=normalizer, pivot='middle', units='inches',
+                quiverPlot = ax.quiver(X,Y, vx, vy, vz, cmap='jet', norm=normalizer, pivot='middle', units='inches',
                                        angles='xy', scale=lengthScale, scale_units='inches',
                                        width=0.015, headwidth=2.5, headlength=2, headaxislength=2, minlength=0.8)
-                ax.quiverkey(quiverPlot, 0.8, -0.08, Bmax, key, coordinates='axes', labelpos='E')
+                ax.quiverkey(quiverPlot, 0.8, -0.08, vmax, key, coordinates='axes', labelpos='E')
 
                 # if not in interactive mode, save the figure; otherwise leave it open
                 if not ut.interactive(interactive):
