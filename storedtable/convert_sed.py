@@ -230,7 +230,6 @@ def convertMappingsSEDFamily(inFilePaths, outFilePaths):
     #    [CII] line at 158 micron and [CI] lines at 370 and 609 micron
     for wline in (158e-6, 370e-6, 609e-6):
         i = np.argmin(np.abs(w-wline))
-        print (i)
         w = np.delete(w, i, 0)
         L = np.delete(L, i, 0)
 
