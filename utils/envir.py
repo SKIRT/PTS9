@@ -34,6 +34,6 @@ def username():
 
 ## This function returns the name of the local host.
 def hostname():
-    return socket.getfqdn()
+    return socket.gethostname()
 
 # -----------------------------------------------------------------
