@@ -79,7 +79,8 @@ def getHEALPixIndices(theta, phi, Nside):
 
 ## This function returns the projection of the given HEALPix data map, using the given
 # number of vertical pixels for the resulting projection image, and the given projection
-# transformation.
+# transformation. The optional parameters thetaCenter and phiCenter allow to select a
+# different central position than the original crosshair of the HEALPixSkyInstrument.
 #
 # The function first sets up the linear coordinates for the projection image and then converts
 # them to the appropriate zenith and azimuth angles using the appropriate projection. These angles
@@ -88,36 +89,67 @@ def getHEALPixIndices(theta, phi, Nside):
 # Because of the nature of the Mollweide projection, some pixels in the four corners of the output
 # image are unused. The values in these pixels are set to zero.
 #
-def getProjectionMap(HEALPixCube, nPixelY, projection="Mollweide"):
+def getProjectionMap(
+    HEALPixCube, nPixelY, projection="Mollweide", thetaCenter=0.0, phiCenter=0.0
+):
     # derive the HEALPix parameters from the image size
     Nside = HEALPixCube.shape[1] // 4
 
+    # convert the azimuth angle from degrees to radians
+    phiCenter *= np.pi / 180.0
+    thetaCenter *= np.pi / 180.0
+
+    # make sure we oversample the HEALPix pixels initially, we will resample after the projection
+    if nPixelY < 2 * Nside:
+        nPixelYHigh = 2 * Nside
+        nPixelYHigh += nPixelY - nPixelYHigh % nPixelY
+        resFac = nPixelYHigh // nPixelY
+    else:
+        nPixelYHigh = nPixelY
+        resFac = 1
+
     # initialize the image pixels
-    nPixelX = 2 * nPixelY
-    yMin = -1.0 + 1.0 / nPixelY
-    dY = 2.0 / nPixelY
-    xMin = -2.0 + 2.0 / nPixelX
-    dX = 4.0 / nPixelX
+    nPixelXHigh = 2 * nPixelYHigh
+    yMin = -1.0 + 1.0 / nPixelYHigh
+    dY = 2.0 / nPixelYHigh
+    xMin = -2.0 + 2.0 / nPixelXHigh
+    dX = 4.0 / nPixelXHigh
     y, x = np.mgrid[yMin:1.0:dY, xMin:2.0:dX]
 
     if projection == "Mollweide":
         # compute the Mollweide angles for each pixel
         temp = np.arcsin(y)
-        theta = np.arcsin((2.0 * temp + np.sin(2.0 * temp)) / np.pi) + 0.5 * np.pi
-        phi = np.pi + 0.5 * np.pi * x / np.cos(temp)
+        theta = (
+            np.arcsin((2.0 * temp + np.sin(2.0 * temp)) / np.pi)
+            + 0.5 * np.pi
+            + thetaCenter
+        )
+        phi = phiCenter + np.pi + 0.5 * np.pi * x / np.cos(temp)
 
+        theta = np.mod(theta, np.pi)
+        # wrap an invert the azimuth angle
+        phi = np.mod(phi, 2.0 * np.pi)
         phi = 2.0 * np.pi - phi
 
         # filter out invalid angles in the corners
-        iValid = (theta >= 0.0) & (theta <= np.pi) & (phi >= 0.0) & (phi <= 2.0 * np.pi)
+        iValid = (0.5 * x) ** 2 + (y) ** 2 < 1.0
         theta = theta[iValid]
         phi = phi[iValid]
     elif projection == "HammerAitoff":
+        x *= np.sqrt(2.0)
+        y *= np.sqrt(2.0)
         # compute the Hammer-Aitoff angles for each pixel
         temp = np.sqrt(1.0 - (0.25 * x) ** 2 - (0.5 * y) ** 2)
-        theta = np.arcsin(temp * y) + 0.5 * np.pi
-        phi = 2.0 * np.arctan(0.5 * temp * x / (2.0 * temp ** 2 - 1.0)) + np.pi
+        theta = np.arcsin(temp * y) + 0.5 * np.pi + thetaCenter
+        phi = (
+            2.0 * np.arctan(0.5 * temp * x / (2.0 * temp ** 2 - 1.0))
+            + np.pi
+            + phiCenter
+        )
 
+        theta = np.mod(theta, np.pi)
+        # wrap an invert the azimuth angle
+        phi = np.mod(phi, 2.0 * np.pi)
         phi = 2.0 * np.pi - phi
 
         # filter out invalid angles in the corners
@@ -137,6 +169,13 @@ def getProjectionMap(HEALPixCube, nPixelY, projection="Mollweide"):
     image = np.zeros(x.shape)
     # copy the HEALPix pixel values into the corresponding image pixels (only for valid pixels)
     image[iValid] = HEALPixCube[j, i]
+
+    # resample the image onto the desired resolution
+    if resFac > 1:
+        temp = image.reshape(
+            (image.shape[0] // resFac, resFac, image.shape[1] // resFac, resFac)
+        )
+        image = np.sum(temp, axis=(1, 3))
 
     return image
 

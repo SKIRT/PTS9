@@ -16,6 +16,10 @@
 #    and HammerAitoff (for the Hammer-Aitoff projection); default is Mollweide.
 #  - \em nPixelX (int): Number of pixels in the vertical direction for the generated image. The number of pixels
 #    in the horizontal direction is twice this value. Default is 250.
+#  - \em thetaCenter (float): Zenith angle of the central position relative to the original crosshair of the
+#    HEALPixSkyInstrument (in degrees). Default is 0.
+#  - \em phiCenter (float): Azimuth angle of the central position relative to the original crosshair of the
+#    HEALPixSkyInstrument (in degrees). Default is 0.
 #
 
 # -----------------------------------------------------------------
@@ -35,6 +39,14 @@ def do(
         int,
         "number of pixels to use in the vertical direction for the output image",
     ) = 250,
+    thetaCenter: (
+        float,
+        "zenith angle of the central position relative to the original crosshair (in degrees)",
+    ) = 0.0,
+    phiCenter: (
+        float,
+        "azimuth angle of the central position relative to the original crosshair (in degrees)",
+    ) = 0.0,
 ) -> "create a projected image based on a HEALPixSkyInstrument output cube":
 
     import numpy as np
@@ -64,7 +76,9 @@ def do(
     numWav = len(inputData)
     outputData = np.zeros((numWav, nPixelY, 2 * nPixelY))
     for i in range(numWav):
-        outputData[i] = healpix.getProjectionMap(inputData[i], nPixelY, projection)
+        outputData[i] = healpix.getProjectionMap(
+            inputData[i], nPixelY, projection, thetaCenter, phiCenter
+        )
 
     outputHDUL = fits.HDUList(
         [fits.PrimaryHDU(outputData, header=inputFile[0].header), inputFile[1]]
