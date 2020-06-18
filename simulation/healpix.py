@@ -84,10 +84,19 @@ def getHEALPixIndices(theta, phi, Nside):
 #
 # The function first sets up the linear coordinates for the projection image and then converts
 # them to the appropriate zenith and azimuth angles using the appropriate projection. These angles
-# are then passed on to getHEALPixIndices() to get the corresponding HEALPix pixels.
+# are then rotated according to thetaCenter and phiCenter so that they point to the correct angles
+# on the rotated HEALPix sphere. Finally, the angles are passed on to getHEALPixIndices() to get
+# the corresponding HEALPix pixels.
 #
 # Because of the nature of the Mollweide projection, some pixels in the four corners of the output
 # image are unused. The values in these pixels are set to zero.
+#
+# The angles thetaCenter and phiCenter lead to vertical and horizontal rotations respectively. The
+# horizontal rotation is simply to the right. The vertical rotation goes upward in the left part of
+# the image and downward in the right part. Pixels that rotate through the pole move from the left
+# part to the right part. Due to the projection, thetaCenter can go through a full 360 degrees
+# rotation before the projection image is the same; thetaCenter angles larger than 180 degrees
+# correspond to projection images for smaller thetaCenter values that are seen upside down.
 #
 def getProjectionMap(
     HEALPixCube, nPixelY, projection="Mollweide", thetaCenter=0.0, phiCenter=0.0
@@ -116,20 +125,14 @@ def getProjectionMap(
     dX = 4.0 / nPixelXHigh
     y, x = np.mgrid[yMin:1.0:dY, xMin:2.0:dX]
 
+    # create an empty pixel map
+    image = np.zeros(x.shape)
+
     if projection == "Mollweide":
         # compute the Mollweide angles for each pixel
         temp = np.arcsin(y)
-        theta = (
-            np.arcsin((2.0 * temp + np.sin(2.0 * temp)) / np.pi)
-            + 0.5 * np.pi
-            + thetaCenter
-        )
-        phi = phiCenter + np.pi + 0.5 * np.pi * x / np.cos(temp)
-
-        theta = np.mod(theta, np.pi)
-        # wrap an invert the azimuth angle
-        phi = np.mod(phi, 2.0 * np.pi)
-        phi = 2.0 * np.pi - phi
+        theta = np.arcsin((2.0 * temp + np.sin(2.0 * temp)) / np.pi) + 0.5 * np.pi
+        phi = np.pi + 0.5 * np.pi * x / np.cos(temp)
 
         # filter out invalid angles in the corners
         iValid = (0.5 * x) ** 2 + (y) ** 2 < 1.0
@@ -140,17 +143,8 @@ def getProjectionMap(
         y *= np.sqrt(2.0)
         # compute the Hammer-Aitoff angles for each pixel
         temp = np.sqrt(1.0 - (0.25 * x) ** 2 - (0.5 * y) ** 2)
-        theta = np.arcsin(temp * y) + 0.5 * np.pi + thetaCenter
-        phi = (
-            2.0 * np.arctan(0.5 * temp * x / (2.0 * temp ** 2 - 1.0))
-            + np.pi
-            + phiCenter
-        )
-
-        theta = np.mod(theta, np.pi)
-        # wrap an invert the azimuth angle
-        phi = np.mod(phi, 2.0 * np.pi)
-        phi = 2.0 * np.pi - phi
+        theta = np.arcsin(temp * y) + 0.5 * np.pi
+        phi = 2.0 * np.arctan(0.5 * temp * x / (2.0 * temp ** 2 - 1.0)) + np.pi
 
         # filter out invalid angles in the corners
         iValid = (0.5 * x) ** 2 + (y) ** 2 < 2.0
@@ -163,10 +157,35 @@ def getProjectionMap(
             + ")! Possible values are Mollweide, HammerAitoff."
         )
 
+    # invert the azimuth angle to account for the SKIRT orientation convention
+    phi = 2.0 * np.pi - phi
+
+    # we have successfully applied the projection to obtain the angular coordinates of each
+    # pixel of the projection image on the unit sphere, centred on (theta, phi) = (0, 0)
+    # now we need to transform these angles to the unit sphere centred on (thetaCenter, phiCenter)
+    # we do this by applying two rotations:
+    #  - a rotation over phiCenter along the z axis. This rotation only affects phi
+    phi += phiCenter
+    #  - a rotation over thetaCenter along the (rotated) x axis. This rotation needs to be done
+    #    in Cartesian space
+    sinTheta = np.sin(theta)
+    x = sinTheta * np.cos(phi)
+    y = sinTheta * np.sin(phi)
+    z = np.cos(theta)
+    sinThetaCenter = np.sin(thetaCenter)
+    cosThetaCenter = np.cos(thetaCenter)
+    temp = y * cosThetaCenter + z * sinThetaCenter
+    z = -y * sinThetaCenter + z * cosThetaCenter
+    y = temp
+    phi = np.arctan2(y, x)
+    theta = np.arccos(z)
+
+    # make sure the final angles are within range for the HEALPix grid
+    phi = np.mod(phi, 2.0 * np.pi)
+    theta = np.mod(theta, np.pi)
+
     j, i = getHEALPixIndices(theta, phi, Nside)
 
-    # create an empty pixel map
-    image = np.zeros(x.shape)
     # copy the HEALPix pixel values into the corresponding image pixels (only for valid pixels)
     image[iValid] = HEALPixCube[j, i]
 

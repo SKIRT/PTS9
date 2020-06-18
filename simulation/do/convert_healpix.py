@@ -17,9 +17,10 @@
 #  - \em nPixelX (int): Number of pixels in the vertical direction for the generated image. The number of pixels
 #    in the horizontal direction is twice this value. Default is 250.
 #  - \em thetaCenter (float): Zenith angle of the central position relative to the original crosshair of the
-#    HEALPixSkyInstrument (in degrees). Default is 0.
+#    HEALPixSkyInstrument (in degrees). Corresponds to a vertical rotation that goes downward in the right half
+#    of the image. Default is 0.
 #  - \em phiCenter (float): Azimuth angle of the central position relative to the original crosshair of the
-#    HEALPixSkyInstrument (in degrees). Default is 0.
+#    HEALPixSkyInstrument (in degrees). Corresponds to a horizontal rotation to the right. Default is 0.
 #
 
 # -----------------------------------------------------------------
@@ -41,11 +42,13 @@ def do(
     ) = 250,
     thetaCenter: (
         float,
-        "zenith angle of the central position relative to the original crosshair (in degrees)",
+        "zenith angle of the central position relative to the original crosshair (in degrees),"
+        " corresponding to a vertical rotation that goes downward in the right half of the image",
     ) = 0.0,
     phiCenter: (
         float,
-        "azimuth angle of the central position relative to the original crosshair (in degrees)",
+        "azimuth angle of the central position relative to the original crosshair (in degrees),"
+        " corresponding to a horizontal rotation to the right",
     ) = 0.0,
 ) -> "create a projected image based on a HEALPixSkyInstrument output cube":
 
