@@ -40,9 +40,60 @@ class HEALPixGrid:
                 self._NSide, self._order
             )
         )
-        logging.info(
-            "It contains {0} variables per pixel.".format(self._HEALPixCube.shape[0])
+        if len(self._HEALPixCube) == 3:
+            logging.info(
+                "It contains {0} variables per pixel.".format(
+                    self._HEALPixCube.shape[0]
+                )
+            )
+
+    ## This function returns the angle arrays corresponding to the given input index arrays.
+    #
+    # The index array j contains the ring indices, the index array i contains the pixel-in-ring
+    # indices. The return arrays contain the centers of the corresponding pixels.
+    #
+    # This function is the inverse of getHEALPixIndices(). No checks are done on the input values
+    # to ensure that they are actually valid indices.
+    #
+    def getHEALPixAngles(self, j, i):
+
+        # make sure the input values are NumPy arrays
+        if not j is np.ndarray:
+            j = np.array(j)
+        if not i is np.ndarray:
+            i = np.array(i)
+
+        # reserve empty result arrays
+        theta = np.zeros(j.shape)
+        phi = np.zeros(i.shape)
+
+        # cache the total number of pixels that is used below
+        Ntot = 12 * self._NSide ** 2
+
+        # now compute the angles
+        # we treat the poles and equatorial region separately
+
+        # north pole
+        iNPol = j < self._NSide - 1
+        z = 1.0 - 4.0 * (j[iNPol] + 1.0) ** 2 / Ntot
+        theta[iNPol] = np.arccos(z)
+        phi[iNPol] = 0.5 * np.pi * (i[iNPol] + 0.5) / (j[iNPol] + 1.0)
+
+        # equator
+        iEq = (j >= self._NSide - 1) & (j < 3 * self._NSide)
+        z = 2.0 * (2 * self._NSide - j[iEq] - 1.0) / (3 * self._NSide)
+        theta[iEq] = np.arccos(z)
+        phi[iEq] = (
+            (i[iEq] + 0.5 * np.bitwise_and(j[iEq], 1)) * 1.5 * np.pi / (3 * self._NSide)
         )
+
+        # south pole
+        iSPol = j >= 3 * self._NSide
+        z = 4.0 * (4 * self._NSide - j[iSPol] - 1.0) ** 2 / Ntot - 1.0
+        theta[iSPol] = np.arccos(z)
+        phi[iSPol] = 0.5 * np.pi * (i[iSPol] + 0.5) / (4 * self._NSide - j[iSPol] - 1.0)
+
+        return theta, phi
 
     ## This function returns the index arrays corresponding to the given input zenith and azimuth angles for the
     # HEALPix grid in SKIRT's modified ring order.
@@ -256,5 +307,102 @@ class HEALPixGrid:
             logging.info("Resampled projected cube to shape {0}".format(image.shape))
 
         return image
+
+    ## This function returns a new HEALPixGrid that contains a degraded copy of this one.
+    # The degraded copy combines 2*2^degradeFactor pixels into a single pixel using the
+    # given operator (default is sum) to combine pixel values. This effectively changes
+    # the order of the HEALPixGrid by -degradeFactor.
+    #
+    def degrade(self, degradeFactor, operator=np.sum):
+
+        # compute the properties of the degraded grid
+        newOrder = self._order - degradeFactor
+        newNSide = 1 << newOrder
+
+        # allocate the degraded data cube
+        if len(self._HEALPixCube.shape) == 2:
+            newHEALPixCube = np.zeros((4 * newNSide - 1, 4 * newNSide))
+        elif len(self._HEALPixCube.shape) == 3:
+            newHEALPixCube = np.zeros(
+                (self._HEALPixCube.shape[0], 4 * newNSide - 1, 4 * newNSide)
+            )
+
+        # create the degraded grid
+        newHEALPixGrid = HEALPixGrid(newHEALPixCube)
+
+        # generate index arrays for the entire old HEALPix grid
+        # we first overdo it a bit
+        j, i = np.mgrid[0 : 4 * self._NSide - 1 : 1, 0 : 4 * self._NSide : 1]
+        # now mask out the top and bottom triangles for the missing pixels in the polar regions
+        select = np.ones(j.shape, dtype=bool)
+        select[i + 1 > 4 * (j + 1)] = False
+        select[i + 1 > 4 * (4 * self._NSide - j - 1)] = False
+        j = j[select]
+        i = i[select]
+
+        # compute the angles for the centres of the old pixels
+        theta, phi = self.getHEALPixAngles(j, i)
+        # now get the pixels that contain these angles
+        newj, newi = newHEALPixGrid.getHEALPixIndices(theta, phi)
+        # what we want to do at this point, is something like
+        #  newHEALPixCube[newj, newi] += self._HEALPixCube[j, i]
+        # (assuming our operator is a summation)
+        # this does not work, and that is very sensible, since this is like
+        # trying to add to the same variable with multiple threads in a shared
+        # memory context (and for all we know, that could be exactly what happens
+        # inside the NumPy library)
+        # we can however bypass this issue by using our knowledge of the grid:
+        # we know that every new pixel corresponds to exactly 2*2^degradeFactor
+        # old pixels, so if we could do the summation 2*2^degradeFactor times,
+        # and only sum the corresponding fraction of pixels in one go, then
+        # we are done
+        # this only works if the new pixels are ordered sensibly, which they
+        # will not be in our RING pixel ordering (the first 4 indices for
+        # example *always* correspond to different pixels, no matter what
+        # the resolution of the HEALPix grid is)
+        # we can however find a good ordering by computing the pixel index
+        # for our new pixels, and argsorting on this. We don't even care
+        # about properly accounting for the corners, as we are only
+        # interested in the relative index ordering, not in retrieving the
+        # correct RING pixel index
+        # So:
+        #  - compute the RING pixel indices within the degraded grid
+        pixel = newj * 4 * newNSide + newi
+        #  - argsort these. If we index the j and i arrays with the pixSort
+        #    array, then 2*2^degradeFactor consecutive elements in the
+        #    resulting arrays will correspond to the same pixel in the degraded
+        #    grid
+        pixSort = np.argsort(pixel)
+        #  - now do the summations
+        #    we could do this using a loop, but that would make it harder to
+        #    apply our operator (not all operators can be applied sequentially)
+        #    and would possibly be inefficient
+        #    instead, we do some clever reshaping and directly put the new pixel
+        #    values into their corresponding new pixels
+        numOldPerNew = 2 * (1 << degradeFactor)
+        # we do need the new pixel indices (in the right order) for this to work
+        jsmall, ismall = np.mgrid[0 : 4 * newNSide - 1 : 1, 0 : 4 * newNSide : 1]
+        select = np.ones(jsmall.shape, dtype=bool)
+        select[ismall + 1 > 4 * (jsmall + 1)] = False
+        select[ismall + 1 > 4 * (4 * newNSide - jsmall - 1)] = False
+        jsmall = jsmall[select]
+        ismall = ismall[select]
+        # now get the old pixels sorted per new pixel index and reshaped
+        # appropriately so that we can simply apply our operator to the last axis
+        if len(self._HEALPixCube.shape) == 2:
+            sortedPixels = self._HEALPixCube[j[pixSort], i[pixSort]].reshape(
+                (12 * newNSide ** 2, numOldPerNew)
+            )
+            newHEALPixCube[jsmall[select], ismall[select]] = operator(
+                sortedPixels, axis=1
+            )
+        elif len(self._HEALPixCube.shape) == 3:
+            sortedPixels = self._HEALPixCube[:, j[pixSort], i[pixSort]].reshape(
+                (self._HEALPixCube.shape[0], 12 * newNSide ** 2, numOldPerNew)
+            )
+            newHEALPixCube[:, jsmall, ismall] = operator(sortedPixels, axis=2)
+
+        return newHEALPixGrid
+
 
 # -----------------------------------------------------------------
