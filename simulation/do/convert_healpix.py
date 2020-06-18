@@ -57,6 +57,7 @@ def do(
     import pts.simulation.healpix as healpix
     import pathlib
     from pts.utils.error import UserError
+    import logging
 
     inputPath = pathlib.Path(inputFileName)
     if not inputPath.exists():
@@ -74,17 +75,15 @@ def do(
         raise UserError("Invalid number of pixels: {0}!".format(nPixelY))
 
     inputFile = fits.open(inputPath)
+    logging.info("Opened input file {0}".format(inputPath))
 
-    inputData = inputFile[0].data
-    numWav = len(inputData)
-    outputData = np.zeros((numWav, nPixelY, 2 * nPixelY))
-    for i in range(numWav):
-        outputData[i] = healpix.getProjectionMap(
-            inputData[i], nPixelY, projection, thetaCenter, phiCenter
-        )
+    hData = healpix.HEALPixGrid(inputFile[0].data)
+    hData.printInfo()
+    outputData = hData.getProjectionMap(nPixelY, projection, thetaCenter, phiCenter)
 
     outputHDUL = fits.HDUList(
         [fits.PrimaryHDU(outputData, header=inputFile[0].header), inputFile[1]]
     )
 
     outputHDUL.writeto(outputPath)
+    logging.info("Wrote output file {0}".format(outputPath))
