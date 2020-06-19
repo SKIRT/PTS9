@@ -16,6 +16,44 @@ import numpy as np
 from pts.utils.error import UserError
 import logging
 
+# -----------------------------------------------------------------
+
+## Get the shortest distance (in radians) between two points (A, B) on the celestial sphere with the
+# given zenith and azimuth.
+#
+# The distance can easily be derived by realizing that the angle between the unit vectors pointing to
+# A and B is given by
+# \f[
+#    \delta{} = \arccos{\vec{r}_A \dot{} \vec{r}_B}.
+# \f]
+# In spherical coordinates, the dot product of the two unit vectors with sky coordinates \f$(\theta{}_A,\phi{}_A)\f$
+# and \f$(\theta{}_B,\phi{}_B)\f$ yields
+# \f[
+#    \vec{r}_A \dot{} \vec{r}_B =
+#      \sin{\theta{}_A}\sin{\theta{}_B} \left(
+#        \cos{\phi{}_A}\cos{\phi{}_B} + \sin{\phi{}_A}\sin{\phi{}_B}
+#      \right) + \cos{\theta{}_A}\cos{\theta{}_B} =
+#      \sin{\theta{}_A}\sin{\theta{}_B} \cos{(\phi{}_A-\phi{}_B)}
+#        + \cos{\theta{}_A}\cos{\theta{}_B} =
+#      \frac{1}{2} \left[
+#        \cos{(\theta{}_A-\theta{}_B)} - \cos{(\theta{}_A+\theta{}_B)}
+#      \right] \cos{(\phi{}_A-\phi{}_B)} + \frac{1}{2} \left[
+#        \cos{(\theta{}_A-\theta{}_B)} + \cos{(\theta{}_A+\theta{}_B)}
+#      \right].
+# \f]
+#
+def getDistanceOnSky(thetaA, phiA, thetaB, phiB):
+    cosThetaDiff = np.cos(thetaA - thetaB)
+    cosThetaSum = np.cos(thetaA + thetaB)
+    cosPhiDiff = np.cos(phiA - phiB)
+    return np.arccos(
+        0.5 * (cosThetaDiff - cosThetaSum) * cosPhiDiff
+        + 0.5 * (cosThetaDiff + cosThetaSum)
+    )
+
+
+# -----------------------------------------------------------------
+
 ## This class represents a HEALPix grid. It contains a reference to the raw
 # HEALPixSkyInstrument data cube and some additional geometrical information
 # about the grid that is derived from it.
@@ -32,6 +70,10 @@ class HEALPixGrid:
         self._HEALPixCube = HEALPixCube
         self._NSide = HEALPixCube.shape[-1] // 4
         self._order = int(np.log2(self._NSide))
+        self._j = None
+        self._i = None
+        self._theta = None
+        self._phi = None
 
     ## Print some information about the HEALPix grid to the console.
     def printInfo(self):
@@ -159,6 +201,42 @@ class HEALPixGrid:
         j[ipol & (z < 0)] = 4 * self._NSide - j[ipol & (z < 0)] - 1
 
         return j, i
+
+    ## This function returns arrays of ring indices j and pixel-in-ring indices i that,
+    # when traversed in order, traverse the HEALPix grid in RING order.
+    #
+    # These values are cached internally for improved efficiency.
+    #
+    def getPixelIndices(self):
+        if self._j is None:
+            # we first overdo it a bit
+            j, i = np.mgrid[0 : 4 * self._NSide - 1 : 1, 0 : 4 * self._NSide : 1]
+            # now we mask out the top and bottom triangles for the missing pixels in the polar regions
+            select = np.ones(j.shape, dtype=bool)
+            select[i + 1 > 4 * (j + 1)] = False
+            select[i + 1 > 4 * (4 * self._NSide - j - 1)] = False
+            # and remove them from the arrays
+            j = j[select]
+            i = i[select]
+
+            self._j = j
+            self._i = i
+
+        return self._j, self._i
+
+    ## This function returns arrays of zenith angles theta and azimuth angles phi in the
+    # same RING order returned by getPixelIndices().
+    #
+    # These values are cached internally for improved efficiency.
+    #
+    def getPixelAngles(self):
+        if self._theta is None:
+            j, i = self.getPixelIndices()
+            theta, phi = self.getHEALPixAngles(j, i)
+            self._theta = theta
+            self._phi = phi
+
+        return self._theta, self._phi
 
     ## This function returns the projection of the HEALPix data map, using the given
     # number of vertical pixels for the resulting projection image, and the given projection
@@ -330,18 +408,10 @@ class HEALPixGrid:
         # create the degraded grid
         newHEALPixGrid = HEALPixGrid(newHEALPixCube)
 
-        # generate index arrays for the entire old HEALPix grid
-        # we first overdo it a bit
-        j, i = np.mgrid[0 : 4 * self._NSide - 1 : 1, 0 : 4 * self._NSide : 1]
-        # now mask out the top and bottom triangles for the missing pixels in the polar regions
-        select = np.ones(j.shape, dtype=bool)
-        select[i + 1 > 4 * (j + 1)] = False
-        select[i + 1 > 4 * (4 * self._NSide - j - 1)] = False
-        j = j[select]
-        i = i[select]
+        # get the indices and angles for the centres of the old pixels
+        j, i = self.getPixelIndices()
+        theta, phi = self.getPixelAngles()
 
-        # compute the angles for the centres of the old pixels
-        theta, phi = self.getHEALPixAngles(j, i)
         # now get the pixels that contain these angles
         newj, newi = newHEALPixGrid.getHEALPixIndices(theta, phi)
         # what we want to do at this point, is something like
@@ -381,21 +451,14 @@ class HEALPixGrid:
         #    values into their corresponding new pixels
         numOldPerNew = 2 * (1 << degradeFactor)
         # we do need the new pixel indices (in the right order) for this to work
-        jsmall, ismall = np.mgrid[0 : 4 * newNSide - 1 : 1, 0 : 4 * newNSide : 1]
-        select = np.ones(jsmall.shape, dtype=bool)
-        select[ismall + 1 > 4 * (jsmall + 1)] = False
-        select[ismall + 1 > 4 * (4 * newNSide - jsmall - 1)] = False
-        jsmall = jsmall[select]
-        ismall = ismall[select]
+        jsmall, ismall = newHEALPixGrid.getPixelIndices()
         # now get the old pixels sorted per new pixel index and reshaped
         # appropriately so that we can simply apply our operator to the last axis
         if len(self._HEALPixCube.shape) == 2:
             sortedPixels = self._HEALPixCube[j[pixSort], i[pixSort]].reshape(
                 (12 * newNSide ** 2, numOldPerNew)
             )
-            newHEALPixCube[jsmall[select], ismall[select]] = operator(
-                sortedPixels, axis=1
-            )
+            newHEALPixCube[jsmall, ismall] = operator(sortedPixels, axis=1)
         elif len(self._HEALPixCube.shape) == 3:
             sortedPixels = self._HEALPixCube[:, j[pixSort], i[pixSort]].reshape(
                 (self._HEALPixCube.shape[0], 12 * newNSide ** 2, numOldPerNew)
@@ -403,6 +466,18 @@ class HEALPixGrid:
             newHEALPixCube[:, jsmall, ismall] = operator(sortedPixels, axis=2)
 
         return newHEALPixGrid
+
+    ## Get a mask that selects all pixels within an annulus with the given inner
+    # and outer radius surrounding the given central pixel.
+    #
+    # When indexed with this mask, any grid related array will be reduced to an array
+    # that only contains values for pixels within the annulus.
+    #
+    def getAnnulusAroundPixel(self, centralPixel, innerRadius, outerRadius):
+        theta, phi = self.getPixelAngles()
+        delta = getDistanceOnSky(theta[centralPixel], phi[centralPixel], theta, phi)
+        selection = (delta >= innerRadius) & (delta <= outerRadius)
+        return selection
 
 
 # -----------------------------------------------------------------
