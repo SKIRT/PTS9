@@ -15,6 +15,7 @@
 import numpy as np
 from pts.utils.error import UserError
 import logging
+from scipy.spatial import cKDTree
 
 # -----------------------------------------------------------------
 
@@ -74,6 +75,8 @@ class HEALPixGrid:
         self._i = None
         self._theta = None
         self._phi = None
+        self._positions = None
+        self._tree = None
 
     ## Print some information about the HEALPix grid to the console.
     def printInfo(self):
@@ -201,6 +204,34 @@ class HEALPixGrid:
         j[ipol & (z < 0)] = 4 * self._NSide - j[ipol & (z < 0)] - 1
 
         return j, i
+
+    ## This function returns the RING indices for the pixels that contain the given
+    # positions on the sky.
+    #
+    def getRINGIndex(self, theta, phi):
+        j, i = self.getHEALPixIndices(theta, phi)
+        ringIndex = np.zeros(j.shape, dtype=int)
+
+        # north pole
+        iNPol = j < self._NSide - 1
+        ringIndex[iNPol] = 2 * (j[iNPol] + 1) * j[iNPol] + i[iNPol]
+
+        # equator
+        iEq = (j >= self._NSide - 1) & (j < 3 * self._NSide)
+        ringIndex[iEq] = (
+            2 * (self._NSide ** 2 - self._NSide)
+            + 4 * (j[iEq] - self._NSide + 1) * self._NSide
+            + i[iEq]
+        )
+
+        # south pole
+        iSPol = j >= 3 * self._NSide
+        j[iSPol] = 4 * self._NSide - 1 - j[iSPol]
+        ringIndex[iSPol] = (
+            12 * self._NSide ** 2 - 2 * (j[iSPol] + 1) * j[iSPol] + i[iSPol]
+        )
+
+        return ringIndex
 
     ## This function returns arrays of ring indices j and pixel-in-ring indices i that,
     # when traversed in order, traverse the HEALPix grid in RING order.
@@ -449,7 +480,7 @@ class HEALPixGrid:
         #    and would possibly be inefficient
         #    instead, we do some clever reshaping and directly put the new pixel
         #    values into their corresponding new pixels
-        numOldPerNew = 2 * (1 << degradeFactor)
+        numOldPerNew = (1 << degradeFactor) ** 2
         # we do need the new pixel indices (in the right order) for this to work
         jsmall, ismall = newHEALPixGrid.getPixelIndices()
         # now get the old pixels sorted per new pixel index and reshaped
@@ -467,17 +498,67 @@ class HEALPixGrid:
 
         return newHEALPixGrid
 
+    ## This function returns an array containing the position of each pixel in
+    # 3D space, assuming a celestial sphere with radius 1.
+    #
+    # These values are cached internally for improved efficiency.
+    #
+    def getPositions(self):
+        if self._positions is None:
+            theta, phi = self.getPixelAngles()
+            self._positions = np.zeros((theta.shape[0], 3))
+            sinTheta = np.sin(theta)
+            self._positions[:, 0] = sinTheta * np.cos(phi)
+            self._positions[:, 1] = sinTheta * np.sin(phi)
+            self._positions[:, 2] = np.cos(theta)
+
+        return self._positions
+
+    ## This function returns a scipy.spatial.cKDTree containing all pixels in the
+    # grid. This tree can be used to perform spatial queries on the pixels (in
+    # Cartesian 3D space).
+    #
+    # The tree is cached fro improved efficiency.
+    #
+    def getKDTree(self):
+        if self._tree is None:
+            positions = self.getPositions()
+            self._tree = cKDTree(positions)
+
+        return self._tree
+
     ## Get a mask that selects all pixels within an annulus with the given inner
     # and outer radius surrounding the given central pixel.
     #
     # When indexed with this mask, any grid related array will be reduced to an array
     # that only contains values for pixels within the annulus.
     #
-    def getAnnulusAroundPixel(self, centralPixel, innerRadius, outerRadius):
+    # When the optional argument useTree is set to True, the function will make use of
+    # a KD-tree (scipy.spatial.cKDTree) to speed up the neighbour finding. This is only
+    # useful for (many) repeated calls to this function and for large grids. In this case,
+    # the first call to this function will take a lot longer, because it will need to
+    # construct the tree. The tree is then cached for later reuse.
+    #
+    def getAnnulusAroundPixel(
+        self, centralPixel, innerRadius, outerRadius, useTree=False
+    ):
         theta, phi = self.getPixelAngles()
-        delta = getDistanceOnSky(theta[centralPixel], phi[centralPixel], theta, phi)
-        selection = (delta >= innerRadius) & (delta <= outerRadius)
-        return selection
+        if useTree:
+            positions = self.getPositions()
+            tree = self.getKDTree()
+            annulus = np.array(
+                tree.query_ball_point(positions[centralPixel], outerRadius)
+            )
+            delta = getDistanceOnSky(
+                theta[centralPixel], phi[centralPixel], theta[annulus], phi[annulus]
+            )
+            selection = (delta >= innerRadius) & (delta <= outerRadius)
+            annulus = annulus[selection]
+            return annulus
+        else:
+            delta = getDistanceOnSky(theta[centralPixel], phi[centralPixel], theta, phi)
+            selection = (delta >= innerRadius) & (delta <= outerRadius)
+            return selection
 
 
 # -----------------------------------------------------------------
