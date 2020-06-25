@@ -269,6 +269,20 @@ class HEALPixGrid:
 
         return self._theta, self._phi
 
+    ## Access the pixels corresponding to the given ring and pixel-in-ring indices.
+    #
+    def getPixel(self, j, i):
+        if len(self._HEALPixCube.shape) == 2:
+            return self._HEALPixCube[j, i]
+        elif len(self._HEALPixCube.shape) == 3:
+            return self._HEALPixCube[:, j, i]
+
+    ## Access the pixels corresponding to the given RING indices.
+    #
+    def getPixelFromRINGIndex(self, index):
+        j, i = self.getPixelIndices()
+        return getPixel(self, j[index], i[index])
+
     ## This function returns the projection of the HEALPix data map, using the given
     # number of vertical pixels for the resulting projection image, and the given projection
     # transformation. The optional parameters thetaCenter and phiCenter allow to select a
@@ -522,8 +536,13 @@ class HEALPixGrid:
     #
     def getKDTree(self):
         if self._tree is None:
+            logging.info(
+                "Creating KD tree to speed up spatial queries."
+                "This might take a while..."
+            )
             positions = self.getPositions()
             self._tree = cKDTree(positions)
+            logging.info("Done creating KD tree.")
 
         return self._tree
 
@@ -559,6 +578,35 @@ class HEALPixGrid:
             delta = getDistanceOnSky(theta[centralPixel], phi[centralPixel], theta, phi)
             selection = (delta >= innerRadius) & (delta <= outerRadius)
             return selection
+
+
+# -----------------------------------------------------------------
+
+## Construct a new, empty HEALPixGrid of the given order and with the given number
+# of values per pixel.
+#
+# The order \f$k\f$ relates to the HEALPix parameter \f$N_{side} = 2^k\f$, which gives
+# the number of pixels along one axis of the 12 HEALPix base pixels. The total number
+# of pixels is then given by \f$12N_{side}^2\f$. Each pixel has the exact same size,
+# \f$\frac{\pi{}}{3N_{side}^2}\f$. Assuming square pixels (which is approximately true),
+# the angular resolution \f$R\f$ can be computed from
+# \f[
+#    R \approx{} \sqrt{\frac{\pi{}}{3N_{side}^2}}
+#      = \frac{1}{N_{side}} \left(\frac{10800}{\sqrt{3\pi{}}}\right) '
+#      \approx{} \left(\frac{3520}{N_{side}}\right) '
+# \f]
+#
+# For example, most Planck maps are published with an order \f$k=10\f$, which
+# corresponds to a resolution of \f$\approx{}3.4'\f$ (nominally \f$5'\f$). \f$k=6\f$ would
+# correspond to a resolution of \f$\approx{}1^\circ{}\f$.
+#
+def getEmptyHEALPixGrid(order, numValuesPerPixel=1):
+    NSide = 1 << order
+    if numValuesPerPixel == 1:
+        dataCube = np.zeros((4 * NSide - 1, 4 * NSide))
+    else:
+        dataCube = np.zeros((numValuesPerPixel, 4 * NSide - 1, 4 * NSide))
+    return HEALPixGrid(dataCube)
 
 
 # -----------------------------------------------------------------
