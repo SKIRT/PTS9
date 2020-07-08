@@ -16,6 +16,11 @@
 #    and HammerAitoff (for the Hammer-Aitoff projection); default is Mollweide.
 #  - \em nPixelX (int): Number of pixels in the vertical direction for the generated image. The number of pixels
 #    in the horizontal direction is twice this value. Default is 250.
+#  - \em thetaCenter (float): Zenith angle of the central position relative to the original crosshair of the
+#    HEALPixSkyInstrument (in degrees). Corresponds to a vertical rotation that goes downward in the right half
+#    of the image. Default is 0.
+#  - \em phiCenter (float): Azimuth angle of the central position relative to the original crosshair of the
+#    HEALPixSkyInstrument (in degrees). Corresponds to a horizontal rotation to the right. Default is 0.
 #
 
 # -----------------------------------------------------------------
@@ -35,6 +40,16 @@ def do(
         int,
         "number of pixels to use in the vertical direction for the output image",
     ) = 250,
+    thetaCenter: (
+        float,
+        "zenith angle of the central position relative to the original crosshair (in degrees),"
+        " corresponding to a vertical rotation that goes downward in the right half of the image",
+    ) = 0.0,
+    phiCenter: (
+        float,
+        "azimuth angle of the central position relative to the original crosshair (in degrees),"
+        " corresponding to a horizontal rotation to the right",
+    ) = 0.0,
 ) -> "create a projected image based on a HEALPixSkyInstrument output cube":
 
     import numpy as np
@@ -42,6 +57,7 @@ def do(
     import pts.simulation.healpix as healpix
     import pathlib
     from pts.utils.error import UserError
+    import logging
 
     inputPath = pathlib.Path(inputFileName)
     if not inputPath.exists():
@@ -59,15 +75,15 @@ def do(
         raise UserError("Invalid number of pixels: {0}!".format(nPixelY))
 
     inputFile = fits.open(inputPath)
+    logging.info("Opened input file {0}".format(inputPath))
 
-    inputData = inputFile[0].data
-    numWav = len(inputData)
-    outputData = np.zeros((numWav, nPixelY, 2 * nPixelY))
-    for i in range(numWav):
-        outputData[i] = healpix.getProjectionMap(inputData[i], nPixelY, projection)
+    hData = healpix.HEALPixGrid(inputFile[0].data)
+    hData.printInfo()
+    outputData = hData.getProjectionMap(nPixelY, projection, thetaCenter, phiCenter)
 
     outputHDUL = fits.HDUList(
         [fits.PrimaryHDU(outputData, header=inputFile[0].header), inputFile[1]]
     )
 
     outputHDUL.writeto(outputPath)
+    logging.info("Wrote output file {0}".format(outputPath))
