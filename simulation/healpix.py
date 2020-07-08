@@ -538,7 +538,7 @@ class HEALPixGrid:
         if self._tree is None:
             logging.info(
                 "Creating KD tree to speed up spatial queries."
-                "This might take a while..."
+                " This might take a while..."
             )
             positions = self.getPositions()
             self._tree = cKDTree(positions)
