@@ -205,6 +205,7 @@ def convertBpassSEDFamily(inFilePaths, outFilePaths):
         w = np.loadtxt(inFilePath.replace("*", "001"), usecols=0) * 1e-10
 
         # initialize the metallicity grid and the corresponding filename codes
+        Z = np.array((1e-5, 1e-4, 0.001, 0.002, 0.003, 0.004, 0.006, 0.008, 0.01, 0.014, 0.02, 0.03, 0.04))
         Zcode = ["em5", "em4", "001", "002", "003", "004", "006", "008", "010", "014", "020", "030", "040"]
 
         # initialize the age grid (in years)
