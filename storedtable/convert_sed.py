@@ -190,6 +190,45 @@ def convertStarburst99SEDFamily(inFilePaths, outFilePaths):
 
 # -----------------------------------------------------------------
 
+## This function converts data representing a BPASS family of SED templates for stellar populations
+# (Eldridge, Stanway et al, 2017, PASA 34, 58; Stanway & Eldridge, 2018, MNRAS, 479, 75) to stored table format.
+# The function expects a sequence of input file paths and corresponding output file paths. Each input file path
+# is actually interpreted as a template where the string "*" will be replaced by the appropriate metallicity code.
+#
+# The stored table output file contains specific luminosities in W/m normalized on an *initial* stellar population
+# mass of 1 solar mass, as a function of wavelength and parameterized on metallicity and age.
+#
+def convertBpassSEDFamily(inFilePaths, outFilePaths):
+    for inFilePath, outFilePath in zip(inFilePaths, outFilePaths):
+
+        # read the wavelength grid from one of the files (and convert from Angstrom to meter)
+        w = np.loadtxt(inFilePath.replace("*", "001"), usecols=0) * 1e-10
+
+        # initialize the metallicity grid and the corresponding filename codes
+        Z = np.array((1e-5, 1e-4, 0.001, 0.002, 0.003, 0.004, 0.006, 0.008, 0.01, 0.014, 0.02, 0.03, 0.04))
+        Zcode = ["em5", "em4", "001", "002", "003", "004", "006", "008", "010", "014", "020", "030", "040"]
+
+        # initialize the age grid (in years)
+        t = np.array([10**(6+c/10) for c in range(51)])
+
+        # allocate hypercube for the luminosities
+        L = np.zeros((len(w), len(Z), len(t)))
+
+        # read the luminosities from each of the files
+        for m in range(len(Z)):
+            L[:, m, :] = np.loadtxt(inFilePath.replace("*", Zcode[m]), usecols=range(1, 52))
+
+        # convert from input units: Lsun/Angstrom normalized to 1e6 Msun
+        #          to output units: W/m normalized to 1 Msun
+        L *= 3.848e26 * 1e10 * 1e-6
+
+        # write stored table
+        writeStoredTable(outFilePath,
+                              ['lambda','Z','t'], ['m','1','yr'], ['log','log','log'], [w,Z,t],
+                              ['Llambda'], ['W/m'], ['log'], [L])
+
+# -----------------------------------------------------------------
+
 ## This function converts data representing the family of MAPPINGS III starburst template SEDs, parameterized on
 # metallicity, compactness, ISM pressure and PDR covering factor, as described in Groves et al. (2008, ApJS,176,438),
 # to stored table format. The function expects a single input file path pointing to the IDL save file containing
