@@ -24,9 +24,10 @@ import pts.simulation as sm
 # -----------------------------------------------------------------
 
 ## An instance of the BroadBand class represents either a built-in standard broadband filter
-# (including transmission curve data) or a uniform filter over a specified wavelength range
-# (with a constant transmission curve in that range). Refer to the constructor of this class
-# for information on how to construct one of these two types of BroadBand objects.
+# (including transmission curve data), a uniform filter over a specified wavelength range
+# (with a constant transmission curve in that range), or a custom filter based on a given
+# wavelength grid and transmission curve. Refer to the constructor of this class for
+# information on how to construct one of these two types of BroadBand objects.
 #
 # Band properties and operations
 # ------------------------------
@@ -306,7 +307,7 @@ class BroadBand:
         "ALMA_ALMA_10": ("ALMA", "alma-0-2000-02.dat", (320, 380)),
     }
 
-    ## The constructor creates a BroadBand instance in one of the following two ways, depending on the type of
+    ## The constructor creates a BroadBand instance in one of the following three ways, depending on the type of
     # the \em bandspec argument:
     #
     #   - if \em bandspec is a string, it looks for a built-in standard broadband filter based on the text segments
@@ -318,6 +319,12 @@ class BroadBand:
     #
     #   - if \em bandspec is a tuple with two numbers, a bolometer-type band is constructed with a uniform
     #     transmission curve in the indicated (min,max) wavelength range (expressed in micron).
+    #
+    #   - if \em bandspec is a two-dimensional numpy.ndarray, a bolometer-type band is constructed using
+    #     \em bandspec[:,0] as wavelength grid and \em bandspec[:,1] as transmission curve. The wavelengths are
+    #     assumed to be expressed in micron, while the transmission curves are assumed dimensionless.
+    #     The array layout used here is identical to what one would obtain when applying numpy.loadtxt() to the
+    #     input file for a SKIRT FileBand.
     #
     # If \em bandspec has a different type, or if its string contents does not unambiguously match a built-in band
     # name, the constructor raises an exception.
@@ -345,6 +352,13 @@ class BroadBand:
             self._bandname = "Uniform"
             self._wavelengths = np.array(list(map(float, bandspec)))
             self._transmissions = np.ones(2)
+            self._photoncounter = False
+
+        # construction of a custom band
+        elif isinstance(bandspec, np.ndarray) and len(bandspec.shape)==2:
+            self._bandname = "Custom"
+            self._wavelengths = bandspec[:,0].astype(float)
+            self._transmissions = bandspec[:,1].astype(float)
             self._photoncounter = False
 
         else: raise ValueError("Unsuppported type of band specification '{}'".format(bandspec))
@@ -496,8 +510,17 @@ class BroadBand:
         return self._wavelengths[-1]
 
     ## This function returns the pivot wavelength as defined in the class header, as an astropy quantity in micron.
+    #
+    # \note The implementation here does purposefully not use a call to numpy.trapz() to exactly reproduce the
+    # numerical quadrature rule implemented in the Band class in SKIRT. This to avoid significant differences in
+    # pivot wavelength for a uniform band consisting of only two wavelength points. Both the implementation here
+    # and in SKIRT are bad approximations for the real pivot wavelength in this case, but at least they will be
+    # the same, which is important when identifying bands in SKIRT output.
     def pivotWavelength(self):
-        return np.sqrt(1. /  np.trapz(x=self._wavelengths, y=self._transmissions/self._wavelengths**2) )
+        dlam = self._wavelengths[1:] - self._wavelengths[:-1]
+        lam = 0.5 * (self._wavelengths[1:] + self._wavelengths[:-1])
+        T = 0.5 * (self._transmissions[1:] + self._transmissions[:-1])
+        return 1. / np.sqrt((T*dlam/lam**2).sum())
 
     ## This function returns the effective band width (a wavelength interval) as defined in the class header
     # as an astropy quantity in micron.
