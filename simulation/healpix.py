@@ -374,8 +374,17 @@ class HEALPixGrid:
                 + ")! Possible values are Mollweide, HammerAitoff."
             )
 
-        # invert the azimuth angle to account for the SKIRT orientation convention
+        # invert the azimuth and zenith angles, so that applying this projection yields exactly
+        # the same image as would be returned by an AllSkyInstrument with the same projection
+        # at the same position
+        # The real reason for the inversion is that geographical coordinates assume a different
+        # direction than our astrophyical coordinates:
+        #  - Colatitude is 0 at the North Pole and increases to 180 degrees at the South Pole,
+        #    while geographical latitude is 0 at the equator and increases towars the North Pole
+        #  - While both galactic and geographical longitude increase from West to East, astronomers
+        #    put the East left and the West right, since they see the sphere from the inside.
         phi = 2.0 * np.pi - phi
+        theta = np.pi - theta
 
         # we have successfully applied the projection to obtain the angular coordinates of each
         # pixel of the projection image on the unit sphere, centred on (theta, phi) = (0, 0)
@@ -406,8 +415,12 @@ class HEALPixGrid:
         # copy the HEALPix pixel values into the corresponding image pixels (only for valid pixels)
         if len(self._HEALPixCube.shape) == 2:
             image[iValid] = self._HEALPixCube[j, i]
+            # explicitly set the invalid pixels to NaN to mask them
+            image[~iValid] = np.nan
         elif len(self._HEALPixCube.shape) == 3:
             image[:, iValid] = self._HEALPixCube[:, j, i]
+            # explicitly set the invalid pixels to NaN to mask them
+            image[:, ~iValid] = np.nan
 
         # resample the image onto the desired resolution
         if resFac > 1:
