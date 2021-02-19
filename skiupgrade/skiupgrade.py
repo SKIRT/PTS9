@@ -97,6 +97,11 @@ def _getUpgradeDefinitions():
         _removeScalarPropertyWithValue("GeometricMedium", "velocityX", "0 "),
         _removeScalarPropertyWithValue("GeometricMedium", "velocityY", "0 "),
         _removeScalarPropertyWithValue("GeometricMedium", "velocityZ", "0 "),
+
+        # SKIRT update (4 feb 2021): change base type for SED properties of Lya SED decorators to continuous SED
+        _changeCompoundPropertyBaseType("LyaSEDDecorator", "sedOriginal", "SED", "ContSED"),
+        _changeCompoundPropertyBaseType("LyaSEDDecorator", "sedLymanAlpha", "SED", "ContSED"),
+        _changeCompoundPropertyBaseType("LyaSEDFamilyDecorator", "sedLymanAlpha", "SED", "ContSED"),
     ]
 
 # -----------------------------------------------------------------
@@ -145,5 +150,16 @@ def _changeCompoundPropertyName(typeName, oldPropName, newPropName):
                 </xsl:element>
             </xsl:template>
             '''.format(typeName, oldPropName, newPropName))
+
+## Generates the definition for changing the base type of a compound property for a given type.
+def _changeCompoundPropertyBaseType(typeName, propName, oldBaseType, newBaseType):
+    return ('''//{0}/{1}[@type='{2}']'''.format(typeName, propName, oldBaseType),
+            '''
+            <xsl:template match="//{0}/{1}/@type">
+                <xsl:attribute name="type">
+                    <xsl:value-of select="'{2}'"/>
+                </xsl:attribute>
+            </xsl:template>
+            '''.format(typeName, propName, newBaseType))
 
 # -----------------------------------------------------------------
