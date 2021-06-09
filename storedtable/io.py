@@ -5,10 +5,17 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.storedtable.io Input/output functions for files in the SKIRT stored table format
+## \package pts.storedtable.io Input/output functions for files in the SKIRT stored table and stored column format
 #
 # The functions in this module allow reading and writing data and metadata from and to a disk file
-# in SKIRT stored table format.
+# in SKIRT stored table format or in SKIRT stored column format.
+#
+# SKIRT stored table format
+# -------------------------
+#
+# The SKIRT stored table file format is intended for tabulating one or more physical quantities
+# as a function of on one or more independent variables. It has been designed for representing
+# built-in SKIRT resources but it can be used for multi-dimensional tables in other contexts.
 #
 # A SKIRT stored table file contains binary data with a straightforward layout. The file is essentially
 # a sequence of 8-byte data items. A data item can have one of three types:
@@ -33,6 +40,29 @@
 #
 # The values are ordered so that the quantity values for a particular point are next to each other,
 # the first axis index varies most rapidly, and the last axis index varies least rapidly.
+#
+# SKIRT stored columns format
+# ---------------------------
+#
+# The SKIRT stored columns file format stores a set of data columns and is intended as a faster
+# replacement for large regular text column data files, without the benefit of being human readable.
+# The format does not support non-leaf rows, so it cannot be used for adaptive mesh data.
+#
+# A SKIRT stored columns file contains binary data with a straightforward layout. It can contain
+# the same type of data items as described for stored tables above. The layout is similar but not
+# identical to stored tables:
+#
+#  - SKIRT name/version tag
+#  - Endianness tag
+#  - 0  (to differentiate from stored table format, which stores the nr of axes here)
+#  - numRows
+#  - numColumns
+#  - columnName (x numColumns)
+#  - columnUnit (x numColumns)
+#  - value (x numColumns x numRows)
+#  - end-of-file tag
+#
+# The values are ordered so that the column values for a particular row are next to each other.
 #
 
 # -----------------------------------------------------------------
@@ -213,6 +243,134 @@ def writeStoredTable(outFilePath, axisNames, axisUnits, axisScales, axisGrids,
 
     # report file creation to user
     logging.info("Created stored table file: {}".format(outpath))
+
+# -----------------------------------------------------------------
+
+## This function lists relevant metadata about the specified SKIRT stored columns file. The printed information
+# includes the names and units and ranges for each of the columns and the number of rows.
+# The stored columns file path is interpreted as described for the pts.utils.absPath() function.
+def listStoredColumnsInfo(columnsFilePath):
+    inpath = ut.absPath(columnsFilePath)
+
+    # open the file
+    with open(inpath, 'rb') as infile:
+        # verify header tags
+        if stringFromFile(infile) != "SKIRT X" or intFromFile(infile) != 0x010203040A0BFEFF \
+                        or intFromFile(infile) != 0:
+            raise ValueError("File does not have SKIRT stored columns format: {}".format(inpath))
+
+        # get the number of columns and rows
+        numRows = intFromFile(infile)
+        numColumns = intFromFile(infile)
+
+        # get the column metadata
+        columnNames = [ stringFromFile(infile) for i in range(numColumns) ]
+        columnUnits = [ stringFromFile(infile) for i in range(numColumns) ]
+
+    # print file path
+    logging.info("Stored columns file: {}".format(inpath))
+
+    # print columns information
+    for i in range(numColumns):
+        logging.info("  column {}: {} ({})".format(i+1, columnNames[i], columnUnits[i]))
+    logging.info("  nr of rows: {}".format(numRows))
+
+# -----------------------------------------------------------------
+
+## This function reads the specified SKIRT stored columns file and returns a dictionary with the following structure:
+#  - columnNames: list of column names, in order of occurrence
+#  - columnUnits: list of corresponding units
+#  - for each column name: array with values (one per row) as an astropy quantity with the appropriate unit
+# The stored columns file path is interpreted as described for the pts.utils.absPath() function.
+#
+def readStoredColumns(columnsFilePath):
+    inpath = ut.absPath(columnsFilePath)
+
+    # open the file
+    with open(inpath, 'rb') as infile:
+        # verify header tags
+        if stringFromFile(infile) != "SKIRT X" or intFromFile(infile) != 0x010203040A0BFEFF \
+                        or intFromFile(infile) != 0:
+            raise ValueError("File does not have SKIRT stored table format: {}".format(inpath))
+
+        # get the number of columns and rows
+        numRows = intFromFile(infile)
+        numColumns = intFromFile(infile)
+
+        # get the column metadata
+        columnNames = [ stringFromFile(infile) for i in range(numColumns) ]
+        columnUnits = [ stringFromFile(infile) for i in range(numColumns) ]
+
+        # get the data values
+        values = arrayFromFile(infile, (numColumns, numRows))
+
+        # verify the trailing tag
+        if stringFromFile(infile) != "SCOLEND":
+            raise ValueError("File does not have the proper trailing tag: {}".format(inpath))
+
+    # construct the dictionary that will be returned, adding basic metadata
+    d = dict(columnNames=columnNames, columnUnits=columnUnits)
+
+    # add data values
+    for i in range(numColumns):
+        d[columnNames[i]] = values[i] << sm.unit(columnUnits[i])
+
+    return d
+
+# -----------------------------------------------------------------
+
+## This function writes the specified data and metadata to a disk file in SKIRT stored columns format.
+#
+# \note This low-level function does \em not support astropy quantities; it expects plain numpy arrays with values
+#       presented in the proper units (i.e. as declared by the unit strings).
+#
+# The function expects the following arguments:
+#  - outFilePath: the output file's absolute or relative path, including filename and '.scol' extension
+#  - columnNames: a sequence of column name strings
+#  - columnUnits: a sequence of column unit strings (should match supported SKIRT import units)
+#  - values: a single 2D numpy array with shape (numColumns, numRows) or
+#            a sequence of numColumns 1D numpy arrays with length numRows
+#            specifying the values for each column in the correct units
+#
+# A name or unit string must contain 1 to 8 printable and non-whitespace 7-bit ASCII characters.
+# There must be at least one column; the number of rows may be zero.
+# The output columns file path is interpreted as described for the pts.utils.absPath() function.
+#
+def writeStoredColumns(outFilePath, columnNames, columnUnits, values):
+    outpath = ut.absPath(outFilePath)
+
+    # assemble all values in single array
+    values = np.array(values)
+    numColumns, numRows = values.shape
+
+    # verify some of the requirements/restrictions on the specified data
+    if outpath.suffix != ".scol":
+        raise ValueError("Stored columns filename extension is not '.scol': {}".format(outpath))
+    numColumns = len(columnNames)
+    if numColumns<1 or numColumns!=len(columnNames) or numColumns!=len(columnUnits):
+        raise ValueError("Mismatch in number of columns")
+
+    # open the output file
+    with open(outpath, 'wb') as out:
+        # write the SKIRT and endianness tags
+        out.write(b"SKIRT X\n")
+        intToFile(out, 0x010203040A0BFEFF)
+        intToFile(out, 0)
+
+        # write the rows and columns metadata
+        intToFile(out, numRows)
+        intToFile(out, numColumns)
+        for columnName in columnNames: stringToFile(out, columnName)
+        for columnUnit in columnUnits: stringToFile(out, columnUnit)
+
+        # write the values
+        arrayToFile(out, values)
+
+        # write the EOF tag
+        out.write(b"SCOLEND\n")
+
+    # report file creation to user
+    logging.info("Created stored columns file: {}".format(outpath))
 
 # -----------------------------------------------------------------
 
