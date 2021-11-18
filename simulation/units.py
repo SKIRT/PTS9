@@ -36,6 +36,11 @@ def unit(unitlike):
         # parse string ignoring warnings about multiple divisions, as in "W/m2/sr"
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=u.UnitsWarning)
+            # astropy does not support multiple division for units starting with "1", as in "1/s/keV"
+            # replace the leading "1" by an arbitrary unit and then remove it again
+            if unitlike.startswith("1/"):
+                return u.Unit("A" + unitlike[1:]) / u.Unit("A")
+            # in other cases, directly use the astropy parser
             return u.Unit(unitlike)
     if isinstance(unitlike, u.Quantity):
         return unitlike.unit
@@ -47,8 +52,8 @@ def unit(unitlike):
 
 ## This function accepts a flux density, surface brightness, spectral radiance, or spectral luminosity
 # (generically called "flux" for the purposes of this function), converts this flux from an arbitrary unit
-# in any "flavor" (neutral, per wavelength, or per frequency) to an equivalent unit in the specified flavor,
-# and returns the result.
+# in any "flavor" (neutral, per wavelength, per frequency, or per energy) to an equivalent unit in the
+# specified flavor, and returns the result.
 #
 # Both the wavelength and the flux must be astropy quantities in one of the following shape combinations:
 #  - The wavelength is a scalar: this wavelength is used to convert all values in the flux argument, which can be a
@@ -57,8 +62,8 @@ def unit(unitlike):
 #    which can be, for example an 1D spectrum or a 3D data cube. The wavelengths are broad-casted to the other axes.
 #
 # The target flavor can be specified in one of two ways:
-#  - As one of the strings "neutral", "wavelength", or "frequency"; the result will have the somewhat arbitrary unit
-#    that follows from the conversion calculation and thus depends on the incoming units of both flux and wavelength.
+#  - As one of the strings "neutral", "wavelength", "frequency", or "energy": the result will have the unit that
+#    follows from the conversion calculation and thus depends on the incoming units of both flux and wavelength.
 #    This option is useful in case the incoming flux type (density, brightness, luminosity) is not known a priori.
 #  - As an astropy unit instance (such as the return value of the sm.unit() function): the flavor is derived from
 #    this unit, and the result is explicitly converted to it before being returned. The unit must be compatible
@@ -71,19 +76,38 @@ def convertToFlavor(wavelength, flux, flavor):
     # determine the conversion scheme: first digit = input flavor, second digit = output flavor
     scheme =  _flavor(flux.unit) * 10 + _flavor(flavor)
 
-    # apply the conversion appropriate for each scheme (schemes 11, 22 and 33 require no conversion)
-    if scheme==12:          # neutral to wavelength
+    # shortcuts for constants
+    c = const.c
+    hc2 = (const.h * const.c)**2
+
+    # apply the conversion appropriate for each scheme (schemes 11, 22, 33, and 44 require no conversion)
+    if scheme==12:            # neutral to wavelength
         flux /= wavelength
     elif scheme==13:          # neutral to frequency
-        flux *= wavelength / const.c
+        flux *= wavelength / c
+    elif scheme==14:          # neutral to energy
+        flux *= wavelength**2 / hc2
+
     elif scheme==21:          # wavelength to neutral
         flux *= wavelength
     elif scheme==23:          # wavelength to frequency
-        flux *= wavelength**2 / const.c
+        flux *= wavelength**2 / c
+    elif scheme==24:          # wavelength to energy
+        flux *= wavelength**3 / hc2
+
     elif scheme==31:          # frequency to neutral
-        flux *= const.c / wavelength
+        flux *= c / wavelength
     elif scheme==32:          # frequency to wavelength
-        flux *= const.c / wavelength**2
+        flux *= c / wavelength**2
+    elif scheme==34:          # frequency to energy
+        flux *= wavelength * (c / hc2)
+
+    elif scheme==41:          # energy to neutral
+        flux *= hc2 / wavelength**2
+    elif scheme==42:          # energy to wavelength
+        flux *= hc2 / wavelength**3
+    elif scheme==43:          # energy to frequency
+        flux *= (hc2 / c) / wavelength
 
     # if the output flavor is specified as an explicit unit, convert to that unit
     if isinstance(flavor, u.UnitBase):
@@ -94,16 +118,19 @@ def convertToFlavor(wavelength, flux, flavor):
 #   - 1 for the string "neutral" and for units that have a neutral flavor.
 #   - 2 for the string "wavelength" and for units that have a per wavelength flavor.
 #   - 3 for the string "frequency" and for units that have a per frequency flavor.
+#   - 4 for the string "energy" and for units that have a per energy flavor.
 def _flavor(flavorunit):
     if isinstance(flavorunit, str):
         if flavorunit == "neutral": return 1
         if flavorunit == "wavelength": return 2
         if flavorunit == "frequency": return 3
+        if flavorunit == "energy": return 4
         raise ValueError("Invalid flavor specification: '{}'".format(flavorunit))
 
     if flavorunit.is_equivalent(( unit("W"), unit("W/m2"), unit("W/m2/sr") )): return 1
     if flavorunit.is_equivalent(( unit("W/m"), unit("W/m2/m"), unit("W/m2/sr/m") )): return 2
     if flavorunit.is_equivalent(( unit("W/Hz"), unit("W/m2/Hz"), unit("W/m2/sr/Hz") )): return 3
+    if flavorunit.is_equivalent(( unit("1/s/J"), unit("1/s/m2/J"), unit("1/s/m2/sr/J") )): return 4
     raise ValueError("Not a flux-like unit: '{}'".format(flavorunit))
 
 # -----------------------------------------------------------------
@@ -118,42 +145,44 @@ def latexForUnit(unitlike):
     return r"$\,$[" + latex + r"]"
 
 ## This function returns a latex-formatted string representation for a flux density (\f$\lambda F_\lambda\f$,
-# \f$F_\lambda\f$, or \f$F_\nu\f$) or a surface brightness (\f$\lambda f_\lambda\f$, \f$f_\lambda\f$, or \f$f_\nu\f$)
-# that has the units represented by the "unit-like" input (the latex string does not include the unit itself).
-# The input argument is interpreted as described for the unit() function in this module. If no match is found,
-# the function returns an empty string.
+# \f$F_\lambda\f$, \f$F_\nu\f$, or \f$F_E\f$) or a surface brightness (\f$\lambda f_\lambda\f$, \f$f_\lambda\f$,
+# \f$f_\nu\f$, or \f$f_E\f$) that has the units represented by the "unit-like" input (the latex string does not
+# include the unit itself). The input argument is interpreted as described for the unit() function in this module.
+# If no match is found, the function returns an empty string.
 def latexForSpectralFlux(unitlike):
     un = unit(unitlike)
     if un.is_equivalent(unit("W/m2")): return r"$\lambda\,F_\lambda$"
     if un.is_equivalent(unit("W/m2/m")): return r"$F_\lambda$"
     if un.is_equivalent(unit("W/m2/Hz")): return r"$F_\nu$"
+    if un.is_equivalent(unit("1/s/m2/J")): return r"$F_E$"
     if un.is_equivalent(unit("W/m2/sr")): return r"$\lambda\,f_\lambda$"
     if un.is_equivalent(unit("W/m2/sr/m")): return r"$f_\lambda$"
     if un.is_equivalent(unit("W/m2/sr/Hz")): return r"$f_\nu$"
+    if un.is_equivalent(unit("1/s/m2/sr/J")): return r"$f_E$"
     return ""
 
 ## This function returns a latex-formatted string representation for the mean intensity or spectral radiance
-# (\f$\lambda J_\lambda\f$, \f$J_\lambda\f$, or \f$J_\nu\f$)
-# that has the units represented by the "unit-like" input (the latex string does not include the unit itself).
-# The input argument is interpreted as described for the unit() function in this module. If no match is found,
-# the function returns an empty string.
+# (\f$\lambda J_\lambda\f$, \f$J_\lambda\f$, \f$J_\nu\f$, or \f$J_E\f$) that has the units represented by the
+# "unit-like" input (the latex string does not include the unit itself). The input argument is interpreted as
+# described for the unit() function in this module. If no match is found, the function returns an empty string.
 def latexForSpectralRadiance(unitlike):
     un = unit(unitlike)
     if un.is_equivalent(unit("W/m2/sr")): return r"$\lambda\,J_\lambda$"
     if un.is_equivalent(unit("W/m2/sr/m")): return r"$J_\lambda$"
     if un.is_equivalent(unit("W/m2/sr/Hz")): return r"$J_\nu$"
+    if un.is_equivalent(unit("1/s/m2/sr/J")): return r"$J_E$"
     return ""
 
 ## This function returns a latex-formatted string representation for the spectral luminosity
-# (\f$\lambda L_\lambda\f$, \f$L_\lambda\f$, or \f$L_\nu\f$)
-# that has the units represented by the "unit-like" input (the latex string does not include the unit itself).
-# The input argument is interpreted as described for the unit() function in this module. If no match is found,
-# the function returns an empty string.
+# (\f$\lambda L_\lambda\f$, \f$L_\lambda\f$, \f$L_\nu\f$, or \f$L_E\f$) that has the units represented by the
+# "unit-like" input (the latex string does not include the unit itself). The input argument is interpreted as
+# described for the unit() function in this module. If no match is found, the function returns an empty string.
 def latexForSpectralLuminosity(unitlike):
     un = unit(unitlike)
     if un.is_equivalent(unit("W")): return r"$\lambda\,L_\lambda$"
     if un.is_equivalent(unit("W/m")): return r"$L_\lambda$"
     if un.is_equivalent(unit("W/Hz")): return r"$L_\nu$"
+    if un.is_equivalent(unit("1/s/J")): return r"$L_E$"
     return ""
 
 # -----------------------------------------------------------------
