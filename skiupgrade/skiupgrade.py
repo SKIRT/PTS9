@@ -102,11 +102,100 @@ def _getUpgradeDefinitions():
         _changeCompoundPropertyBaseType("LyaSEDDecorator", "sedOriginal", "SED", "ContSED"),
         _changeCompoundPropertyBaseType("LyaSEDDecorator", "sedLymanAlpha", "SED", "ContSED"),
         _changeCompoundPropertyBaseType("LyaSEDFamilyDecorator", "sedLymanAlpha", "SED", "ContSED"),
-    ]
 
-# -----------------------------------------------------------------
+        # SKIRT update (oct/nov 2021): reorganize simulation mode and medium options to enable gas emission
+        # -- simulation mode and top-level iterate options
+        _adjustLyaExtinctionMode(),
+        _adjustDustSelfAbsorptionMode(),
+        _moveScalarProperty("DynamicStateOptions", "hasDynamicState", "MonteCarloSimulation", "iterateMediumState"),
+        # -- radiation field options
+        _addMediumSystemOptions("RadiationFieldOptions", "ExtinctionOnlyOptions"),
+        _addMediumSystemOptions("RadiationFieldOptions", "DustEmissionOptions"),
+        _moveScalarProperty("ExtinctionOnlyOptions", "storeRadiationField", "RadiationFieldOptions"),
+        _copyCompoundProperty("ExtinctionOnlyOptions", "radiationFieldWLG", "RadiationFieldOptions"),
+        _removeCompoundProperty("ExtinctionOnlyOptions", "radiationFieldWLG"),
+        _copyCompoundProperty("DustEmissionOptions", "radiationFieldWLG", "RadiationFieldOptions"),
+        _removeCompoundProperty("DustEmissionOptions", "radiationFieldWLG"),
+        # -- sampling options
+        _addMediumSystemOptions("SamplingOptions", "MediumSystem", "numDensitySamples"),
+        _moveScalarProperty("MediumSystem", "numDensitySamples", "SamplingOptions"),
+        # -- iteration options
+        _addMediumSystemOptions("IterationOptions", "DynamicStateOptions"),
+        _addMediumSystemOptions("IterationOptions", "DustSelfAbsorptionOptions"),
+        _moveScalarProperty("DynamicStateOptions", "minIterations", "IterationOptions", "minPrimaryIterations"),
+        _moveScalarProperty("DynamicStateOptions", "maxIterations", "IterationOptions", "maxPrimaryIterations"),
+        _moveScalarProperty("DynamicStateOptions", "iterationPacketsMultiplier",
+                            "IterationOptions", "primaryIterationPacketsMultiplier"),
+        _moveScalarProperty("DustSelfAbsorptionOptions", "minIterations", "IterationOptions", "minSecondaryIterations"),
+        _moveScalarProperty("DustSelfAbsorptionOptions", "maxIterations", "IterationOptions", "maxSecondaryIterations"),
+        _moveScalarProperty("DustSelfAbsorptionOptions", "iterationPacketsMultiplier",
+                            "IterationOptions", "secondaryIterationPacketsMultiplier"),
+        # -- secondary emission options
+        _addMediumSystemOptions("SecondaryEmissionOptions", "DustEmissionOptions"),
+        _moveScalarProperty("DustEmissionOptions", "storeEmissionRadiationField", "SecondaryEmissionOptions"),
+        _moveScalarProperty("DustEmissionOptions", "secondaryPacketsMultiplier", "SecondaryEmissionOptions"),
+        _moveScalarProperty("DustEmissionOptions", "spatialBias", "SecondaryEmissionOptions"),
+        # -- dust emission options
+        _moveScalarProperty("DustSelfAbsorptionOptions", "maxFractionOfPrimary", "DustEmissionOptions"),
+        _moveScalarProperty("DustSelfAbsorptionOptions", "maxFractionOfPrevious", "DustEmissionOptions"),
+        # obsolete option sets
+        _removeCompoundProperty("MediumSystem", "extinctionOnlyOptions"),
+        _removeCompoundProperty("MediumSystem", "dustSelfAbsorptionOptions"),
+]
 
-## Generates the definition for unconditionally adding a scalar property to a given type.
+# --------- handling specific (non-generic) updates
+
+# Replace simulation mode "LyaWithDustExtinction" with "LyaExtinctionOnly"
+def _adjustLyaExtinctionMode():
+    return ('''//MonteCarloSimulation[@simulationMode='LyaWithDustExtinction']''',
+            '''
+            <xsl:template match="//MonteCarloSimulation/@simulationMode">
+                <xsl:attribute name="simulationMode">
+                    <xsl:value-of select="'LyaExtinctionOnly'"/>
+                </xsl:attribute>
+            </xsl:template>
+            ''')
+
+# Replace simulation mode "DustEmissionWithSelfAbsorption" with "DustEmission"
+# and add iterateSecondaryEmission="true"
+def _adjustDustSelfAbsorptionMode():
+    return ('''//MonteCarloSimulation[@simulationMode='DustEmissionWithSelfAbsorption']''',
+            '''
+            <xsl:template match="//MonteCarloSimulation">
+                <xsl:element name="MonteCarloSimulation">
+                    <xsl:apply-templates select="@*"/>
+                    <xsl:attribute name="simulationMode">
+                        <xsl:value-of select="'DustEmission'"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="iterateSecondaryEmission">
+                        <xsl:value-of select="'true'"/>
+                    </xsl:attribute>
+                    <xsl:apply-templates select="node()"/>
+                </xsl:element>
+            </xsl:template>
+            ''')
+
+# Add a new MediumSystem options section of the given type if a given type/property exists
+def _addMediumSystemOptions(optionsTypeName, oldTypeName, oldPropName=None):
+    optionsPropName = optionsTypeName[0].lower() + optionsTypeName[1:]
+    condition = "{0}" if oldPropName is None else "{0}/@{1}"
+    condition = "boolean(//{0}) and not(//{1})".format(condition, optionsTypeName)
+    return (condition.format(oldTypeName, oldPropName),
+            '''
+            <xsl:template match="//MediumSystem">
+                <xsl:element name="MediumSystem">
+                    <xsl:apply-templates select="@*"/>
+                        <{0} type="{1}">
+                            <{1}/>
+                        </{0}>
+                    <xsl:apply-templates select="node()"/>
+                </xsl:element>
+            </xsl:template>
+            '''.format(optionsPropName, optionsTypeName))
+
+# --------- handling scalar properties
+
+## Add a scalar property to a given type.
 def _addScalarProperty(typeName, propName, propStringValue):
     return ('''//{0}[not(@{1})]'''.format(typeName, propName),
             '''
@@ -121,7 +210,15 @@ def _addScalarProperty(typeName, propName, propStringValue):
             </xsl:template>
             '''.format(typeName, propName, propStringValue))
 
-## Generates the definition for removing a scalar property with a value starting with a given string from a given type.
+## Remove a scalar property from a given type.
+def _removeScalarProperty(typeName, oldPropName):
+    return ('''//{0}/@{1}'''.format(typeName, oldPropName),
+            '''
+            <xsl:template match="//{0}/@{1}">
+            </xsl:template>
+            '''.format(typeName, oldPropName))
+
+## Remove a scalar property with a value starting with a given string from a given type.
 def _removeScalarPropertyWithValue(typeName, oldPropName, oldValue):
     return ('''//{0}[starts-with(@{1},'{2}')]'''.format(typeName, oldPropName, oldValue),
             '''
@@ -129,7 +226,7 @@ def _removeScalarPropertyWithValue(typeName, oldPropName, oldValue):
             </xsl:template>
             '''.format(typeName, oldPropName, oldValue))
 
-## Generates the definition for changing the name of a scalar property for a given type.
+## Change the name of a scalar property for a given type.
 def _changeScalarPropertyName(typeName, oldPropName, newPropName):
     return ('''//{0}/@{1}'''.format(typeName, oldPropName),
             '''
@@ -140,7 +237,28 @@ def _changeScalarPropertyName(typeName, oldPropName, newPropName):
             </xsl:template>
             '''.format(typeName, oldPropName, newPropName))
 
-## Generates the definition for changing the name of a compound property for a given type.
+## Move a scalar property and its value from one type to another, optionally using
+# a new property name on the target type (the target type is assumed to exist).
+def _moveScalarProperty(oldTypeName, oldPropName, newTypeName, newPropName=None):
+   return ('''//{0}/@{1}'''.format(oldTypeName, oldPropName),
+           '''
+           <xsl:template match="//{2}">
+               <xsl:element name="{2}">
+                   <xsl:apply-templates select="@*"/>
+                   <xsl:attribute name="{3}">
+                       <xsl:value-of select="//{0}/@{1}"/>
+                   </xsl:attribute>
+                   <xsl:apply-templates select="node()"/>
+               </xsl:element>
+           </xsl:template>
+           <xsl:template match="//{0}/@{1}">
+           </xsl:template>
+           '''.format(oldTypeName, oldPropName, newTypeName,
+                      oldPropName if newPropName is None else newPropName))
+
+# --------- handling compound properties
+
+## Change the name of a compound property for a given type.
 def _changeCompoundPropertyName(typeName, oldPropName, newPropName):
     return ('''//{0}/{1}'''.format(typeName, oldPropName),
             '''
@@ -151,7 +269,7 @@ def _changeCompoundPropertyName(typeName, oldPropName, newPropName):
             </xsl:template>
             '''.format(typeName, oldPropName, newPropName))
 
-## Generates the definition for changing the base type of a compound property for a given type.
+## Change the base type of a compound property for a given type.
 def _changeCompoundPropertyBaseType(typeName, propName, oldBaseType, newBaseType):
     return ('''//{0}/{1}[@type='{2}']'''.format(typeName, propName, oldBaseType),
             '''
@@ -161,5 +279,27 @@ def _changeCompoundPropertyBaseType(typeName, propName, oldBaseType, newBaseType
                 </xsl:attribute>
             </xsl:template>
             '''.format(typeName, propName, newBaseType))
+
+## Remove a compound property from a given type.
+def _removeCompoundProperty(typeName, oldPropName):
+    return ('''//{0}/{1}'''.format(typeName, oldPropName),
+            '''
+            <xsl:template match="//{0}/{1}">
+            </xsl:template>
+            '''.format(typeName, oldPropName))
+
+## Copy a compound property and its value from one type to another
+# (the target type is assumed to exist)
+def _copyCompoundProperty(oldTypeName, oldPropName, newTypeName):
+    return ('''//{0}/{1}'''.format(oldTypeName, oldPropName),
+            '''
+            <xsl:template match="//{2}">
+                <xsl:element name="{2}">
+                     <xsl:apply-templates select="@*"/>
+                     <xsl:apply-templates select="//{0}/{1}"/>
+                     <xsl:apply-templates select="node()"/>
+                </xsl:element>
+            </xsl:template>
+            '''.format(oldTypeName, oldPropName, newTypeName))
 
 # -----------------------------------------------------------------
