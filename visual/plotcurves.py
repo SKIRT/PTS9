@@ -108,8 +108,8 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None, *
         plt.xlim(None, (maxWavelength << waveUnit).value)
     if decades is not None:
         plt.ylim(fluxMax.value * 10 ** (-decades), fluxMax.value * 10 ** 0.2)
-    plt.xlabel(r"$\lambda$" + sm.latexForUnit(waveUnit), fontsize='large')
-    plt.ylabel(sm.latexForSpectralFlux(fluxUnit) + sm.latexForUnit(fluxUnit), fontsize='large')
+    plt.xlabel(sm.latexForWavelengthWithUnit(waveUnit), fontsize='large')
+    plt.ylabel(sm.latexForSpectralFluxWithUnit(fluxUnit), fontsize='large')
     plt.legend(loc='best')
 
     # if not in interactive mode, save the figure; otherwise leave it open
@@ -196,7 +196,7 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
         plt.xlim(None, (maxWavelength << lumiWave.unit).value)
     if decades is not None:
         plt.ylim(10 ** (-decades), 10 ** 0.2)
-    plt.xlabel(r"$\lambda$" + sm.latexForUnit(lumiWave.unit), fontsize='large')
+    plt.xlabel(sm.latexForWavelengthWithUnit(lumiWave.unit), fontsize='large')
     plt.ylabel(r"Normalized $L$ and $N_\mathrm{pp}$", fontsize='large')
     plt.legend(loc='best')
 

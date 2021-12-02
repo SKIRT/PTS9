@@ -22,4 +22,6 @@ from .skifile import SkiFile
 from .skirt import Skirt
 from .text import getQuantityFromFile, getColumnDescriptions, loadColumns, saveColumns
 from .units import unit, convertToFlavor, \
-                   latexForUnit, latexForSpectralFlux, latexForSpectralRadiance, latexForSpectralLuminosity
+                   latexForUnit, latexForWavelength, latexForWavelengthWithUnit, \
+                   latexForSpectralFlux, latexForSpectralRadiance, latexForSpectralLuminosity, \
+                   latexForSpectralFluxWithUnit, latexForSpectralRadianceWithUnit, latexForSpectralLuminosityWithUnit

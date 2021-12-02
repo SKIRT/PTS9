@@ -19,6 +19,11 @@ import warnings
 
 # -----------------------------------------------------------------
 
+# globally enable automatic conversion between photon wavelength, frequency, and energy units
+u.set_enabled_equivalencies(u.spectral())
+
+# -----------------------------------------------------------------
+
 ## This function returns an astropy unit for any of the following "unit-like" inputs:
 #  - a string representing a valid SKIRT unit: returns the corresponding astropy unit.
 #  - a string representing a valid astropy unit in generic format: returns the corresponding astropy unit.
@@ -144,6 +149,18 @@ def latexForUnit(unitlike):
     latex = latex.replace("{}^{\prime\prime}^","({}^{\prime\prime})^")
     return r"$\,$[" + latex + r"]"
 
+## This function returns a latex-formatted string representation for wavelength (\f$\lambda\f$),
+# frequency (\f$\nu\f$), or energy (\f$E\f$), depending on the units represented by the "unit-like" input
+# (the latex string does not include the unit itself). The input argument is interpreted as described
+# for the unit() function in this module. If no match is found, the function returns an empty string.
+def latexForWavelength(unitlike):
+    un = unit(unitlike)
+    with u.set_enabled_equivalencies([]):
+        if un.is_equivalent(unit("m")): return r"$\lambda$"
+        if un.is_equivalent(unit("Hz")): return r"$\nu$"
+        if un.is_equivalent(unit("J")): return r"$E$"
+    return ""
+
 ## This function returns a latex-formatted string representation for a flux density (\f$\lambda F_\lambda\f$,
 # \f$F_\lambda\f$, \f$F_\nu\f$, or \f$F_E\f$) or a surface brightness (\f$\lambda f_\lambda\f$, \f$f_\lambda\f$,
 # \f$f_\nu\f$, or \f$f_E\f$) that has the units represented by the "unit-like" input (the latex string does not
@@ -151,14 +168,15 @@ def latexForUnit(unitlike):
 # If no match is found, the function returns an empty string.
 def latexForSpectralFlux(unitlike):
     un = unit(unitlike)
-    if un.is_equivalent(unit("W/m2")): return r"$\lambda\,F_\lambda$"
-    if un.is_equivalent(unit("W/m2/m")): return r"$F_\lambda$"
-    if un.is_equivalent(unit("W/m2/Hz")): return r"$F_\nu$"
-    if un.is_equivalent(unit("1/s/m2/J")): return r"$F_E$"
-    if un.is_equivalent(unit("W/m2/sr")): return r"$\lambda\,f_\lambda$"
-    if un.is_equivalent(unit("W/m2/sr/m")): return r"$f_\lambda$"
-    if un.is_equivalent(unit("W/m2/sr/Hz")): return r"$f_\nu$"
-    if un.is_equivalent(unit("1/s/m2/sr/J")): return r"$f_E$"
+    with u.set_enabled_equivalencies([]):
+        if un.is_equivalent(unit("W/m2")): return r"$\lambda\,F_\lambda$"
+        if un.is_equivalent(unit("W/m2/m")): return r"$F_\lambda$"
+        if un.is_equivalent(unit("W/m2/Hz")): return r"$F_\nu$"
+        if un.is_equivalent(unit("1/s/m2/J")): return r"$F_E$"
+        if un.is_equivalent(unit("W/m2/sr")): return r"$\lambda\,f_\lambda$"
+        if un.is_equivalent(unit("W/m2/sr/m")): return r"$f_\lambda$"
+        if un.is_equivalent(unit("W/m2/sr/Hz")): return r"$f_\nu$"
+        if un.is_equivalent(unit("1/s/m2/sr/J")): return r"$f_E$"
     return ""
 
 ## This function returns a latex-formatted string representation for the mean intensity or spectral radiance
@@ -167,10 +185,11 @@ def latexForSpectralFlux(unitlike):
 # described for the unit() function in this module. If no match is found, the function returns an empty string.
 def latexForSpectralRadiance(unitlike):
     un = unit(unitlike)
-    if un.is_equivalent(unit("W/m2/sr")): return r"$\lambda\,J_\lambda$"
-    if un.is_equivalent(unit("W/m2/sr/m")): return r"$J_\lambda$"
-    if un.is_equivalent(unit("W/m2/sr/Hz")): return r"$J_\nu$"
-    if un.is_equivalent(unit("1/s/m2/sr/J")): return r"$J_E$"
+    with u.set_enabled_equivalencies([]):
+        if un.is_equivalent(unit("W/m2/sr")): return r"$\lambda\,J_\lambda$"
+        if un.is_equivalent(unit("W/m2/sr/m")): return r"$J_\lambda$"
+        if un.is_equivalent(unit("W/m2/sr/Hz")): return r"$J_\nu$"
+        if un.is_equivalent(unit("1/s/m2/sr/J")): return r"$J_E$"
     return ""
 
 ## This function returns a latex-formatted string representation for the spectral luminosity
@@ -179,10 +198,27 @@ def latexForSpectralRadiance(unitlike):
 # described for the unit() function in this module. If no match is found, the function returns an empty string.
 def latexForSpectralLuminosity(unitlike):
     un = unit(unitlike)
-    if un.is_equivalent(unit("W")): return r"$\lambda\,L_\lambda$"
-    if un.is_equivalent(unit("W/m")): return r"$L_\lambda$"
-    if un.is_equivalent(unit("W/Hz")): return r"$L_\nu$"
-    if un.is_equivalent(unit("1/s/J")): return r"$L_E$"
+    with u.set_enabled_equivalencies([]):
+        if un.is_equivalent(unit("W")): return r"$\lambda\,L_\lambda$"
+        if un.is_equivalent(unit("W/m")): return r"$L_\lambda$"
+        if un.is_equivalent(unit("W/Hz")): return r"$L_\nu$"
+        if un.is_equivalent(unit("1/s/J")): return r"$L_E$"
     return ""
+
+## This function returns the result of latexForWavelength() + latexForUnit() with the same argument.
+def latexForWavelengthWithUnit(unitlike):
+    return latexForWavelength(unitlike) + latexForUnit(unitlike)
+
+## This function returns the result of latexForSpectralFlux() + latexForUnit() with the same argument.
+def latexForSpectralFluxWithUnit(unitlike):
+    return latexForSpectralFlux(unitlike) + latexForUnit(unitlike)
+
+## This function returns the result of latexForSpectralRadiance() + latexForUnit() with the same argument.
+def latexForSpectralRadianceWithUnit(unitlike):
+    return latexForSpectralRadiance(unitlike) + latexForUnit(unitlike)
+
+## This function returns the result of latexForSpectralLuminosity() + latexForUnit() with the same argument.
+def latexForSpectralLuminosityWithUnit(unitlike):
+    return latexForSpectralLuminosity(unitlike) + latexForUnit(unitlike)
 
 # -----------------------------------------------------------------
