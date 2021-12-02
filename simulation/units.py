@@ -41,10 +41,12 @@ def unit(unitlike):
         # parse string ignoring warnings about multiple divisions, as in "W/m2/sr"
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=u.UnitsWarning)
-            # astropy does not support multiple division for units starting with "1", as in "1/s/keV"
-            # replace the leading "1" by an arbitrary unit and then remove it again
+            # astropy does not support multiple division for units starting with "1/" or "/", as in
+            # "1/s/keV" or "/s/keV"; replace the leading "1" by an arbitrary unit and then remove it again
             if unitlike.startswith("1/"):
                 return u.Unit("A" + unitlike[1:]) / u.Unit("A")
+            if unitlike.startswith("/"):
+                return u.Unit("A" + unitlike) / u.Unit("A")
             # in other cases, directly use the astropy parser
             return u.Unit(unitlike)
     if isinstance(unitlike, u.Quantity):
