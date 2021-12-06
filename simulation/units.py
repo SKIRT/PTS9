@@ -163,6 +163,16 @@ def latexForWavelength(unitlike):
         if un.is_equivalent(unit("J")): return r"$E$"
     return ""
 
+## This function returns True if the units represented by the "unit-like" input are those for
+# frequency (\f$\nu\f$) or energy (\f$E\f$), and False if not (including for wavelength (\f$\lambda\f$).
+# The input argument is interpreted as described for the unit() function in this module.
+def hasReverseWavelengthOrder(unitlike):
+    un = unit(unitlike)
+    with u.set_enabled_equivalencies([]):
+        if un.is_equivalent(unit("Hz")): return True
+        if un.is_equivalent(unit("J")): return True
+    return False
+
 ## This function returns a latex-formatted string representation for a flux density (\f$\lambda F_\lambda\f$,
 # \f$F_\lambda\f$, \f$F_\nu\f$, or \f$F_E\f$) or a surface brightness (\f$\lambda f_\lambda\f$, \f$f_\lambda\f$,
 # \f$f_\nu\f$, or \f$f_E\f$) that has the units represented by the "unit-like" input (the latex string does not

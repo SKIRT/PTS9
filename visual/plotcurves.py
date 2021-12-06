@@ -102,10 +102,7 @@ def plotSeds(simulation, minWavelength=None, maxWavelength=None, decades=None, *
     # set axis details and add a legend
     plt.xscale('log')
     plt.yscale('log')
-    if minWavelength is not None:
-        plt.xlim((minWavelength << waveUnit).value, None)
-    if maxWavelength is not None:
-        plt.xlim(None, (maxWavelength << waveUnit).value)
+    plt.xlim(_adjustWavelengthRange(plt.xlim(), waveUnit, minWavelength, maxWavelength))
     if decades is not None:
         plt.ylim(fluxMax.value * 10 ** (-decades), fluxMax.value * 10 ** 0.2)
     plt.xlabel(sm.latexForWavelengthWithUnit(waveUnit), fontsize='large')
@@ -190,10 +187,7 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
     # set axis details and add a legend
     plt.xscale('log')
     plt.yscale('log')
-    if minWavelength is not None:
-        plt.xlim((minWavelength << lumiWave.unit).value, None)
-    if maxWavelength is not None:
-        plt.xlim(None, (maxWavelength << lumiWave.unit).value)
+    plt.xlim(_adjustWavelengthRange(plt.xlim(), lumiWave.unit, minWavelength, maxWavelength))
     if decades is not None:
         plt.ylim(10 ** (-decades), 10 ** 0.2)
     plt.xlabel(sm.latexForWavelengthWithUnit(lumiWave.unit), fontsize='large')
@@ -229,7 +223,7 @@ def plotSpectralResolution(inFilePath, minWavelength=None, maxWavelength=None, d
             raise ValueError("No wavelength axis in stored table: {}".format(inFilePath))
         grid = table["lambda"]
     elif inFilePath.suffix.lower() == ".dat":
-        if sm.getColumnDescriptions(inFilePath)[0].lower() != "wavelength":
+        if not sm.getColumnDescriptions(inFilePath)[0].lower().startswith("wavelength"):
             raise ValueError("First text column is not labeled 'wavelength': {}".format(inFilePath))
         grid = sm.loadColumns(inFilePath, "1")[0]
     else:
@@ -239,20 +233,17 @@ def plotSpectralResolution(inFilePath, minWavelength=None, maxWavelength=None, d
     R = grid[:-1] / (grid[1:] - grid[:-1])
     Rmax = R.max()
 
-    # choose wavelength units from range arguments or grid
-    if minWavelength is not None: wunit = minWavelength.unit
-    elif maxWavelength is not None: wunit = maxWavelength.unit
-    else: wunit = grid.unit
+    # choose wavelength units from grid
+    wunit = grid.unit
 
     # setup the plot
     plt.figure(figsize=figSize)
-    plt.xlabel(r"$\lambda$" + sm.latexForUnit(wunit), fontsize='large')
+    plt.xlabel(sm.latexForWavelengthWithUnit(wunit), fontsize='large')
     plt.ylabel(r"$R=\frac{\lambda}{\Delta\lambda}$", fontsize='large')
     plt.xscale('log')
     plt.yscale('log')
     plt.grid(which='major', axis='both', ls=":")
-    if minWavelength is not None and maxWavelength is not None:
-        plt.xlim(minWavelength.to_value(wunit), maxWavelength.to_value(wunit))
+    plt.xlim(_adjustWavelengthRange(plt.xlim(), wunit, minWavelength, maxWavelength))
     if decades is not None:
         plt.ylim(Rmax* 10 ** (-decades), Rmax * 10 ** 0.2)
 
@@ -270,5 +261,29 @@ def plotSpectralResolution(inFilePath, minWavelength=None, maxWavelength=None, d
         plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
         plt.close()
         logging.info("Created {}".format(saveFilePath))
+
+# ----------------------------------------------------------------------
+
+## This private function adjusts the given wavelength range to the given minimum and/or maximum, if present,
+# and returns the result. The input and output wavelength ranges are expressed in the specified units but
+# do not carry explicit unit information. The output range will always be in increasing order. The minimum
+# and/or maximum values, if present, must include explicit unit information and will be converted to plot units.
+# Their ordering depends on the style of the units in which they are specified (and not on the plot units).
+def _adjustWavelengthRange(wrange, wunit, wmin=None, wmax=None):
+    # get the incoming range in increasing order
+    wrange = list(wrange)
+    if (wrange[0] > wrange[1]):
+        wrange = wrange[::-1]
+
+    # adjust for given minimum and/or maximum
+    if wmin is not None:
+        wrange[1 if sm.hasReverseWavelengthOrder(wmin) else 0] = wmin.to_value(wunit)
+    if wmax is not None:
+        wrange[0 if sm.hasReverseWavelengthOrder(wmax) else 1] = wmax.to_value(wunit)
+
+    # get the outgoing range in increasing order
+    if (wrange[0] > wrange[1]):
+        wrange = wrange[::-1]
+    return wrange
 
 # ----------------------------------------------------------------------
