@@ -25,6 +25,6 @@ from .plotgrids import plotGrids
 from .plotmagneticfield import plotMagneticFieldCuts
 from .plotpolarization import plotPolarization
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
-from .plottemperaturecuts import plotDefaultDustTemperatureCuts
+from .plottemperaturecuts import plotTemperatureCuts
 from .plotvelocity import plotMediumVelocityCuts
 from .rgbimage import RGBImage
