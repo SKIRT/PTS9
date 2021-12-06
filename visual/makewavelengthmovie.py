@@ -84,7 +84,7 @@ def makeWavelengthMovie(simulation, *, maxPercentile=100, minPercentile=10, deca
     logging.info("Creating movie for {} ({} wavelengths and {} instruments)..." \
                  .format(instruments[0].prefix(), nlambda, len(instruments)))
     sedData = [ sm.loadColumns(sedPath, "total flux")[0] for sedPath in sedPaths ]
-    cubData = [ sm.loadFits(cubPath) for cubPath in cubPaths ]
+    cubData = [ sm.loadFits(cubPath).value for cubPath in cubPaths ]
 
     # determine the shape (assume that frames in all fits files have the same shape)
     imgShape = cubData[0].shape[:2]
@@ -141,8 +141,8 @@ def makeWavelengthMovie(simulation, *, maxPercentile=100, minPercentile=10, deca
         ax.axvline(wavelengths[frame].value, color='m')
         ax.set_ylabel(sm.latexForSpectralFlux(sedData[0]) + sm.latexForUnit(sedData[0]))
         ax.set_ylim(Fmin.value/1.1, Fmax.value*1.1)
-        ax.legend(loc='lower right',
-                  title=r"$\lambda={0:.4g}\,$".format(wavelengths[frame].value)+sm.latexForUnit(wavelengths))
+        ax.legend(loc='lower right', title=sm.latexForWavelength(wavelengths) \
+                    + r"$={0:.4g}\,$".format(wavelengths[frame].value)+sm.latexForUnit(wavelengths))
         canvas.draw()
         im = RGBImage(figure)
         image.addBelow(im)

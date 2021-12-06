@@ -34,20 +34,6 @@
 # for the pts.utils.savePath() function.
 #
 
-# This script creates RGB images in PNG format for the surface brightness maps produced by the instruments of
-# a SKIRT simulation. The R,G,B color channels can be specified as wavelength values or as broadbands.
-#
-# The function takes the following arguments:
-#  - \em simDirPath (positional string argument): the path to the SKIRT simulation output directory,
-#                                                 or "." for the current directory.
-#  - \em prefix (string): the prefix of the simulation to handle; by default handles all simulations in the directory.
-#  - \em type (string): the final segment of the name of the instrument output files to be handled, excluding the
-#        ".fits" suffix (for example, "primaryscattered"); by default the script handles the "total" output files.
-#
-# In all cases, the image files are is placed next to the "*.fits" file(s) being represented, with the same filename
-# but extended with the specified \em name string and the filename extension replaced by ".png".
-#
-
 # -----------------------------------------------------------------
 
 def do( simDirPath : (str, "SKIRT simulation output directory"),
