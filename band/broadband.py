@@ -120,12 +120,12 @@ import pts.simulation as sm
 #   | PLANCK_LFI_70      | 4303
 #   | PLANCK_LFI_44      | 6845.9
 #   | PLANCK_LFI_30      | 10674
-#   | RUBIN_LSST_u       | 0.368
-#   | RUBIN_LSST_g       | 0.47823
-#   | RUBIN_LSST_r       | 0.62178
-#   | RUBIN_LSST_i       | 0.75323
-#   | RUBIN_LSST_z       | 0.86851
-#   | RUBIN_LSST_y       | 0.97301
+#   | RUBIN_LSST_U       | 0.368
+#   | RUBIN_LSST_G       | 0.47823
+#   | RUBIN_LSST_R       | 0.62178
+#   | RUBIN_LSST_I       | 0.75323
+#   | RUBIN_LSST_Z       | 0.86851
+#   | RUBIN_LSST_Y       | 0.97301
 #   | SLOAN_SDSS_U       | 0.35565
 #   | SLOAN_SDSS_G       | 0.47025
 #   | SLOAN_SDSS_R       | 0.61756
@@ -332,12 +332,12 @@ class BroadBand:
         "EUCLID_NISP_H":  ("EUCLID", "Euclid_NISP_H.txt", True),
 
         # RUBIN
-        "RUBIN_LSST_u":  ("EUCLID", "lsst_u.txt", True),
-        "RUBIN_LSST_g":  ("EUCLID", "lsst_g.txt", True),
-        "RUBIN_LSST_r":  ("EUCLID", "lsst_r.txt", True),
-        "RUBIN_LSST_i":  ("EUCLID", "lsst_i.txt", True),
-        "RUBIN_LSST_z":  ("EUCLID", "lsst_z.txt", True),
-        "RUBIN_LSST_y":  ("EUCLID", "lsst_y.txt", True),
+        "RUBIN_LSST_U":  ("EUCLID", "lsst_u.txt", True),
+        "RUBIN_LSST_G":  ("EUCLID", "lsst_g.txt", True),
+        "RUBIN_LSST_R":  ("EUCLID", "lsst_r.txt", True),
+        "RUBIN_LSST_I":  ("EUCLID", "lsst_i.txt", True),
+        "RUBIN_LSST_Z":  ("EUCLID", "lsst_z.txt", True),
+        "RUBIN_LSST_Y":  ("EUCLID", "lsst_y.txt", True),
     }
 
     ## The constructor creates a BroadBand instance in one of the following three ways, depending on the type of
