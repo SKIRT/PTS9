@@ -237,7 +237,7 @@ import pts.simulation as sm
 # Some files include a lot of leading and/or trailing wavelength points with zero or very small transmission;
 # our load function removes these points.
 #
-# We assume that the input files for all Euclid and Rubin instruments reflect the reponse curves for photon counters.
+# All Euclid and Rubin instruments are photon counters.
 #
 class BroadBand:
     ## The band information dictionary described in the class header
