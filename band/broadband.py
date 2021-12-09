@@ -86,6 +86,10 @@ import pts.simulation as sm
 #   | ALMA_ALMA_5        | 1616
 #   | ALMA_ALMA_4        | 2100.2
 #   | ALMA_ALMA_3        | 3043.4
+#   | EUCLID_VIS_VIS     | 0.71032
+#   | EUCLID_NISP_Y      | 1.0808
+#   | EUCLID_NISP_J      | 1.3644
+#   | EUCLID_NISP_H      | 1.7696
 #   | GALEX_GALEX_FUV    | 0.15351
 #   | GALEX_GALEX_NUV    | 0.23008
 #   | GENERIC_JOHNSON_U  | 0.35247
@@ -116,6 +120,12 @@ import pts.simulation as sm
 #   | PLANCK_LFI_70      | 4303
 #   | PLANCK_LFI_44      | 6845.9
 #   | PLANCK_LFI_30      | 10674
+#   | RUBIN_LSST_U       | 0.368
+#   | RUBIN_LSST_G       | 0.47823
+#   | RUBIN_LSST_R       | 0.62178
+#   | RUBIN_LSST_I       | 0.75323
+#   | RUBIN_LSST_Z       | 0.86851
+#   | RUBIN_LSST_Y       | 0.97301
 #   | SLOAN_SDSS_U       | 0.35565
 #   | SLOAN_SDSS_G       | 0.47025
 #   | SLOAN_SDSS_R       | 0.61756
@@ -220,6 +230,15 @@ import pts.simulation as sm
 # |  9 | 602 - 720 | 0.50 - 0.42 |  420 - 500  |
 # | 10 | 787 - 950 | 0.38 - 0.32 |  320 - 380  |
 #
+#
+# __EUCLID and RUBIN__
+#
+# The Euclid and Rubin response curves are provided as simple text column files with wavelength in Angstrom.
+# Some files include a lot of leading and/or trailing wavelength points with zero or very small transmission;
+# our load function removes these points.
+#
+# All Euclid and Rubin instruments are photon counters.
+#
 class BroadBand:
     ## The band information dictionary described in the class header
     _bandinfo = {
@@ -305,6 +324,20 @@ class BroadBand:
         "ALMA_ALMA_8":  ("ALMA", "alma-0-2000-02.dat", (600, 780)),
         "ALMA_ALMA_9":  ("ALMA", "alma-0-2000-02.dat", (420, 500)),
         "ALMA_ALMA_10": ("ALMA", "alma-0-2000-02.dat", (320, 380)),
+
+        # EUCLID
+        "EUCLID_VIS_VIS":  ("EUCLID", "Euclid_VIS.txt", True),
+        "EUCLID_NISP_Y":  ("EUCLID", "Euclid_NISP_Y.txt", True),
+        "EUCLID_NISP_J":  ("EUCLID", "Euclid_NISP_J.txt", True),
+        "EUCLID_NISP_H":  ("EUCLID", "Euclid_NISP_H.txt", True),
+
+        # RUBIN
+        "RUBIN_LSST_U":  ("EUCLID", "lsst_u.txt", True),
+        "RUBIN_LSST_G":  ("EUCLID", "lsst_g.txt", True),
+        "RUBIN_LSST_R":  ("EUCLID", "lsst_r.txt", True),
+        "RUBIN_LSST_I":  ("EUCLID", "lsst_i.txt", True),
+        "RUBIN_LSST_Z":  ("EUCLID", "lsst_z.txt", True),
+        "RUBIN_LSST_Y":  ("EUCLID", "lsst_y.txt", True),
     }
 
     ## The constructor creates a BroadBand instance in one of the following three ways, depending on the type of
@@ -345,6 +378,7 @@ class BroadBand:
             elif form=="JCMT": self._loadJCMT()
             elif form=="PLANCK": self._loadPLANCK()
             elif form=="ALMA": self._loadALMA()
+            elif form=="EUCLID": self._loadEUCLID()
             else: raise ValueError("Unsuppported built-in band format '{}'".format(form))
 
         # construction of uniform band
@@ -467,6 +501,24 @@ class BroadBand:
         # reverse order
         self._wavelengths = np.flipud(wavelengths)
         self._transmissions = np.flipud(transmissions)
+
+    ## This function loads the transmission curve for the EUCLID format. It expects _bandname to be set,
+    # and it sets _wavelengths, _transmissions, and _photoncounter.
+    def _loadEUCLID(self):
+        # get band info
+        subdir, filename, self._photoncounter = self._bandinfo[self._bandname]
+
+        # load text columns and convert from Angstrom to micron
+        filepath = ut.dataPath(BroadBand) / subdir / filename
+        wavelengths, transmissions = np.loadtxt(filepath, unpack=True)
+        wavelengths *= 1e-4
+
+        # remove leading and trailing values that are close to zero
+        zeroT = transmissions.max() / 500.
+        first = max(0, np.argmax(transmissions > zeroT) - 1)
+        last = len(transmissions) - np.argmax(transmissions[::-1] > zeroT) + 1
+        self._wavelengths = wavelengths[first:last]
+        self._transmissions = transmissions[first:last]
 
     ## This function normalizes the transmission curve after it has been loaded during construction,
     # and attaches the appropriate astropy units (micron and 1/micron, respectively)
