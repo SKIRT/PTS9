@@ -223,7 +223,7 @@ def plotSpectralResolution(inFilePath, minWavelength=None, maxWavelength=None, d
             raise ValueError("No wavelength axis in stored table: {}".format(inFilePath))
         grid = table["lambda"]
     elif inFilePath.suffix.lower() == ".dat":
-        if not sm.getColumnDescriptions(inFilePath)[0].lower().startswith("wavelength"):
+        if "wavelength" not in sm.getColumnDescriptions(inFilePath)[0].lower():
             raise ValueError("First text column is not labeled 'wavelength': {}".format(inFilePath))
         grid = sm.loadColumns(inFilePath, "1")[0]
     else:
