@@ -205,7 +205,8 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
 # ----------------------------------------------------------------------
 
 ## This function creates a plot of the spectral resolution \f$R=\lambda/\Delta\lambda\f$ of a wavelength grid
-# loaded from a SKIRT stored table (".stab") or a SKIRT text column file (".dat") that includes a wavelength axis.
+# loaded from a SKIRT stored table (".stab"), a SKIRT text column file (".dat") that includes a wavelength axis,
+# or a SKIRT instrument or probe data cube that includes a wavelength axis.
 #
 # By default, the figure is saved in the current directory, using the name of the input file but
 # with the ".pdf" filename extension. This can be overridden with the out* arguments as described for the
@@ -223,11 +224,16 @@ def plotSpectralResolution(inFilePath, minWavelength=None, maxWavelength=None, d
             raise ValueError("No wavelength axis in stored table: {}".format(inFilePath))
         grid = table["lambda"]
     elif inFilePath.suffix.lower() == ".dat":
-        if not sm.getColumnDescriptions(inFilePath)[0].lower().startswith("wavelength"):
+        if "wavelength" not in sm.getColumnDescriptions(inFilePath)[0].lower():
             raise ValueError("First text column is not labeled 'wavelength': {}".format(inFilePath))
         grid = sm.loadColumns(inFilePath, "1")[0]
+    elif inFilePath.suffix.lower() == ".fits":
+        axes = sm.getFitsAxes(inFilePath)
+        if len(axes) != 3:
+            raise ValueError("FITS file does not have embedded wavelength axis")
+        grid = axes[2]
     else:
-        raise ValueError("Filename does not have the .stab or .dat extension: {}".format(inFilePath))
+        raise ValueError("Filename does not have the .stab, .dat, or .fits extension: {}".format(inFilePath))
 
     # calculate the spectral resolution
     R = grid[:-1] / (grid[1:] - grid[:-1])
