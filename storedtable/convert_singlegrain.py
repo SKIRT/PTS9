@@ -48,6 +48,10 @@ def convertMeanInterstellarOpticalProps(inFilePaths, outFilePaths):
     sa = (1-a)*se
     ss = a*se
 
+    # replace asymmetry parameter values in x-ray range by analytical approximation 1 - lambda in micron
+    mask = w < 1e-8
+    g[mask] = 1 - w[mask]*1e6
+
     # determine dust mass
     mu = np.zeros_like(w) + 1.870e-29     # in kg/H
 
