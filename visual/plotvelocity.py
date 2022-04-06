@@ -24,10 +24,10 @@ import pts.utils as ut
 
 # -----------------------------------------------------------------
 
-## This function creates PDF vector maps for the medium velocity cuts through the SKIRT input model produced by the
-# relevant probes. Specifically, the function accepts a single Simulation instance and it assumes that the simulation
-# includes one or more DefaultMediumVelocityCutsProbe or PlanarMediumVelocityCutsProbe instances. If this is not the
-# case, the function does nothing.
+## This function creates PDF vector maps for the medium velocity cuts or projections through the SKIRT input model
+# produced by the relevant probes. Specifically, the function accepts a single Simulation instance and it assumes that
+# the simulation includes one or more VelocityProbe instances with an associated probe form that produces a planar cut
+# or planar projection. If this is not the case, the function does nothing.
 #
 # The figure displays an arrow for each bin of Nx by Ny pixels. The bin size can be specified as an argument.
 # The orientation and length of the arrow indicate respectively the direction and magnitude of the medium velocity
@@ -50,12 +50,12 @@ import pts.utils as ut
 def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figSize=(6, 6), interactive=None):
 
     # find the relevant probes
-    probes = [ probe for probe in simulation.probes() \
-               if probe.type() in ("DefaultMediumVelocityCutsProbe", "PlanarMediumVelocityCutsProbe") ]
+    probes = simulation.probes("VelocityProbe",
+                    ("DefaultCutsForm", "PlanarCutsForm", "ParallelProjectionForm", "AllSkyProjectionForm"))
 
     # iterate over them
     for probe in probes:
-        for cut in ("xy", "xz", "yz"):
+        for cut in ("_xy", "_xz", "_yz", ""):
 
             # load velocity field for this probe and cut
             paths = probe.outFilePaths("{}.fits".format(cut))
@@ -102,8 +102,17 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
                 # configure the axes
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
-                ax.set_xlabel(cut[0] + sm.latexForUnit(xgrid), fontsize='large')
-                ax.set_ylabel(cut[-1] + sm.latexForUnit(ygrid), fontsize='large')
+                if len(cut)>0:
+                    xlabel = cut[1]
+                    ylabel = cut[2]
+                elif "AllSky" in probe.formType():
+                    xlabel = r"$\phi$"
+                    ylabel = r"$\theta$"
+                else:
+                    xlabel = "x"
+                    ylabel = "y"
+                ax.set_xlabel(xlabel + sm.latexForUnit(xgrid), fontsize='large')
+                ax.set_ylabel(ylabel + sm.latexForUnit(ygrid), fontsize='large')
                 ax.set_aspect('equal')
 
                 # determine a characteristic 'large' field strength in the cut plane
@@ -124,11 +133,11 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
                 quiverPlot = ax.quiver(X,Y, vx, vy, vz, cmap='jet', norm=normalizer, pivot='middle', units='inches',
                                        angles='xy', scale=lengthScale, scale_units='inches',
                                        width=0.015, headwidth=2.5, headlength=2, headaxislength=2, minlength=0.8)
-                ax.quiverkey(quiverPlot, 0.8, -0.08, vmax, key, coordinates='axes', labelpos='E')
+                ax.quiverkey(quiverPlot, 0.75, -0.08*abs((xmax-xmin)/(ymax-ymin)), vmax, key, coordinates='axes', labelpos='E')
 
                 # if not in interactive mode, save the figure; otherwise leave it open
                 if not ut.interactive(interactive):
-                    saveFilePath = ut.savePath(simulation.outFilePath("{}_v_{}.pdf".format(probe.name(),cut)),
+                    saveFilePath = ut.savePath(simulation.outFilePath("{}_v{}.pdf".format(probe.name(),cut)),
                                                (".pdf", ".png"), outDirPath=outDirPath)
                     plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
                     plt.close()
