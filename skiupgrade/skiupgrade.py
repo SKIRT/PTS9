@@ -80,13 +80,27 @@ def upgradeSkiFile(inpath, *, backup=True, replace=True):
 # upgrade definitions for specific types of changes, such as, for example, changing the name of a property.
 # That way, as soon as the XSLT sheet for a particular type of change has been developed, it can be more easily
 # reused for other, similar changes. As a result, this function consists of a sequence of calls to definition
-# generators. The git hash and date listed for each (set of) calls identifies the change in the SKIRT 9 code
+# generators. New generators will have to be added as the need arises.
+#
+# The comments before each set of generator calls identifies the change in the SKIRT 9 code
 # requiring the corresponding ski file modification(s).
 #
-# New generators will have to be added as the need arises. Examples of specific XSLT templates can be found
-# in the previous version of PTS in the source file <tt>~/PTS/pts/core/prep/upgradeskifile.py</tt>.
-#
 def _getUpgradeDefinitions():
+    # construct dictionaries used by the upgrade definitions replacing existing probes by form probes (see below)
+    propsAtPositionsForm = dict(filename=None, useColumns=None)
+    propsLinearCutForm = dict(numSamples=None, startX=None, startY=None, startZ=None, endX=None, endY=None, endZ=None)
+    propsMeridionalCutForm = dict(numSamples=None, radius=None, azimuth=None)
+    grid = "//MediumSystem/grid/*"
+    propsPlanarCutsForm = dict(minX=grid, maxX=grid, minY=grid, maxY=grid, minZ=grid, maxZ=grid,
+                               positionX=None, positionY=None, positionZ=None,
+                               numPixelsX=None, numPixelsY=None, numPixelsZ=None)
+    propsParallelProjectionForm = dict(inclination=None, azimuth=None, roll=None,
+                                       fieldOfViewX=None, numPixelsX=None, centerX=None,
+                                       fieldOfViewY=None, numPixelsY=None, centerY=None)
+    propsAllSkyProjectionForm = dict(numPixelsY=None, observerX=None, observerY=None, observerZ=None,
+                                     crossX=None, crossY=None, crossZ=None, upX=None, upY=None, upZ=None)
+
+    # construct the list of upgrade definitions
     return [
         # SKIRT update (15 jan 2020): replace single bulk velocity with velocity field for geometric sources and media
         # !!! We just remove the zero-velocity components without upgrading non-zero velocities
@@ -141,7 +155,123 @@ def _getUpgradeDefinitions():
         # obsolete option sets
         _removeCompoundProperty("MediumSystem", "extinctionOnlyOptions"),
         _removeCompoundProperty("MediumSystem", "dustSelfAbsorptionOptions"),
-]
+
+        # SKIRT update (may 2022): introduce form probes, replacing many existing probes
+        _changeTypeName("SpatialGridConvergenceProbe", "ConvergenceInfoProbe"),
+        _changeTypeName("DefaultMediaDensityCutsProbe", "ConvergenceCutsProbe"),
+        # PerCellForm
+        _changeToFormProbe("DustTemperaturePerCellProbe", "TemperatureProbe", "PerCellForm",
+                            dict(probeName=None, probeAfter="Run"), dict()),
+        _changeToFormProbe("ElectronTemperaturePerCellProbe", "TemperatureProbe", "PerCellForm",
+                            dict(probeName=None, probeAfter="Setup"), dict()),
+        _changeToFormProbe("GasTemperaturePerCellProbe", "TemperatureProbe", "PerCellForm",
+                            dict(probeName=None, probeAfter=None), dict()),
+        _changeToFormProbe("MetallicityPerCellProbe", "MetallicityProbe", "PerCellForm",
+                            dict(probeName=None, probeAfter=None), dict()),
+        _changeToFormProbe("MediumVelocityPerCellProbe", "VelocityProbe", "PerCellForm",
+                            dict(probeName=None), dict()),
+        _changeToFormProbe("MagneticFieldPerCellProbe", "MagneticFieldProbe", "PerCellForm",
+                            dict(probeName=None), dict()),
+        _changeToFormProbe("CustomStatePerCellProbe", "CustomStateProbe", "PerCellForm",
+                            dict(probeName=None, probeAfter=None), dict()),
+        _changeToFormProbe("RadiationFieldPerCellProbe", "RadiationFieldProbe", "PerCellForm",
+                            dict(probeName=None, writeWavelengthGrid=None), dict()),
+        # DefaultCutsForm
+        _changeToFormProbe("DefaultDustTemperatureCutsProbe", "TemperatureProbe", "DefaultCutsForm",
+                            dict(probeName=None, probeAfter="Run"), dict()),
+        _changeToFormProbe("DefaultElectronTemperatureCutsProbe", "TemperatureProbe", "DefaultCutsForm",
+                            dict(probeName=None, probeAfter="Setup"), dict()),
+        _changeToFormProbe("DefaultGasTemperatureCutsProbe", "TemperatureProbe", "DefaultCutsForm",
+                            dict(probeName=None, probeAfter=None), dict()),
+        _changeToFormProbe("DefaultMetallicityCutsProbe", "MetallicityProbe", "DefaultCutsForm",
+                            dict(probeName=None, probeAfter=None), dict()),
+        _changeToFormProbe("DefaultMediumVelocityCutsProbe", "VelocityProbe", "DefaultCutsForm",
+                            dict(probeName=None), dict()),
+        _changeToFormProbe("DefaultMagneticFieldCutsProbe", "MagneticFieldProbe", "DefaultCutsForm",
+                            dict(probeName=None), dict()),
+        _changeToFormProbe("DefaultCustomStateCutsProbe", "CustomStateProbe", "DefaultCutsForm",
+                            dict(probeName=None, probeAfter=None), dict()),
+        _changeToFormProbe("DefaultRadiationFieldCutsProbe", "RadiationFieldProbe", "DefaultCutsForm",
+                            dict(probeName=None, writeWavelengthGrid=None), dict()),
+        # AtPositionsForm
+        _changeToFormProbe("RadiationFieldAtPositionsProbe", "RadiationFieldProbe", "AtPositionsForm",
+                            dict(probeName=None, writeWavelengthGrid=None), propsAtPositionsForm),
+        # LinearCutForm
+        _changeToFormProbe("LinearDustTemperatureCutProbe", "TemperatureProbe", "LinearCutForm",
+                            dict(probeName=None, probeAfter="Run"), propsLinearCutForm),
+        # MeridionalCutForm
+        _changeToFormProbe("MeridionalDustTemperatureCutProbe", "TemperatureProbe", "MeridionalCutForm",
+                            dict(probeName=None, probeAfter="Run"), propsMeridionalCutForm),
+        # PlanarCutsForm
+        _changeToFormProbe("PlanarMediaDensityCutsProbe", "DensityProbe", "PlanarCutsForm",
+                            dict(probeName=None, probeAfter=None), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarDustTemperatureCutsProbe", "TemperatureProbe", "PlanarCutsForm",
+                            dict(probeName=None, probeAfter="Run"), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarElectronTemperatureCutsProbe", "TemperatureProbe", "PlanarCutsForm",
+                            dict(probeName=None, probeAfter="Setup"), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarGasTemperatureCutsProbe", "TemperatureProbe", "PlanarCutsForm",
+                            dict(probeName=None, probeAfter=None), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarMetallicityCutsProbe", "MetallicityProbe", "PlanarCutsForm",
+                            dict(probeName=None, probeAfter=None), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarMediumVelocityCutsProbe", "VelocityProbe", "PlanarCutsForm",
+                            dict(probeName=None), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarMagneticFieldCutsProbe", "MagneticFieldProbe", "PlanarCutsForm",
+                            dict(probeName=None), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarCustomStateCutsProbe", "CustomStateProbe", "PlanarCutsForm",
+                            dict(probeName=None, probeAfter=None), propsPlanarCutsForm),
+        _changeToFormProbe("PlanarRadiationFieldCutsProbe", "RadiationFieldProbe", "PlanarCutsForm",
+                            dict(probeName=None, writeWavelengthGrid=None), propsPlanarCutsForm),
+        # ParallelProjectionForm
+        _changeToFormProbe("ProjectedMediaDensityProbe", "DensityProbe", "ParallelProjectionForm",
+                            dict(probeName=None, probeAfter=None), propsParallelProjectionForm),
+        # AllSkyProjectionForm
+        _changeToFormProbe("OpticalDepthMapProbe", "OpacityProbe", "AllSkyProjectionForm",
+                            dict(probeName=None, wavelength=None, probeAfter=None), propsAllSkyProjectionForm),
+    ]
+
+# --------- handling probe to form-probe updates
+
+# Replace the given old probe by the given new probe with the given nested form;
+# probeProps and formProps are dictionaries listing the scalar properties for the new probe and form;
+# the value for each property in the dictionaries can be:
+#  - a string that does not start with "/": this literal value is used,
+#  - a string that starts with "/": the property is copied from the element at the specified path,
+#  - None: the value is copied from the old probe;
+# any compound properties of the old probe are copied into the form.
+def _changeToFormProbe(oldProbeName, probeName, formName, probeProps, formProps):
+    # create a list of templates for the probe and form properties
+    def constructPropsString(props):
+        propsString = ""
+        for name, value in props.items():
+            if value is None:
+                value = "@{0}".format(name)
+            elif value.startswith("/"):
+                value = value+"/@{0}".format(name)
+            else:
+                value= "'{0}'".format(value)
+            propsString += '''<xsl:attribute name="{0}"> <xsl:value-of select="{1}"/> </xsl:attribute>
+                           '''.format(name, value)
+        return propsString
+    probePropsString = constructPropsString(probeProps)
+    formPropsString = constructPropsString(formProps)
+    # create the full template
+    return ('''//{0}'''.format(oldProbeName),
+            '''
+            <xsl:template match="//{0}">
+                <xsl:element name="{1}">
+                    {3}
+                    <xsl:element name="form">
+                        <xsl:attribute name="type">
+                            <xsl:value-of select="'Form'"/>
+                        </xsl:attribute>
+                        <xsl:element name="{2}">
+                            {4}
+                            <xsl:apply-templates select="node()"/>
+                        </xsl:element>
+                    </xsl:element>
+                </xsl:element>
+            </xsl:template>
+            '''.format(oldProbeName, probeName, formName, probePropsString, formPropsString))
 
 # --------- handling specific (non-generic) updates
 
@@ -192,6 +322,19 @@ def _addMediumSystemOptions(optionsTypeName, oldTypeName, oldPropName=None):
                 </xsl:element>
             </xsl:template>
             '''.format(optionsPropName, optionsTypeName))
+
+# --------- handling types
+
+## Rename a given type.
+def _changeTypeName(oldTypeName, newTypeName):
+    return ('''//{0}'''.format(oldTypeName),
+            '''
+            <xsl:template match="//{0}">
+                <xsl:element name="{1}">
+                    <xsl:apply-templates select="@*|node()"/>
+                </xsl:element>
+            </xsl:template>
+            '''.format(oldTypeName, newTypeName))
 
 # --------- handling scalar properties
 
