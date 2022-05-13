@@ -5,10 +5,10 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.visual.plotvelocity Plot planar cuts through the medium velocity field in a SKIRT input model
+## \package pts.visual.plotvelocity Plot planar velocity cuts or projections from a SKIRT simulation
 #
-# The function in this module creates PDF vector maps for the planar medium velocity cuts through the SKIRT input model
-# produced by the DefaultMediumVelocityCutsProbe and PlanarMediumVelocityCutsProbe probes.
+# The function in this module creates PDF vector maps for the planar velocity cuts or projections
+# produced by one of the relevant probes in a SKIRT simulation.
 #
 
 # -----------------------------------------------------------------
@@ -24,15 +24,16 @@ import pts.utils as ut
 
 # -----------------------------------------------------------------
 
-## This function creates PDF vector maps for the medium velocity cuts or projections through the SKIRT input model
-# produced by the relevant probes. Specifically, the function accepts a single Simulation instance and it assumes that
-# the simulation includes one or more VelocityProbe instances with an associated probe form that produces a planar cut
-# or planar projection. If this is not the case, the function does nothing.
+## This function creates PDF vector maps for the planar velocity cuts or projections produced by one of the relevant
+# probes in a SKIRT simulation. Specifically, the function accepts a single Simulation instance and it assumes that
+# the simulation includes one or more VelocityProbe, ImportedSourceVelocityProbe, and/or ImportedMediumVelocityProbe
+# instances with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
+# projection (ParallelProjectionForm, AllSkyProjectionForm). If this is not the case, the function does nothing.
 #
 # The figure displays an arrow for each bin of Nx by Ny pixels. The bin size can be specified as an argument.
 # The orientation and length of the arrow indicate respectively the direction and magnitude of the medium velocity
-# projected on the cut plane and averaged over the bin. The color of the arrow scales with the velocity
-# component orthogonal to the cut plane, also averaged over the bin. Vectors pointing away from the
+# projected on the image plane and averaged over the bin. The color of the arrow scales with the velocity
+# component orthogonal to the image plane, also averaged over the bin. Vectors pointing away from the
 # observer and are red-ish and vectors pointing towards the observer and are blue-ish.
 #
 # By default, the figures are saved in the simulation output directory with a filename that includes the simulation
@@ -41,31 +42,27 @@ import pts.utils as ut
 # the figures are not saved and are left open for display in notebooks.
 #
 # The function takes the following arguments:
-#   - simulation: the Simulation instance for which to plot the cuts.
+#   - simulation: the Simulation instance for which to plot the velocity.
 #   - binSize: the number of pixels in each bin, in horizontal and vertical directions.
 #   - outDirPath: string or Pathlib.Path object that specifies (overrides) the output directory.
 #   - figSize: the horizontal and vertical size of the output figure in inch; default is 6x6 inch.
 #   - interactive: whether to leave figures open (True) or save them to file (False).
 #
-def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figSize=(6, 6), interactive=None):
+def plotMediumVelocity(simulation, *, binSize=(32,32), outDirPath=None, figSize=(6, 6), interactive=None):
 
     # find the relevant probes
-    probes = simulation.probes("VelocityProbe",
+    probes = simulation.probes(("VelocityProbe", "ImportedSourceVelocityProbe", "ImportedMediumVelocityProbe"),
                     ("DefaultCutsForm", "PlanarCutsForm", "ParallelProjectionForm", "AllSkyProjectionForm"))
 
-    # iterate over them
+    # iterate over the output file paths for each probe
     for probe in probes:
-        for cut in ("_xy", "_xz", "_yz", ""):
+        for path in probe.outFilePaths(".fits"):
 
-            # load velocity field for this probe and cut
-            paths = probe.outFilePaths("{}.fits".format(cut))
-            if len(paths) == 1:
-
-                # load data cube with shape (nx, ny, 3)
-                vs = sm.loadFits(paths[0])
+                # load velocity data cube with shape (nx, ny, 3)
+                vs = sm.loadFits(path)
 
                 # load the axes grids
-                xgrid, ygrid, dummygrid = sm.getFitsAxes(paths[0])
+                xgrid, ygrid, dummygrid = sm.getFitsAxes(path)
                 xmin = xgrid[0].value
                 xmax = xgrid[-1].value
                 ymin = ygrid[0].value
@@ -102,20 +99,28 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
                 # configure the axes
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
-                if len(cut)>0:
-                    xlabel = cut[1]
-                    ylabel = cut[2]
-                elif "AllSky" in probe.formType():
-                    xlabel = r"$\phi$"
-                    ylabel = r"$\theta$"
-                else:
-                    xlabel = "x"
-                    ylabel = "y"
-                ax.set_xlabel(xlabel + sm.latexForUnit(xgrid), fontsize='large')
-                ax.set_ylabel(ylabel + sm.latexForUnit(ygrid), fontsize='large')
                 ax.set_aspect('equal')
 
-                # determine a characteristic 'large' field strength in the cut plane
+                # configure the axes labels
+                if "AllSky" in probe.formType():
+                    xlabel = r"$\phi$"
+                    ylabel = r"$\theta$"
+                elif "_xy" in path.stem:
+                    xlabel = "x"
+                    ylabel = "y"
+                elif "_xz" in path.stem:
+                    xlabel = "x"
+                    ylabel = "z"
+                elif "_yz" in path.stem:
+                    xlabel = "y"
+                    ylabel = "z"
+                else:
+                    xlabel = "horizontal"
+                    ylabel = "vertical"
+                ax.set_xlabel(xlabel + sm.latexForUnit(xgrid), fontsize='large')
+                ax.set_ylabel(ylabel + sm.latexForUnit(ygrid), fontsize='large')
+
+                # determine a characteristic 'large' field strength in the image plane
                 vmax = np.percentile(np.sqrt(vx**2 + vy**2), 99.0)
                 if vmax==0: vmax=1      # guard against all zeros
 
@@ -123,7 +128,7 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
                 lengthScale = 2 * vmax * max(float(len(posX))/figSize[0], float(len(posY))/figSize[1])
                 key = "{:.3g}{}".format(vmax, sm.latexForUnit(vs))
 
-                # determine the color scheme for the component orthogonal to cut plane
+                # determine the color scheme for the component orthogonal to image plane
                 vzmax = np.abs(vz).max()
                 if vzmax==0: vzmax=1      # guard against all zeros
                 normalizer = matplotlib.colors.Normalize(-vzmax, vzmax)
@@ -137,8 +142,7 @@ def plotMediumVelocityCuts(simulation, *, binSize=(32,32), outDirPath=None, figS
 
                 # if not in interactive mode, save the figure; otherwise leave it open
                 if not ut.interactive(interactive):
-                    saveFilePath = ut.savePath(simulation.outFilePath("{}_v{}.pdf".format(probe.name(),cut)),
-                                               (".pdf", ".png"), outDirPath=outDirPath)
+                    saveFilePath = ut.savePath(path.with_suffix(".pdf"), (".pdf", ".png"), outDirPath=outDirPath)
                     plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
                     plt.close()
                     logging.info("Created {}".format(saveFilePath))

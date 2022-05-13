@@ -140,9 +140,8 @@ def plotSources(simulation, minWavelength=None, maxWavelength=None, decades=None
                 outDirPath=None, outFileName=None, outFilePath=None, figSize=(8, 6), interactive=None):
 
     # find the required probes
-    probes = simulation.probes()
-    lumiProbes = [ probe for probe in probes if probe.type() == "LuminosityProbe" ]
-    packProbes = [ probe for probe in probes if probe.type() == "LaunchedPacketsProbe" ]
+    lumiProbes = simulation.probes("LuminosityProbe")
+    packProbes = simulation.probes("LaunchedPacketsProbe")
     if len(lumiProbes) != 1 or len(packProbes) != 1:
         return
     lumiProbe = lumiProbes[0]

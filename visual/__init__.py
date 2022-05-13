@@ -26,5 +26,5 @@ from .plotmagneticfield import plotMagneticFieldCuts
 from .plotpolarization import plotPolarization
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
 from .plottemperaturecuts import plotTemperatureCuts
-from .plotvelocity import plotMediumVelocityCuts
+from .plotvelocity import plotMediumVelocity
 from .rgbimage import RGBImage
