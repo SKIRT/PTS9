@@ -5,7 +5,7 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.visual.do.plot_velocity Plot planar velocity cuts or projections from a SKIRT simulation
+## \package pts.visual.do.plot_velocity Plot planar velocity cuts or projections from one or more SKIRT simulations
 #
 # This script creates PDF vector maps for the planar velocity cuts or projections produced by one of the relevant
 # probes in a SKIRT simulation, allowing a visual evaluation of the velocity field.

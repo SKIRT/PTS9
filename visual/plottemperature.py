@@ -14,6 +14,7 @@
 # -----------------------------------------------------------------
 
 import logging
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import pts.simulation as sm
 import pts.utils as ut
@@ -30,13 +31,17 @@ import pts.utils as ut
 # with names that differ only by orientation labels ("_xy", "_xz", and/or "_yz"), the temperature maps for these
 # files are included in a single plot and share the same temperature scale.
 #
+# For \em decades = 0, the temperature scale is linear. For \em decades > 0, the temperature scale is logarithmic
+# with the given dynamic range in dex.
+#
 # By default, the figure is saved in the simulation output directory with a filename that includes the simulation
 # prefix, the probe name, and the medium component or type indicator, and has the ".pdf" filename extension.
 # This can be overridden with the out* arguments as described for the pts.utils.savePath() function.
 # In interactive mode (see the pts.utils.interactive() function), the figure is not saved and it is left open
 # so that is displayed in notebooks.
 #
-def plotTemperature(simulation, *, outDirPath=None, outFileName=None, outFilePath=None, figSize=None, interactive=None):
+def plotTemperature(simulation, decades=0, *,
+                    outDirPath=None, outFileName=None, outFilePath=None, figSize=None, interactive=None):
 
     # find the relevant probes
     probes = simulation.probes(("TemperatureProbe", "ImportedMediumTemperatureProbe"),
@@ -58,14 +63,19 @@ def plotTemperature(simulation, *, outDirPath=None, outFileName=None, outFilePat
                 pathgroup.append(paths[index])
                 index += 1
 
-        # load the temperature frames and the range of the x and y axes
+        # load the data frames and the range of the x and y axes
         # (there can be one to three frames depending on symmetries)
         numframes = len(pathgroup)
         frames = [ sm.loadFits(path) for path in pathgroup ]
         grids = [ sm.getFitsAxes(path) for path in pathgroup ]
 
-        # determine the maximum temperature value to display
-        Tmax = max([ frame.max() for frame in frames ])
+        # determine the range of values to display and clip the data arrays
+        vmax = max([ frame.max() for frame in frames ])
+        vmin = vmax - vmax  # to retain units
+        if decades>0:
+            vmin = vmax / 10**decades
+            for frame in frames:
+                frame[ frame<vmin ] = vmin
 
         # setup the figure depending on the number of frames
         fig, axes = plt.subplots(ncols=numframes, nrows=1, figsize=figSize if figSize is not None else (8*numframes,6))
@@ -73,12 +83,19 @@ def plotTemperature(simulation, *, outDirPath=None, outFileName=None, outFilePat
 
         # plot the frames and set axis details for each
         for ax, path, frame, (xgrid, ygrid) in zip(axes, pathgroup, frames, grids):
+            # set normalizer (logarithmic normalizer crashes if all values are zero)
+            if decades>0 and vmax>0:
+                normalizer = matplotlib.colors.LogNorm(vmin.value, vmax.value)
+            else:
+                normalizer = matplotlib.colors.Normalize(vmin.value, vmax.value)
+            # plot the frame
             extent = (xgrid[0].value, xgrid[-1].value, ygrid[0].value, ygrid[-1].value)
-            im = ax.imshow(frame.value.T, vmin=0, vmax=Tmax.value, cmap='gnuplot', extent=extent,
+            im = ax.imshow(frame.value.T, norm=normalizer, cmap='gnuplot', extent=extent,
                            aspect='equal', interpolation='bicubic', origin='lower')
+            # set axis limits
             ax.set_xlim(xgrid[0].value, xgrid[-1].value)
             ax.set_ylim(ygrid[0].value, ygrid[-1].value)
-
+            # set axis labels
             if "AllSky" in pathdict[path].formType():
                 xlabel = r"$\phi$"
                 ylabel = r"$\theta$"
