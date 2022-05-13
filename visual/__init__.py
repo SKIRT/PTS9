@@ -22,9 +22,9 @@ from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources, plotSpectralResolution
 from .plotdensitycuts import plotMediaDensityCuts
 from .plotgrids import plotGrids
-from .plotmagneticfield import plotMagneticFieldCuts
+from .plotmagneticfield import plotMagneticField
 from .plotpolarization import plotPolarization
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
 from .plottemperaturecuts import plotTemperatureCuts
-from .plotvelocity import plotMediumVelocity
+from .plotvelocity import plotVelocity
 from .rgbimage import RGBImage
