@@ -5,13 +5,12 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.visual.do.plot_density Plot planar density cuts or projections from one or more SKIRT simulations
+## \package pts.visual.do.plot_opacity Plot planar opacity cuts or projections from one or more SKIRT simulations
 #
-# This script creates plots of the density cuts or projections produced by one of the relevant probes
-# in a SKIRT simulation. The script supports DensityProbe, ImportedSourceDensityProbe, and/or ImportedMediumDensityProbe
-# instances with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
-# projection (ParallelProjectionForm, AllSkyProjectionForm). For cuts, the plotted quantity is a mass or number density;
-# for projections, the plotted quantity is a surface mass density or a column density.
+# This script creates plots of the opacity cuts or projections produced by the OpacityProbe in a SKIRT simulation.
+# The script supports OpacityProbe instances with an associated probe form that produces a planar cut (DefaultCutsForm,
+# PlanarCutsForm) or planar projection (ParallelProjectionForm, AllSkyProjectionForm). For cuts, the plotted quantity
+# is an opacity \f$k=\kappa\rho=n\varsigma\f$; for projections, the plotted quantity is an optical depth \f$\tau\f$.
 # If the simulation does not include any supported probes, the script does nothing.
 #
 # If the output for a given medium component or medium type (dust, gas, or electrons) includes two or three files
@@ -33,13 +32,12 @@
 def do( simDirPath : (str, "SKIRT simulation output directory"),
         prefix : (str,"SKIRT simulation prefix") = "",
         dex : (float,"number of decades to be included in the density range (color bar)") = 5,
-        ) -> "plot planar density cuts or projections from one or more SKIRT simulations":
+        ) -> "plot planar opacity cuts or projections from one or more SKIRT simulations":
 
     import pts.simulation as sm
     import pts.visual as vis
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix) > 0 else None):
-        vis.plotScalarCuts(sim, probeTypes=("DensityProbe", "ImportedSourceDensityProbe", "ImportedMediumDensityProbe"),
-                           decades=dex)
+        vis.plotScalarCuts(sim, probeTypes="OpacityProbe", decades=dex)
 
 # ----------------------------------------------------------------------

@@ -39,6 +39,7 @@ def do( simDirPath : (str,"SKIRT simulation output directory"),
     import pts.visual as vis
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix)>0 else None):
-        vis.plotTemperature(sim, decades=dex)
+        vis.plotScalarCuts(sim, probeTypes=("TemperatureProbe", "ImportedMediumTemperatureProbe"),
+                           decades=dex)
 
 # ----------------------------------------------------------------------

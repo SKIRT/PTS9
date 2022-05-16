@@ -20,11 +20,10 @@ from .makewavelengthmovie import makeWavelengthMovie
 from .moviefile import MovieFile
 from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources, plotSpectralResolution
-from .plotdensitycuts import plotMediaDensityCuts
 from .plotgrids import plotGrids
 from .plotmagneticfield import plotMagneticField
 from .plotpolarization import plotPolarization
+from .plotscalarcuts import plotScalarCuts
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
-from .plottemperature import plotTemperature
 from .plotvelocity import plotVelocity
 from .rgbimage import RGBImage

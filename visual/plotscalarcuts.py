@@ -5,9 +5,9 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.visual.plottemperature Plot planar temperature cuts or projections from a SKIRT simulation
+## \package pts.visual.plotscalarcuts Plot planar cuts or projections for a scalar quantity from a SKIRT simulation
 #
-# The function in this module creates plots of the planar temperature cuts or projections
+# The function in this module creates plots of the planar cuts or projections for a scalar quantity
 # produced by one of the relevant probes in a SKIRT simulation.
 #
 
@@ -21,18 +21,18 @@ import pts.utils as ut
 
 # -----------------------------------------------------------------
 
-## This function creates plots of the planar temperature cuts or projections produced by one of the relevant
+## This function creates plots of the planar cuts or projections for a scalar quantity produced by one of the relevant
 # probes in a SKIRT simulation. Specifically, the function accepts a single Simulation instance and it assumes that
-# the simulation includes one or more TemperatureProbe and/or ImportedMediumTemperatureProbe
-# instances with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
+# the simulation includes one or more instances of one or more of the probe types listed in \em probeTypes,
+# with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
 # projection (ParallelProjectionForm, AllSkyProjectionForm). If this is not the case, the function does nothing.
 #
-# If the output for a given medium component or medium type (dust, gas, or electrons) includes two or three files
-# with names that differ only by orientation labels ("_xy", "_xz", and/or "_yz"), the temperature maps for these
-# files are included in a single plot and share the same temperature scale.
+# For \em decades=0, the color scale is linear. For \em decades>0, the color scale is logarithmic with the given
+# dynamic range in dex.
 #
-# For \em decades = 0, the temperature scale is linear. For \em decades > 0, the temperature scale is logarithmic
-# with the given dynamic range in dex.
+# If the output for a given medium component or medium type (dust, gas, or electrons) includes two or three files
+# with names that differ only by orientation labels ("_xy", "_xz", and/or "_yz"), the maps for these files are
+# included in a single plot and share the same color scale.
 #
 # By default, the figure is saved in the simulation output directory with a filename that includes the simulation
 # prefix, the probe name, and the medium component or type indicator, and has the ".pdf" filename extension.
@@ -40,11 +40,11 @@ import pts.utils as ut
 # In interactive mode (see the pts.utils.interactive() function), the figure is not saved and it is left open
 # so that is displayed in notebooks.
 #
-def plotTemperature(simulation, decades=0, *,
-                    outDirPath=None, outFileName=None, outFilePath=None, figSize=None, interactive=None):
+def plotScalarCuts(simulation, probeTypes, decades=0, *,
+                   outDirPath=None, outFileName=None, outFilePath=None, figSize=None, interactive=None):
 
     # find the relevant probes
-    probes = simulation.probes(("TemperatureProbe", "ImportedMediumTemperatureProbe"),
+    probes = simulation.probes(probeTypes,
                     ("DefaultCutsForm", "PlanarCutsForm", "ParallelProjectionForm", "AllSkyProjectionForm"))
 
     # find the list of sorted output file paths and map them to the corresponding probe
@@ -114,8 +114,14 @@ def plotTemperature(simulation, decades=0, *,
             ax.set_xlabel(xlabel + sm.latexForUnit(xgrid.unit), fontsize='large')
             ax.set_ylabel(ylabel + sm.latexForUnit(ygrid.unit), fontsize='large')
 
-        # add a color bar
-        fig.colorbar(im, ax=axes).ax.set_ylabel("T" + sm.latexForUnit(frame.unit), fontsize='large')
+        # add a color bar with a label derived from the filename's last or one but last segment
+        segments = path.stem.split("_")
+        symbol = segments[-1]
+        if symbol == "xy" or symbol == "xz" or symbol == "yz":
+            symbol = segments[-2]
+        if len(symbol)>1:
+            symbol = r"$\{}$".format(symbol)
+        fig.colorbar(im, ax=axes).ax.set_ylabel(symbol + sm.latexForUnit(frame.unit), fontsize='large')
 
         # if not in interactive mode, save the figure; otherwise leave it open
         if not ut.interactive(interactive):
