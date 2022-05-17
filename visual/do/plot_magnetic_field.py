@@ -35,6 +35,6 @@ def do( simDirPath : (str, "SKIRT simulation output directory"),
     import pts.visual as vis
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix) > 0 else None):
-        vis.plotMagneticField(sim, binSize=(bin,bin))
+        vis.plotVectorCuts(sim, "MagneticFieldProbe", binSize=(bin,bin))
 
 # ----------------------------------------------------------------------

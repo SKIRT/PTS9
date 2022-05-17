@@ -34,13 +34,23 @@ import pts.utils as ut
 # with names that differ only by orientation labels ("_xy", "_xz", and/or "_yz"), the maps for these files are
 # included in a single plot and share the same color scale.
 #
-# By default, the figure is saved in the simulation output directory with a filename that includes the simulation
+# By default, the figures are saved in the simulation output directory with a filename that includes the simulation
 # prefix, the probe name, and the medium component or type indicator, and has the ".pdf" filename extension.
 # This can be overridden with the out* arguments as described for the pts.utils.savePath() function.
-# In interactive mode (see the pts.utils.interactive() function), the figure is not saved and it is left open
-# so that is displayed in notebooks.
+# In interactive mode (see the pts.utils.interactive() function), the figures are not saved and are left open
+# for display in notebooks.
 #
-def plotScalarCuts(simulation, probeTypes, decades=0, *,
+# The function takes the following arguments:
+#   - simulation: the Simulation instance for which to plot the vector quantity.
+#   - probeTypes: a sequence of strings with probe types (SKIRT class names) for which to plot the vector quantity.
+#   - decades: the dynamic range of a logarithmic color scale in dex, or zero for linear color scale; default is 5.
+#   - outDirPath: string or Pathlib.Path object that overrides the output directory.
+#   - outFileName: string or Pathlib.Path object that overrides the output file name.
+#   - outFilePath: string or Pathlib.Path object that overrides the output file path.
+#   - figSize: the horizontal and vertical size of the output figure in inch; default is 8*num-plots x 6 inch.
+#   - interactive: whether to leave figures open (True) or save them to file (False).
+#
+def plotScalarCuts(simulation, probeTypes, decades=5, *,
                    outDirPath=None, outFileName=None, outFilePath=None, figSize=None, interactive=None):
 
     # find the relevant probes

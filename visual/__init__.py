@@ -21,9 +21,8 @@ from .moviefile import MovieFile
 from .plotbands import plotBuiltinBands
 from .plotcurves import plotSeds, plotSources, plotSpectralResolution
 from .plotgrids import plotGrids
-from .plotmagneticfield import plotMagneticField
 from .plotpolarization import plotPolarization
 from .plotscalarcuts import plotScalarCuts
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
-from .plotvelocity import plotVelocity
+from .plotvectorcuts import plotVectorCuts
 from .rgbimage import RGBImage

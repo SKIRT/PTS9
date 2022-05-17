@@ -5,9 +5,9 @@
 # **       © Astronomical Observatory, Ghent University          **
 # *****************************************************************
 
-## \package pts.visual.plotvelocity Plot planar velocity cuts or projections from a SKIRT simulation
+## \package pts.visual.plotvectorcuts Plot planar cuts or projections for a vector quantity from a SKIRT simulation
 #
-# The function in this module creates vector maps for the planar velocity cuts or projections
+# The function in this module creates plots of the planar cuts or projections for a vector quantity
 # produced by one of the relevant probes in a SKIRT simulation.
 #
 
@@ -24,40 +24,45 @@ import pts.utils as ut
 
 # -----------------------------------------------------------------
 
-## This function creates vector maps for the planar velocity cuts or projections produced by one of the relevant
+## This function creates plots of the planar cuts or projections for a vector quantity produced by one of the relevant
 # probes in a SKIRT simulation. Specifically, the function accepts a single Simulation instance and it assumes that
-# the simulation includes one or more VelocityProbe, ImportedSourceVelocityProbe, and/or ImportedMediumVelocityProbe
-# instances with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
+# the simulation includes one or more instances of one or more of the probe types listed in \em probeTypes,
+# with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
 # projection (ParallelProjectionForm, AllSkyProjectionForm). If this is not the case, the function does nothing.
 #
 # The figure displays an arrow for each bin of Nx by Ny pixels. The bin size can be specified as an argument.
-# The orientation and length of the arrow indicate respectively the direction and magnitude of the velocity
-# projected on the image plane and averaged over the bin. The color of the arrow scales with the velocity
+# The orientation and length of the arrow indicate respectively the direction and magnitude of the vector
+# projected on the image plane and averaged over the bin. The color of the arrow scales with the vector
 # component orthogonal to the image plane, also averaged over the bin. Vectors pointing away from the
 # observer and are red-ish and vectors pointing towards the observer and are blue-ish.
 #
 # By default, the figures are saved in the simulation output directory with a filename that includes the simulation
-# prefix and the probe name, and has the ".pdf" filename extension. The output directory can be overridden as
-# described for the pts.utils.savePath() function. In interactive mode (see the pts.utils.interactive() function),
-# the figures are not saved and are left open for display in notebooks.
+# prefix, the probe name, and the medium component or type indicator, and has the ".pdf" filename extension.
+# This can be overridden with the out* arguments as described for the pts.utils.savePath() function.
+# In interactive mode (see the pts.utils.interactive() function), the figures are not saved and are left open
+# for display in notebooks.
 #
 # The function takes the following arguments:
-#   - simulation: the Simulation instance for which to plot the velocity.
-#   - binSize: the number of pixels in each bin, in horizontal and vertical directions.
-#   - outDirPath: string or Pathlib.Path object that specifies (overrides) the output directory.
+#   - simulation: the Simulation instance for which to plot the vector quantity.
+#   - probeTypes: a sequence of strings with probe types (SKIRT class names) for which to plot the vector quantity.
+#   - binSize: the number of pixels in each bin, in horizontal and vertical directions; default is 32 x 32 pixels.
+#   - outDirPath: string or Pathlib.Path object that overrides the output directory.
+#   - outFileName: string or Pathlib.Path object that overrides the output file name.
+#   - outFilePath: string or Pathlib.Path object that overrides the output file path.
 #   - figSize: the horizontal and vertical size of the output figure in inch; default is 6x6 inch.
 #   - interactive: whether to leave figures open (True) or save them to file (False).
 #
-def plotVelocity(simulation, *, binSize=(32,32), outDirPath=None, figSize=(6, 6), interactive=None):
+def plotVectorCuts(simulation, probeTypes, binSize=(32,32), *,
+                   outDirPath=None, outFileName=None, outFilePath=None, figSize=(6,6), interactive=None):
 
     # find the relevant probes
-    probes = simulation.probes(("VelocityProbe", "ImportedSourceVelocityProbe", "ImportedMediumVelocityProbe"),
+    probes = simulation.probes(probeTypes,
                     ("DefaultCutsForm", "PlanarCutsForm", "ParallelProjectionForm", "AllSkyProjectionForm"))
 
     # iterate over the output file paths for each probe
     for probe, path in sm.probeOutFilePaths(probes, ".fits"):
 
-        # load velocity data cube with shape (nx, ny, 3)
+        # load vector data cube with shape (nx, ny, 3)
         vs = sm.loadFits(path)
 
         # load the axes grids
@@ -125,7 +130,15 @@ def plotVelocity(simulation, *, binSize=(32,32), outDirPath=None, figSize=(6, 6)
 
         # determine the scaling so that the longest arrows do not to overlap with neighboring arrows
         lengthScale = 2 * vmax * max(float(len(posX))/figSize[0], float(len(posY))/figSize[1])
-        key = "{:.3g}{}".format(vmax, sm.latexForUnit(vs))
+
+        # determine the quiver key label derived from the filename's last or one but last segment
+        segments = path.stem.split("_")
+        symbol = segments[-1]
+        if symbol == "xy" or symbol == "xz" or symbol == "yz":
+            symbol = segments[-2]
+        if len(symbol)>1:
+            symbol = r"$\{}$".format(symbol)
+        key = "{}={:.3g}{}".format(symbol, vmax, sm.latexForUnit(vs))
 
         # determine the color scheme for the component orthogonal to image plane
         vzmax = np.abs(vz).max()
@@ -141,7 +154,8 @@ def plotVelocity(simulation, *, binSize=(32,32), outDirPath=None, figSize=(6, 6)
 
         # if not in interactive mode, save the figure; otherwise leave it open
         if not ut.interactive(interactive):
-            saveFilePath = ut.savePath(path.with_suffix(".pdf"), (".pdf", ".png"), outDirPath=outDirPath)
+            saveFilePath = ut.savePath(path.with_suffix(".pdf"), (".pdf", ".png"),
+                                       outDirPath=outDirPath, outFileName=outFileName, outFilePath=outFilePath)
             plt.savefig(saveFilePath, bbox_inches='tight', pad_inches=0.25)
             plt.close()
             logging.info("Created {}".format(saveFilePath))
