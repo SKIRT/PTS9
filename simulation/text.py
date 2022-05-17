@@ -20,7 +20,7 @@ from .units import unit as smunit
 # -----------------------------------------------------------------
 
 ## This function extracts a numeric value from a text file such as a SKIRT log file or a file produced by
-# SKIRT's SpatialGridConvergenceProbe class. The value is returned as an astropy quantity with appropriate units,
+# SKIRT's ConvergenceInfoProbe class. The value is returned as an astropy quantity with appropriate units,
 # assuming that a valid unit string has been found in the text file.
 #
 # The file path is interpreted as described for the pts.utils.absPath() function.

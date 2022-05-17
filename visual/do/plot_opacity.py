@@ -21,7 +21,7 @@
 #  - \em simDirPath (positional string argument): the path to the SKIRT simulation output directory,
 #                                                 or "." for the current directory
 #  - \em prefix (string): the prefix of the simulation to handle; by default handles all simulations in the directory
-#  - \em dex (float): if specified, the number of decades to be included in the density range (color bar); default is 5
+#  - \em dex (float): if specified, the number of decades to be included in the opacity range (color bar); default is 5
 #
 # In all cases, the plot file is placed next to the simulation output file(s) being handled. The filename includes the
 # simulation prefix, the probe name, and the medium component or type indicator, and has the ".pdf" filename extension.
@@ -31,7 +31,7 @@
 
 def do( simDirPath : (str, "SKIRT simulation output directory"),
         prefix : (str,"SKIRT simulation prefix") = "",
-        dex : (float,"number of decades to be included in the density range (color bar)") = 5,
+        dex : (float,"number of decades to be included in the opacity range (color bar)") = 5,
         ) -> "plot planar opacity cuts or projections from one or more SKIRT simulations":
 
     import pts.simulation as sm
