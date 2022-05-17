@@ -91,13 +91,14 @@ def plotScalarCuts(simulation, probeTypes, decades=5, *,
         fig, axes = plt.subplots(ncols=numframes, nrows=1, figsize=figSize if figSize is not None else (8*numframes,6))
         if numframes==1: axes = [axes]
 
+        # set normalizer (logarithmic normalizer crashes if all values are zero)
+        if decades>0 and vmax>0:
+            normalizer = matplotlib.colors.LogNorm(vmin.value, vmax.value)
+        else:
+            normalizer = matplotlib.colors.Normalize(vmin.value, vmax.value)
+
         # plot the frames and set axis details for each
         for ax, path, frame, (xgrid, ygrid) in zip(axes, pathgroup, frames, grids):
-            # set normalizer (logarithmic normalizer crashes if all values are zero)
-            if decades>0 and vmax>0:
-                normalizer = matplotlib.colors.LogNorm(vmin.value, vmax.value)
-            else:
-                normalizer = matplotlib.colors.Normalize(vmin.value, vmax.value)
             # plot the frame
             extent = (xgrid[0].value, xgrid[-1].value, ygrid[0].value, ygrid[-1].value)
             im = ax.imshow(frame.value.T, norm=normalizer, cmap='gnuplot', extent=extent,
