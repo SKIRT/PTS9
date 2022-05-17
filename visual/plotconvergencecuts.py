@@ -111,8 +111,8 @@ def plotConvergenceCuts(simulation, decades=5, *,
                 cbarax = fig.colorbar(im, ax=axes, shrink=0.5, anchor=(0,0)).ax
                 cbarax.set_ylabel(symbol + sm.latexForUnit(frame.unit), fontsize='large')
 
-                # find the path to a convergence info data file, if present
-                infopath = _convergenceInfoPath(simulation)
+                # find the path to an appropriate convergence info data file, if present
+                infopath = _convergenceInfoPath(simulation, probe)
                 if infopath is not None:
                     # get the input and gridded mass for the appropriate medium
                     m_type = "Dust"
@@ -142,10 +142,22 @@ def plotConvergenceCuts(simulation, decades=5, *,
 
 # ----------------------------------------------------------------------
 
-## This private function returns the path to one of the convergence info probe output files, or None is there is none.
-def _convergenceInfoPath(simulation):
-    for probe, path in sm.probeOutFilePaths(simulation.probes("ConvergenceInfoProbe"), ".dat"):
-        return path
+## This private function returns the path to the output file of the first convergence info probe that has the same
+# \em probeAfter property value as the requesting convergence cuts probe, or None if there is no such probe.
+def _convergenceInfoPath(simulation, cutsprobe):
+    # get the probeAter value of the cuts probe
+    requested = cutsprobe.getStringAttribute("probeAfter")
+
+    # loop over all convergence info probes
+    for infoprobe, infopath in sm.probeOutFilePaths(simulation.probes("ConvergenceInfoProbe"), ".dat"):
+        # get the probeAter value of the info probe
+        candidate = infoprobe.getStringAttribute("probeAfter")
+
+        # return if this is a hit
+        if candidate == requested:
+            return infopath
+
+    # indicate failure
     return None
 
 # ----------------------------------------------------------------------
