@@ -125,11 +125,11 @@ def plotConvergenceCuts(simulation, decades=5, *,
                     keys = dict(transform=cbarax.transAxes, horizontalalignment='center', fontsize='large')
                     cbarax.text(2, 1.92, m_type, **keys)
                     cbarax.text(2, 1.80, r"$M_\mathrm{input}$", **keys)
-                    cbarax.text(2, 1.72, r"${}$".format(m_in.value) + sm.latexForUnit(m_in), **keys)
+                    cbarax.text(2, 1.72, _latexForNumber(m_in.value) + sm.latexForUnit(m_in), **keys)
                     cbarax.text(2, 1.60, r"$M_\mathrm{gridded}$", **keys)
-                    cbarax.text(2, 1.52, r"${}$".format(m_gr.value) + sm.latexForUnit(m_gr), **keys)
+                    cbarax.text(2, 1.52, _latexForNumber(m_gr.value) + sm.latexForUnit(m_gr), **keys)
                     if m_in > 0:
-                        cbarax.text(2, 1.44, r"$({:4.2} \%)$".format(100 * (m_gr/m_in-1)), **keys)
+                        cbarax.text(2, 1.44, "({:1.2f} %)".format(100 * (m_gr/m_in-1)), **keys)
 
                 # if not in interactive mode, save the figure; otherwise leave it open
                 if not ut.interactive(interactive):
@@ -159,5 +159,12 @@ def _convergenceInfoPath(simulation, cutsprobe):
 
     # indicate failure
     return None
+
+## This private function returns a latex string for a numeric value with appropriate exponential notation
+def _latexForNumber(value):
+    latex = "{:1.4g}".format(value)
+    if "e" in latex:
+        latex = latex.replace("e",r"\times 10^{") + "}"
+    return "$" + latex + "$"
 
 # ----------------------------------------------------------------------
