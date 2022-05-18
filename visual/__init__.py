@@ -19,12 +19,11 @@ from .makergbimages import makeRGBImages, makeConvolvedRGBImages
 from .makewavelengthmovie import makeWavelengthMovie
 from .moviefile import MovieFile
 from .plotbands import plotBuiltinBands
+from .plotconvergencecuts import plotConvergenceCuts
 from .plotcurves import plotSeds, plotSources, plotSpectralResolution
-from .plotdensitycuts import plotMediaDensityCuts
 from .plotgrids import plotGrids
-from .plotmagneticfield import plotMagneticFieldCuts
 from .plotpolarization import plotPolarization
+from .plotscalarcuts import plotScalarCuts
 from .plotstoredtable import plotStoredTableCurve, plotStoredTableInteractive
-from .plottemperaturecuts import plotTemperatureCuts
-from .plotvelocity import plotMediumVelocityCuts
+from .plotvectorcuts import plotVectorCuts
 from .rgbimage import RGBImage

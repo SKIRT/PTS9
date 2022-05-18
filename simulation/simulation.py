@@ -287,9 +287,17 @@ class Simulation:
         return [ Instrument(self, index) for index in range(len(self.instrumentNames())) ]
 
     ## This function returns a list of Probe instances for each of the probes in the simulation,
-    # in their order of appearance in the ski file.
-    def probes(self):
-        return [ Probe(self, index) for index in range(len(self.probeNames())) ]
+    # in their order of appearance in the ski file. The list can be limited to probes of the specified
+    # type(s) and/or with the specified assocated form type(s).
+    def probes(self, probeType=None, formType=None):
+        probes = [ Probe(self, index) for index in range(len(self.probeNames())) ]
+        if probeType is not None:
+            if isinstance(probeType, str): probeType = [ probeType ]
+            probes = [ probe for probe in probes if probe.type() in probeType ]
+        if formType is not None:
+            if isinstance(formType, str): formType = [ formType ]
+            probes = [ probe for probe in probes if probe.formType() in formType ]
+        return probes
 
 # -----------------------------------------------------------------
 
@@ -464,5 +472,13 @@ class Probe(_SimulationEntity):
     ## This function returns the name of the probe as specified in the ski file, as a string.
     def name(self):
         return self.getStringAttribute("probeName")
+
+    ## This function returns the type of the form associated with the probe, or the empty string if the probe
+    # is not a form probe.
+    def formType(self):
+        try:
+            return self._simulation.getStringAttribute(self._xpath + "/form/*[1]", None)
+        except ValueError:
+            return ""
 
 # -----------------------------------------------------------------

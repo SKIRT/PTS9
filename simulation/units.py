@@ -147,8 +147,10 @@ def _flavor(flavorunit):
 # is interpreted as described for the unit() function in this module.
 def latexForUnit(unitlike):
     latex = unit(unitlike).to_string("latex_inline")
-    # Work around for bug in astropy 3.1.2: put parentheses around LaTeX for arcsec if it carries an exponent
+    # work around for bug in astropy 3.1.2: put parentheses around LaTeX for arcsec if it carries an exponent
     latex = latex.replace("{}^{\prime\prime}^","({}^{\prime\prime})^")
+    # use "1" for dimensionless quantities instead of the empty string
+    if latex==r"$\mathrm{}$": latex = r"$\mathrm{1}$"
     return r"$\,$[" + latex + r"]"
 
 ## This function returns a latex-formatted string representation for wavelength (\f$\lambda\f$),
