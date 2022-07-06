@@ -53,9 +53,12 @@ def getQuantityFromFile(path, trigger, header):
             # select the line
             if triggered < len(triggers) and triggers[triggered] in line: triggered += 1
             elif triggered==len(triggers) and header in line:
-                # remove section between parentheses
-                if line.strip().endswith(')'):
+                line = line.strip()
+                # remove section between parentheses and/or trailing "."
+                if line.endswith(')') or line.endswith(').'):
                     line = line[:line.rfind('(')]
+                if line.endswith('.'):
+                    line = line[:-1]
                 segments = line.split()
                 if len(segments) >= 2:
                     try:
