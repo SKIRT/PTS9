@@ -227,6 +227,9 @@ def _getUpgradeDefinitions():
         # AllSkyProjectionForm
         _changeToFormProbe("OpticalDepthMapProbe", "OpacityProbe", "AllSkyProjectionForm",
                             dict(probeName=None, wavelength=None, probeAfter=None), propsAllSkyProjectionForm),
+
+        # SKIRT update (aug 2022): revise dynamic medium state concepts; rename iterateMediumState property
+        _changeScalarPropertyName("MonteCarloSimulation", "iterateMediumState", "iteratePrimaryEmission"),
     ]
 
 # --------- handling probe to form-probe updates
