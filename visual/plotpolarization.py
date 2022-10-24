@@ -148,7 +148,7 @@ def plotPolarization(simulation, *, plotLinMap=True, plotDegMap=False, plotDegAv
 
                 # plot the background image and the corresponding color bar
                 normalizer = matplotlib.colors.LogNorm(vmin, vmax)
-                cmap = plt.get_cmap('PuRd')
+                cmap = plt.get_cmap('PuRd').copy()
                 cmap.set_under('w')
                 backPlot = ax.imshow(Ib, norm=normalizer, cmap=cmap, extent=extent,
                                      aspect='equal', interpolation='bicubic', origin='lower')
@@ -276,7 +276,7 @@ def plotPolarization(simulation, *, plotLinMap=True, plotDegMap=False, plotDegAv
 
                 # plot the background image and the corresponding color bar
                 normalizer = matplotlib.colors.LogNorm(vmin, vmax)
-                cmap = plt.get_cmap('PuRd')
+                cmap = plt.get_cmap('PuRd').copy()
                 cmap.set_under('w')
                 backPlot = ax.imshow(Ib, norm=normalizer, cmap=cmap, extent=extent,
                                      aspect='equal', interpolation='bicubic', origin='lower')
