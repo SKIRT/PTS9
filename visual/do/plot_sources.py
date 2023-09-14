@@ -19,8 +19,9 @@
 #  - \em simDirPath (positional string argument): the path to the SKIRT simulation output directory,
 #                                                 or "." for the current directory
 #  - \em prefix (string): the prefix of the simulation to handle; by default handles all simulations in the directory
-#  - \em wmin (float): smallest wavelength on the horizontal axis, in micron; default is 0.1 micron
-#  - \em wmax (float): largest wavelength on the horizontal axis, in micron; default is 1000 micron
+#  - \em wmin (float): smallest wavelength on the horizontal axis; default is 0.1
+#  - \em wmax (float): largest wavelength on the horizontal axis; default is 1000
+#  - \em unit (string): unit of the wavelength limits (any spectral unit); default is micron
 #  - \em dex (float): if specified, the number of decades to be plotted on the vertical axis; default is 5
 #
 # In all cases, the plot file is placed next to the simulation output file(s) being handled. The filename starts
@@ -31,16 +32,16 @@
 
 def do( simDirPath : (str,"SKIRT simulation output directory"),
         prefix : (str,"SKIRT simulation prefix") = "",
-        wmin : (float,"smallest wavelength on the horizontal axis, in micron") = 0.1,
-        wmax : (float,"largest wavelength on the horizontal axis, in micron") = 1000.,
+        wmin : (float,"smallest wavelength on the horizontal axis") = 0.1,
+        wmax : (float,"largest wavelength on the horizontal axis") = 1000.,
+        unit: (str,"unit of the wavelength limits (any spectral unit)") = "micron",
         dex : (float,"number of decades to be plotted on the vertical axis") = 5,
         ) -> "plot the luminosity of and packets launched by one or more SKIRT simulations":
 
-    import astropy.units as u
     import pts.simulation as sm
     import pts.visual as vis
 
     for sim in sm.createSimulations(simDirPath, prefix if len(prefix)>0 else None):
-        vis.plotSources(sim, minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron, decades=dex)
+        vis.plotSources(sim, minWavelength=wmin*sm.unit(unit), maxWavelength=wmax*sm.unit(unit), decades=dex)
 
 # ----------------------------------------------------------------------
