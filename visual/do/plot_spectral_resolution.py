@@ -12,8 +12,9 @@
 #
 # Provide the name or (relative or absolute) file path of a SKIRT stored table file or a SKIRT output file
 # as the single required argument, and use optional arguments to further configure the plot:
-#  - \em wmin (float): smallest wavelength on the horizontal axis, in micron; default is 0.1 micron
-#  - \em wmax (float): largest wavelength on the horizontal axis, in micron; default is 1000 micron
+#  - \em wmin (float): smallest wavelength on the horizontal axis; default is 0.1
+#  - \em wmax (float): largest wavelength on the horizontal axis; default is 1000
+#  - \em unit (string): unit of the wavelength limits (any spectral unit); default is micron
 #  - \em dex (float): if specified, the number of decades to be plotted on the vertical axis; default is 3
 #  - \em title (string): the title used in the plot legend; default is the name of the input file
 #
@@ -24,16 +25,17 @@
 # -----------------------------------------------------------------
 
 def do( filepath : (str,"name or path of SKIRT stored table or text column file"),
-        wmin : (float,"smallest wavelength on the horizontal axis, in micron") = 0.1,
-        wmax : (float,"largest wavelength on the horizontal axis, in micron") = 1000.,
+        wmin : (float,"smallest wavelength on the horizontal axis") = 0.1,
+        wmax : (float,"largest wavelength on the horizontal axis") = 1000.,
+        unit: (str,"unit of the wavelength limits (any spectral unit)") = "micron",
         dex : (float,"number of decades to be plotted on the vertical axis") = 3,
         title : (str,"title used in plot legend") = "",
         ) -> "plot the spectral resolution of a wavelength axis":
 
-    import astropy.units as u
+    import pts.simulation as sm
     import pts.visual as vis
 
-    vis.plotSpectralResolution(inFilePath=filepath, minWavelength=wmin * u.micron, maxWavelength=wmax * u.micron,
+    vis.plotSpectralResolution(inFilePath=filepath, minWavelength=wmin*sm.unit(unit), maxWavelength=wmax*sm.unit(unit),
                                decades=dex, title=title)
 
 # -----------------------------------------------------------------
