@@ -9,8 +9,6 @@
 #
 # The functions in this module convert broadband response or transmission curves from their original formats
 # to normalized transmission curves in SKIRT stored table format.
-#
-#
 
 # -----------------------------------------------------------------
 
@@ -27,7 +25,7 @@ from .io import writeStoredTable
 def _writeNormalized(outFilePath, wavelengths, transmissions):
     transmissions /= np.trapz(x=wavelengths, y=transmissions)
     writeStoredTable(outFilePath, ['lambda'], ['m'], ['lin'], [wavelengths],
-                                  ['T'], ['1'], ['lin'], [transmissions])
+                                  ['T'], ['1/m'], ['lin'], [transmissions])
 
 # -----------------------------------------------------------------
 
