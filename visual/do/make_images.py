@@ -66,10 +66,10 @@ def do( simDirPath : (str, "SKIRT simulation output directory"),
         return
 
     # try bands
-    try: bands = [ bnd.BroadBand(segment) for segment in segments ]
+    try: bands = [ bnd.builtinBand(segment) for segment in segments ]
     except ValueError: bands = None
     if bands is not None:
-        contributions = [ (bands[0], 1, 0, 0), (bands[1], 0, 1, 0), (bands[1], 0, 0, 1) ]
+        contributions = [ (bands[0], 1, 0, 0), (bands[1], 0, 1, 0), (bands[2], 0, 0, 1) ]
         for sim in sims:
             vis.makeConvolvedRGBImages(sim, contributions=contributions, fileType=type, name=name)
         return

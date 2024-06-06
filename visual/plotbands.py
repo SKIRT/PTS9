@@ -33,17 +33,16 @@ import pts.utils as ut
 # out* arguments as described for the pts.utils.savePath() function. In interactive mode (see the
 # pts.utils.interactive() function), the figure is not saved and it is left open so that is displayed in notebooks.
 #
-def plotBuiltinBands(minWavelength=1e-6*u.micron, maxWavelength=1e6*u.micron, nameSegments=None, *,
+def plotBuiltinBands(minWavelength=1e-99*u.micron, maxWavelength=1e99*u.micron, nameSegments="", *,
                      outDirPath=None, outFileName=None, outFilePath=None, figSize=(20, 6), interactive=None):
 
     # load all bands that satisfy the specified criteria
-    bands = [ bnd.BroadBand(name) for name in bnd.builtinBandNames() ]
-    bands = [ band for band in bands if minWavelength <= band.pivotWavelength() <= maxWavelength ]
-    if nameSegments is not None:
-        if isinstance(nameSegments, str): nameSegments = [ nameSegments ]
-        bands = [ band for band in bands if any([s.lower() in band.name().lower().split("_") for s in nameSegments]) ]
+    bands = bnd.builtinBands(nameSegments, minWavelength, maxWavelength)
+    if len(bands) == 0:
+        logging.info("There are no matching built-in bands")
+        return
 
-    # sort the remaining bands on pivot wavelength
+    # sort these bands on pivot wavelength
     bands = sorted(bands, key=bnd.BroadBand.pivotWavelength)
     logging.info("Plotting {} built-in bands...".format(len(bands)))
 

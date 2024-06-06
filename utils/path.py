@@ -30,6 +30,13 @@ def dataPath(object):
 def ptsPath():
     return pathlib.Path(inspect.getfile(ptsPath)).parent.parent
 
+## This function returns the absolute path to the PTS resources directory as part of the project structure including
+# this PTS source file, or None if no such directory is found.
+def ptsResourcesPath():
+    path = ptsPath().parent / "resources"
+    if path.is_dir(): return path
+    return None
+
 ## This function returns the absolute path to the directory containing the SKIRT and PTS
 # project directories as a pathlib.Path object. In the canonical SKIRT/PTS developer
 # directory structure, this is the grandparent of the pts repository.
@@ -46,6 +53,18 @@ def skirtPath():
     if path.is_file(): return path
     path = project / "SKIRT" / "release" / "SKIRT" / "main" / "skirt"
     if path.is_file(): return path
+    return None
+
+## This function returns the absolute path to the SKIRT resources directory as part of the project structure including
+# this PTS source file, or None if no such directory is found. The function assumes that SKIRT is installed
+# under a \c ~/SKIRT9 or \c SKIRT directory in the directory returned by the projectParent() function. The \c SKIRT9
+# directory is tried first.
+def skirtResourcesPath():
+    project = projectParentPath()
+    path = project / "SKIRT9" / "resources"
+    if path.is_dir(): return path
+    path = project / "SKIRT" / "resources"
+    if path.is_dir(): return path
     return None
 
 ## This function returns the absolute canonical path corresponding to the given path. The input path may

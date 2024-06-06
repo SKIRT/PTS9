@@ -7,30 +7,46 @@
 
 ## \package pts.band.do.list_bands List all broadbands built into PTS
 #
-# This script lists the names of all broadbands built into PTS with their corresponding pivot wavelength.
+# This script lists the names and pivot wavelengths of all built-in broadbands that satisfy
+# all of the specified selection criteria:
+#  - \em names (string with comma-separated segments): if specified, the band name must contain
+#    at least one of these segments
+#  - \em wmin (float): if specified, the pivot wavelength must exceed this value
+#  - \em wmax (float): if specified, the pivot wavelength must be lower than this value
+#
 # The bands are sorted on pivot wavelength within each band family.
 #
 
 # -----------------------------------------------------------------
 
-def do() -> "list all built-in broadbands":
+def do( names : (str,"band name segments for bands to be listed, comma separated") = "",
+        wmin : (float,"smallest pivot wavelength to be listed, in micron") = 1e-99,
+        wmax : (float,"largest pivot wavelength to be listed, in micron") = 1e99,
+        ) -> "list built-in broadbands":
 
     import logging
+    import astropy.units as u
     import pts.band as bnd
 
-    # load all bands
-    bands = [ bnd.BroadBand(name) for name in bnd.builtinBandNames() ]
-    logging.info("There are {} built-in bands:".format(len(bands)))
+    # load selected bands
+    bands = bnd.builtinBands(names, wmin << u.micron, wmax << u.micron)
+    if len(bands) == 0:
+        logging.info("There are no matching built-in bands")
+    else:
+        # sort the bands on pivot wavelength within each band family
+        bands = sorted(bands, key=bnd.BroadBand.pivotWavelength)
+        bands = sorted(bands, key=lambda band: "_".join(band.name().split('_')[:2]))
 
-    # sort them on pivot wavelength within each band family
-    bands = sorted(bands, key=bnd.BroadBand.pivotWavelength)
-    bands = sorted(bands, key=lambda b: b.name().split('_')[0])
+        # get the length of the longest name, with a minimum to accomodate the title
+        maxlen = max([ len(band.name()) for band in bands ] + [10])
 
-    # list band info
-    logging.info("| Band name          | Pivot wavelength")
-    logging.info("|--------------------|-----------------")
-    for band in bands:
-        logging.info("| {:18s} | {:1.5g}".format(band.name(), band.pivotWavelength()))
-    logging.info("|--------------------|-----------------")
+        # list band info
+        logging.info("| {} | Pivot wavelength | Effective width".format("Band name".ljust(maxlen)))
+        logging.info("|-{}-|------------------|-----------------".format("-"*maxlen))
+        for band in bands:
+            pivot = "{:#.5g}".format(band.pivotWavelength().to(u.micron)).ljust(16)
+            effect = "{:#.5g}".format(band.effectiveWidth().to(u.micron))
+            logging.info("| {} | {} | {}".format(band.name().ljust(maxlen), pivot, effect))
+        logging.info("|-{}-|------------------|-----------------".format("-"*maxlen))
 
 # -----------------------------------------------------------------

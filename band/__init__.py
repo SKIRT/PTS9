@@ -16,4 +16,4 @@
 # convolve SEDs or frame data cubes with the transmission curves.
 #
 
-from .broadband import BroadBand, builtinBandNames
+from .broadband import BroadBand, builtinBands, builtinBand
