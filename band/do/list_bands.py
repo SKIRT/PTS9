@@ -41,10 +41,12 @@ def do( names : (str,"band name segments for bands to be listed, comma separated
         maxlen = max([ len(band.name()) for band in bands ] + [10])
 
         # list band info
-        logging.info("| {} | Pivot wavelength".format("Band name".ljust(maxlen)))
-        logging.info("|-{}-|-----------------".format("-"*maxlen))
+        logging.info("| {} | Pivot wavelength | Effective width".format("Band name".ljust(maxlen)))
+        logging.info("|-{}-|------------------|-----------------".format("-"*maxlen))
         for band in bands:
-            logging.info("| {:s} | {:#.5g}".format(band.name().ljust(maxlen), band.pivotWavelength().to(u.micron)))
-        logging.info("|-{}-|-----------------".format("-"*maxlen))
+            pivot = "{:#.5g}".format(band.pivotWavelength().to(u.micron)).ljust(16)
+            effect = "{:#.5g}".format(band.effectiveWidth().to(u.micron))
+            logging.info("| {} | {} | {}".format(band.name().ljust(maxlen), pivot, effect))
+        logging.info("|-{}-|------------------|-----------------".format("-"*maxlen))
 
 # -----------------------------------------------------------------
