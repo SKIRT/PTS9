@@ -22,12 +22,10 @@ import pts.storedtable as stab
 # -----------------------------------------------------------------
 
 ## An instance of the BroadBand class represents a broadband filter with a given transmission curve.
-# An instance can be constructed from one of the "built-in" band definitions (see below),
-# as a uniform filter with constant transmission over a specified wavelength range,
-# or by providing a custom wavelength grid and corresponding transmission curve.
-#
-# Refer to the documentation of the constructor for this class for information on how to construct
-# one of these types of BroadBand objects.
+# Broadcast instances are usually obtained by loading built-in band definitions using one of the class functions
+# builtinBands() or builtinBand() as opposed to directly invoking the constructor. However, for specific use cases,
+# a Broadcast instance can also be constructed directly, for example to obtain a uniform filter with constant
+# transmission over a specified wavelength range. For more information, refer to the documentation of the constructor.
 #
 # Built-in bands
 # --------------
@@ -40,7 +38,7 @@ import pts.storedtable as stab
 # the ~/SKIRT/resources directory and the ~/PTS/resources directory. In other words, if SKIRT has been installed
 # and all relevant resource packs have been installed, all broadbands available to SKIRT are available to this class
 # as well. In case SKIRT is not installed on the same system (and in the same project directory), one can manually
-# download the aprpopriate resource packs from the SKIRT web site, unzip the archives, and place the files in the
+# download the appropriate resource packs from the SKIRT web site, unzip the archives, and place the files in the
 # ~/PTS/resources directory.
 #
 # For a list of available broadbands, see the documentation of the SKIRT %BroadBand class, or use the
@@ -90,39 +88,43 @@ class BroadBand:
     ## Flag becomes True as soon as bandpaths have been added for the SKIRT and PTS resource directories
     _added = False
 
-    ## The constructor creates a BroadBand instance in one of the following three ways, depending on the type of
-    # the \em bandspec argument:
+    ## As mentioned in the class header, built-in Broadcast instances can be obtained using one of the class functions
+    # builtinBands() or builtinBand() as opposed to directly invoking the constructor. For more information, refer to
+    # the doumentation of these functions.
     #
-    #   - if \em bandspec is a string, it looks for a built-in broadband filter based on the text segments
-    #     in the string, and then loads the transmission curve from the corresponding resource file.
-    #     To specify a band, it suffices to include two or more segments of its name (case insensitive) that
-    #     uniquely identify the band, seperated by an underscore or a space. For example, to select the
-    #     HERSCHEL_PACS_100 band, one could enter "Herschel 100", "PACS 100", or "HERSCHEL_PACS_100".
+    # The constructor supports the following use cases, depending on the type of the \em bandspec argument:
+    #
+    #   - If \em bandspec is a string or a pathlib.Path, it should refer to a file in SKIRT stored table format
+    #     that contains a properly normalized band definition (i.e., the same format as built-in band definitions).
+    #     The BroadBand instance is constructed by loading the contents of this file.
     #
     #   - if \em bandspec is a tuple with two numbers, a bolometer-type band is constructed with a uniform
-    #     transmission curve in the indicated (min,max) wavelength range (expressed in micron).
+    #     transmission curve in the indicated (min,max) wavelength range expressed in micron.
     #
-    #   - if \em bandspec is a two-dimensional numpy.ndarray, a bolometer-type band is constructed using
-    #     \em bandspec[:,0] as wavelength grid and \em bandspec[:,1] as transmission curve. The wavelengths are
-    #     assumed to be expressed in micron, while the transmission curve has arbitrary scaling.
-    #     The array layout used here is identical to what one would obtain when applying numpy.loadtxt() to the
-    #     input file for a SKIRT FileBand.
+    #   - if \em bandspec is a two-dimensional numpy array, a custom bolometer-type band is constructed using
+    #     \em bandspec[:,0] as wavelength grid and \em bandspec[:,1] as transmission curve. The wavelengths
+    #     must be expressed in micron, while the transmission curve has arbitrary scaling.
+    #     The array layout used here is identical to what one would obtain when applying numpy.loadtxt()
+    #     to the input file for a SKIRT FileBand.
     #
-    # If \em bandspec has a different type, or if its string contents does not unambiguously match a built-in band
-    # name, the constructor raises an exception.
+    # If \em bandspec has a different type, or if the string/path does not refer to a file in the proper format,
+    # the constructor raises an exception.
     #
-    # \note During the first part of construction, wavelengths are initialized in micron but without explicit units,
-    # and transmissions have arbitrary scale. Thus, these are plain numpy arrays, not astropy quantities. At the
-    # end of construction, the appropriate astropy units are attached.
+    # \note As indicated above, the constructor expects the wavelengths specifying uniform and custom bands
+    # as plain numbers expressed in micron. In contrast, the wavelengths and transmissions stored and returned
+    # by this class are astropy quantities that include poper units. For uniform and custom bands, these units
+    # will be micron (wavelengths) and 1/micron (transmissions). For built-in bands, these units will be
+    # m (wavelengths) and 1/m (transmissions). Clients of this class should thus properly honor the astropy
+    # units of any values returned by this class.
     #
     def __init__(self, bandspec):
-        # construction of built-in band
-        if isinstance(bandspec, str):
-            self._ensureBuiltinBands()
-
-            # get the corresponding built-in band path
-            bandpath = self._bandPathFromSpec(bandspec)
-            self._bandname = bandpath.stem[:-10]
+        # construction of band from stored table
+        if isinstance(bandspec, (str, pathlib.Path)):
+            # get the corresponding band path
+            bandpath = ut.absPath(bandspec)
+            self._bandname = bandpath.stem
+            if self._bandname.endswith("_BroadBand"):
+                self._bandname = self._bandname[:-10]
 
             # load wavelengths and normalized transmissions from the stored table, including proper astropy units
             table = stab.readStoredTable(bandpath)
@@ -143,28 +145,9 @@ class BroadBand:
             self._transmissions = bandspec[:,1].astype(float)
             self._normalize()
 
-        else: raise ValueError("Unsuppported type of band specification '{}'".format(bandspec))
+        else: raise ValueError("Unsupported type of band specification '{}'".format(bandspec))
 
-    ## This function matches the given band specification with all detected built-in band paths.
-    # If there is a single match, the corresponding path is returned. If there is no match,
-    # or if there are multiple matches, an exception is raised.
-    # A band specification must include two or more segments of the band name (case insensitive),
-    # separated by whitespace and/or underscores.
-    def _bandPathFromSpec(self, bandspec):
-        specsegments = bandspec.upper().replace("_"," ").split()
-        result = None
-        for bandpath in self._bandpaths:
-            namesegments = bandpath.stem[:-10].upper().replace("_"," ").split()
-            if all([ (specsegment in namesegments) for specsegment in specsegments ]):
-                if result is not None:
-                    raise ValueError("Band specification '{}' matches multiple band names, "
-                                     "including {} and {}".format(bandspec, result.stem[:-10], bandpath.stem[:-10]))
-                result = bandpath
-        if result is None:
-            raise ValueError("Band specification '{}' matches no band names".format(bandspec))
-        return result
-
-    ## This function normalizes the transmission curve after it has been loaded during construction,
+    ## This private function normalizes the transmission curve for uniform and custom bands,
     # and attaches the appropriate astropy units (micron and 1/micron, respectively).
     def _normalize(self):
         # normalize the transmission curve to unity
@@ -176,7 +159,7 @@ class BroadBand:
 
     # -----------------------------------------------------------------
 
-    ## This function adds any band definitions detected in the SKIRT or PTS resources
+    ## This private function adds any band definitions detected in the SKIRT or PTS resources
     # directories to the list of built-in bands. It does so only the first time it is called.
     @classmethod
     def _ensureBuiltinBands(cls):
@@ -185,7 +168,7 @@ class BroadBand:
             cls._addBuiltinBands(ut.ptsResourcesPath())
             cls._added = True
 
-    ## This function recursively searches the contents of the specified directory and adds
+    ## This private function recursively searches the contents of the specified directory and adds
     # files with a name ending in "_BroadBand.stab" to the list of built-in bands.
     @classmethod
     def _addBuiltinBands(cls, directory):
@@ -194,11 +177,47 @@ class BroadBand:
                 if path.is_file():
                     cls._bandpaths.add(path)
 
-    ## This function returns an iterable over all built-in band names, in arbitrary order.
+    ## This function returns a list of BroadBand instances that match the specified criteria. The list is in
+    # arbitrary order an can be empty.
+    #
+    # - \em nameSegments is a string specifying broadband name segments seperated by an underscore or a space.
+    #   A built-in broad-band matches as soon as its name contains one or more of the specified segments.
+    #   The comparison is case-insensitive. An empty string (the default) matches all bands.
+    #   To specify a given band, it suffices to include two or more segments of its name that
+    #   uniquely identify the band, seperated by an underscore or a space. For example, to select the
+    #   HERSCHEL_PACS_100 band, one could enter "Herschel 100", "PACS 100", or "HERSCHEL_PACS_100".
+    #
+    # - \em minWavelength and \em maxWavelength are astropy quantities specifying a wavelength range.
+    #   A built-in broad-band matches as soon as its pivot wavelength is inside the specified range.
+    #   The default values specify an unlimited wavelength range.
+    #
     @classmethod
-    def builtinBandNames(cls):
+    def builtinBands(cls, nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m):
         cls._ensureBuiltinBands()
-        return [bandpath.stem[:-10] for bandpath in cls._bandpaths]
+
+        # construct a list with all bands that match the specified name segments
+        result = []
+        specsegments = nameSegments.upper().replace("_"," ").split()
+        for bandpath in cls._bandpaths:
+            bandsegments = bandpath.stem[:-10].upper().replace("_"," ").split()
+            if all([ (specsegment in bandsegments) for specsegment in specsegments ]):
+                result.append(BroadBand(bandpath))
+
+        # remove bands outside of the specified wavelength range
+        result = [ band for band in result if minWavelength <= band.pivotWavelength() <= maxWavelength ]
+        return result
+
+    ## This function returns the single BroadBand instance that matches the specified criteria. It raises an error
+    # if multiple bands or no band match the criteria. The arguments are the same as those for builtinBands().
+    @classmethod
+    def builtinBand(cls, nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m):
+        result = cls.builtinBands(nameSegments, minWavelength, maxWavelength)
+        if len(result) > 1:
+            raise ValueError("Name segments '{}' match multiple band names, "
+                             "including {} and {}".format(nameSegments, result[0].name(), result[1].name()))
+        if len(result) == 0:
+            raise ValueError("Band specification matches no bands")
+        return result[0]
 
     # -----------------------------------------------------------------
 
@@ -311,7 +330,7 @@ class BroadBand:
 
 # -----------------------------------------------------------------
 
-## This helper function returns the natural logarithm for positive values, and a large negative number
+## This private helper function returns the natural logarithm for positive values, and a large negative number
 # (but not infinity) for zero or negative values.
 def _log(X):
     zeromask = X <= 0
@@ -322,8 +341,14 @@ def _log(X):
 
 # -----------------------------------------------------------------
 
-## This function returns an iterable over all built-in band names, in arbitrary order.
-def builtinBandNames():
-    return BroadBand.builtinBandNames()
+## This function returns a list of BroadBand instances that match the specified criteria. It merely calls the
+# BroadBand.builtinBands() function; see the documentation of that function for more information.
+def builtinBands(nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m):
+    return BroadBand.builtinBands(nameSegments, minWavelength, maxWavelength)
+
+## This function returns the single BroadBand instance that matches the specified criteria. It merely calls the
+# BroadBand.builtinBand() function; see the documentation of that function for more information.
+def builtinBand(nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m):
+    return BroadBand.builtinBand(nameSegments, minWavelength, maxWavelength)
 
 # -----------------------------------------------------------------
