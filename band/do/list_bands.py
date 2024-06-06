@@ -20,8 +20,8 @@
 # -----------------------------------------------------------------
 
 def do( names : (str,"band name segments for bands to be listed, comma separated") = "",
-        wmin : (float,"smallest pivot wavelength to be listed, in micron") = 1e-9,
-        wmax : (float,"largest pivot wavelength to be listed, in micron") = 1e9,
+        wmin : (float,"smallest pivot wavelength to be listed, in micron") = 1e-99,
+        wmax : (float,"largest pivot wavelength to be listed, in micron") = 1e99,
         ) -> "list built-in broadbands":
 
     import logging
@@ -44,7 +44,7 @@ def do( names : (str,"band name segments for bands to be listed, comma separated
         logging.info("| {} | Pivot wavelength".format("Band name".ljust(maxlen)))
         logging.info("|-{}-|-----------------".format("-"*maxlen))
         for band in bands:
-            logging.info("| {:s} | {:#.4g}".format(band.name().ljust(maxlen), band.pivotWavelength().to(u.micron)))
+            logging.info("| {:s} | {:#.5g}".format(band.name().ljust(maxlen), band.pivotWavelength().to(u.micron)))
         logging.info("|-{}-|-----------------".format("-"*maxlen))
 
 # -----------------------------------------------------------------

@@ -180,7 +180,7 @@ class BroadBand:
     ## This function returns a list of BroadBand instances that match the specified criteria. The list is in
     # arbitrary order an can be empty.
     #
-    # - \em nameSegments is a string specifying broadband name segments seperated by an underscore or a space.
+    # - \em nameSegments is a string specifying broadband name segments seperated by an underscore, a comma or a space.
     #   A built-in broad-band matches as soon as its name contains one or more of the specified segments.
     #   The comparison is case-insensitive. An empty string (the default) matches all bands.
     #   To specify a given band, it suffices to include two or more segments of its name that
@@ -197,7 +197,7 @@ class BroadBand:
 
         # construct a list with all bands that match the specified name segments
         result = []
-        specsegments = nameSegments.upper().replace("_"," ").split()
+        specsegments = nameSegments.upper().replace("_"," ").replace(","," ").split()
         for bandpath in cls._bandpaths:
             bandsegments = bandpath.stem[:-10].upper().replace("_"," ").split()
             if all([ (specsegment in bandsegments) for specsegment in specsegments ]):
