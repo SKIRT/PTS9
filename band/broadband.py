@@ -200,7 +200,7 @@ class BroadBand:
         specsegments = nameSegments.upper().replace("_"," ").replace(","," ").split()
         for bandpath in cls._bandpaths:
             bandsegments = bandpath.stem[:-10].upper().replace("_"," ").split()
-            if all([ (specsegment in bandsegments) for specsegment in specsegments ]):
+            if any([ (specsegment in bandsegments) for specsegment in specsegments ]):
                 result.append(BroadBand(bandpath))
 
         # remove bands outside of the specified wavelength range
