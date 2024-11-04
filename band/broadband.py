@@ -22,9 +22,9 @@ import pts.storedtable as stab
 # -----------------------------------------------------------------
 
 ## An instance of the BroadBand class represents a broadband filter with a given transmission curve.
-# Broadcast instances are usually obtained by loading built-in band definitions using one of the class functions
+# BroadBand instances are usually obtained by loading built-in band definitions using one of the class functions
 # builtinBands() or builtinBand() as opposed to directly invoking the constructor. However, for specific use cases,
-# a Broadcast instance can also be constructed directly, for example to obtain a uniform filter with constant
+# a BroadBand instance can also be constructed directly, for example to obtain a uniform filter with constant
 # transmission over a specified wavelength range. For more information, refer to the documentation of the constructor.
 #
 # Built-in bands
@@ -88,7 +88,7 @@ class BroadBand:
     ## Flag becomes True as soon as bandpaths have been added for the SKIRT and PTS resource directories
     _added = False
 
-    ## As mentioned in the class header, built-in Broadcast instances can be obtained using one of the class functions
+    ## As mentioned in the class header, built-in Broadband instances can be obtained using one of the class functions
     # builtinBands() or builtinBand() as opposed to directly invoking the constructor. For more information, refer to
     # the doumentation of these functions.
     #
@@ -178,29 +178,28 @@ class BroadBand:
                     cls._bandpaths.add(path)
 
     ## This function returns a list of BroadBand instances that match the specified criteria. The list is in
-    # arbitrary order an can be empty.
+    # arbitrary order and can be empty.
     #
     # - \em nameSegments is a string specifying broadband name segments seperated by an underscore, a comma or a space.
     #   A built-in broad-band matches as soon as its name contains one or more of the specified segments.
     #   The comparison is case-insensitive. An empty string (the default) matches all bands.
-    #   To specify a given band, it suffices to include two or more segments of its name that
-    #   uniquely identify the band, seperated by an underscore or a space. For example, to select the
-    #   HERSCHEL_PACS_100 band, one could enter "Herschel 100", "PACS 100", or "HERSCHEL_PACS_100".
+    #   To specify a set of bands, it suffices to include a name segment common to those bands.
+    #   For example, to select all six Herschel bands, one could specify "Herschel" or "PACS,SPIRE".
     #
     # - \em minWavelength and \em maxWavelength are astropy quantities specifying a wavelength range.
-    #   A built-in broad-band matches as soon as its pivot wavelength is inside the specified range.
+    #   A built-in broad-band matches only if its pivot wavelength is inside the specified range.
     #   The default values specify an unlimited wavelength range.
     #
     @classmethod
     def builtinBands(cls, nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m):
         cls._ensureBuiltinBands()
 
-        # construct a list with all bands that match the specified name segments
+        # construct a list with all bands that match any of the specified name segments
         result = []
         specsegments = nameSegments.upper().replace("_"," ").replace(","," ").split()
         for bandpath in cls._bandpaths:
             bandsegments = bandpath.stem[:-10].upper().replace("_"," ").split()
-            if any([ (specsegment in bandsegments) for specsegment in specsegments ]):
+            if len(specsegments)==0 or any([ (specsegment in bandsegments) for specsegment in specsegments ]):
                 result.append(BroadBand(bandpath))
 
         # remove bands outside of the specified wavelength range
@@ -208,10 +207,28 @@ class BroadBand:
         return result
 
     ## This function returns the single BroadBand instance that matches the specified criteria. It raises an error
-    # if multiple bands or no band match the criteria. The arguments are the same as those for builtinBands().
+    # if multiple bands or no band match the criteria.
+    #
+    # - \em nameSegments is a string specifying broadband name segments seperated by an underscore, a comma or a space.
+    #   A built-in broad-band matches as soon as its name contains all of the specified segments.
+    #   The comparison is case-insensitive.
+    #   To specify a given band, it suffices to include two or more segments of its name that
+    #   uniquely identify the band, seperated by an underscore or a space. For example, to select the
+    #   HERSCHEL_PACS_100 band, one could enter "Herschel 100", "PACS 100", or "HERSCHEL_PACS_100".
+    #
     @classmethod
-    def builtinBand(cls, nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m):
-        result = cls.builtinBands(nameSegments, minWavelength, maxWavelength)
+    def builtinBand(cls, nameSegments):
+        cls._ensureBuiltinBands()
+
+        # construct a list with all bands that match all of the specified name segments
+        result = []
+        specsegments = nameSegments.upper().replace("_"," ").replace(","," ").split()
+        for bandpath in cls._bandpaths:
+            bandsegments = bandpath.stem[:-10].upper().replace("_"," ").split()
+            if all([ (specsegment in bandsegments) for specsegment in specsegments ]):
+                result.append(BroadBand(bandpath))
+
+        # verify that the resulting list contains exactly one band
         if len(result) > 1:
             raise ValueError("Name segments '{}' match multiple band names, "
                              "including {} and {}".format(nameSegments, result[0].name(), result[1].name()))
@@ -348,7 +365,7 @@ def builtinBands(nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m)
 
 ## This function returns the single BroadBand instance that matches the specified criteria. It merely calls the
 # BroadBand.builtinBand() function; see the documentation of that function for more information.
-def builtinBand(nameSegments="", minWavelength=0<<u.m, maxWavelength=1e99<<u.m):
-    return BroadBand.builtinBand(nameSegments, minWavelength, maxWavelength)
+def builtinBand(nameSegments):
+    return BroadBand.builtinBand(nameSegments)
 
 # -----------------------------------------------------------------
