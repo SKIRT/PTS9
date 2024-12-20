@@ -40,6 +40,7 @@ def plotGrids(simulation, *, lineWidth=0.1, outDirPath=None, figSize=(8, 8)):
     for probe, gridFilePath in sm.probeOutFilePaths(simulation, "grid_*.dat"):
 
         # determine the format type from the first nonempty line (3D format has 3 columns, 2D format has 2 columns)
+        form = 0
         with open(gridFilePath) as gridfile:
             for line in gridfile:
                 form = len(line.split())
@@ -51,7 +52,7 @@ def plotGrids(simulation, *, lineWidth=0.1, outDirPath=None, figSize=(8, 8)):
         # use 2D or 3D version
         if form == 2:
             _plotGrid2D(gridFilePath, saveFilePath, lineWidth, figSize)
-        else:
+        if form == 3:
             _plotGrid3D(gridFilePath, saveFilePath, lineWidth, figSize)
 
 
