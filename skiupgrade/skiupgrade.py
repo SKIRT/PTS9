@@ -230,10 +230,15 @@ def _getUpgradeDefinitions():
 
         # SKIRT update (aug 2022): revise dynamic medium state concepts; rename iterateMediumState property
         _changeScalarPropertyName("MonteCarloSimulation", "iterateMediumState", "iteratePrimaryEmission"),
-        
+
         # SKIRT update (sep 2022): allow specifying characteristic wavelengths for file/list border wavelength grid
         _changeBooleanToEnumeration("FileBorderWavelengthGrid", "log", "characteristic", "Linear", "Logarithmic"),
         _changeBooleanToEnumeration("ListBorderWavelengthGrid", "log", "characteristic", "Linear", "Logarithmic"),
+
+        # SKIRT update (feb 2024): all Mesh classes are now movable; replace type="MoveableMesh" by type="Mesh"
+        _changeScalarPropertyValue("meshX", "type", "MoveableMesh", "Mesh"),
+        _changeScalarPropertyValue("meshY", "type", "MoveableMesh", "Mesh"),
+        _changeScalarPropertyValue("meshZ", "type", "MoveableMesh", "Mesh"),
     ]
 
 # --------- handling probe to form-probe updates
@@ -386,6 +391,17 @@ def _changeScalarPropertyName(typeName, oldPropName, newPropName):
                 </xsl:attribute>
             </xsl:template>
             '''.format(typeName, oldPropName, newPropName))
+
+## Change the value of a given scalar property for a given type.
+def _changeScalarPropertyValue(typeName, propName, oldValue, newValue):
+    return ('''//{0}[@{1}='{2}']'''.format(typeName, propName, oldValue),
+            '''
+            <xsl:template match="//{0}[@{1}='{2}']/@{1}">
+                <xsl:attribute name="{1}">
+                    <xsl:value-of select="'{3}'"/>
+                </xsl:attribute>
+            </xsl:template>
+            '''.format(typeName, propName, oldValue, newValue))
 
 ## Change Boolean property to enumeration property.
 def _changeBooleanToEnumeration(typeName, oldPropName, newPropName, newValueForFalse, newValueForTrue):
