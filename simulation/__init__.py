@@ -15,7 +15,7 @@
 # (\em ski files), and with SKIRT simulation output files.
 #
 
-from .fits import loadFits, getFitsAxes
+from .fits import loadFits, getFitsAxes, writeFits
 from .simulation import createSimulation, createSimulations, instrumentOutFilePaths, probeOutFilePaths, \
                         Simulation, Instrument, Probe
 from .skifile import SkiFile
