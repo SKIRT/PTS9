@@ -362,7 +362,10 @@ def getDifferenceStatistics(sim, name):
 
     # verify shape
     if ref.shape != out.shape:
-        return "data shape differs"
+        if len(ref.flatten()) == len(out.flatten()) and np.all(ref.flatten() == out.flatten()):
+            return "data shape differs with identical contents"
+        else:
+            return "data shape and contents differ"
 
     # get statistics
     with warnings.catch_warnings():

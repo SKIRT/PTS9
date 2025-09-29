@@ -239,6 +239,9 @@ def _getUpgradeDefinitions():
         _changeScalarPropertyValue("meshX", "type", "MoveableMesh", "Mesh"),
         _changeScalarPropertyValue("meshY", "type", "MoveableMesh", "Mesh"),
         _changeScalarPropertyValue("meshZ", "type", "MoveableMesh", "Mesh"),
+
+        # SKIRT update (sep 2025): OpacityProbe expects compound wavelengthGrid instead of scalar wavelength
+        _replaceWavelengthByGrid("OpacityProbe"),
     ]
 
 # --------- handling probe to form-probe updates
@@ -334,6 +337,25 @@ def _addMediumSystemOptions(optionsTypeName, oldTypeName, oldPropName=None):
                 </xsl:element>
             </xsl:template>
             '''.format(optionsPropName, optionsTypeName))
+
+# replace scalar wavelength property by compound wavelengthGrid property
+def _replaceWavelengthByGrid(typeName):
+    return ('''//{0}[@wavelength]'''.format(typeName),
+            '''
+            <xsl:template match="//{0}[@wavelength]">
+                <xsl:element name="{0}">
+                    <xsl:apply-templates select="@*[(local-name() != 'wavelength')]"/>
+                    <wavelengthGrid type="WavelengthGrid">
+                        <ListWavelengthGrid>
+                            <xsl:attribute name="wavelengths">
+                                <xsl:value-of select="@wavelength"/>
+                            </xsl:attribute>
+                        </ListWavelengthGrid>
+                    </wavelengthGrid>
+                    <xsl:apply-templates select="node()"/>
+                </xsl:element>
+            </xsl:template>
+            '''.format(typeName))
 
 # --------- handling types
 
