@@ -79,6 +79,11 @@ def plotScalarCuts(simulation, probeTypes, decades=5, *,
         frames = [ sm.loadFits(path) for path in pathgroup ]
         grids = [ sm.getFitsAxes(path) for path in pathgroup ]
 
+        # if the frames happen to be cubes, select the middle frame
+        # (this is a hack to make plot_opacity work now that the opacity probe outputs multiple frames)
+        frames = [ frame if len(frame.shape) == 2 else frame[:,:,frame.shape[2]//2] for frame in frames ]
+        grids = [ grid if len(grid) == 2 else grid[0:2] for grid in grids ]
+
         # determine the range of values to display and clip the data arrays
         vmax = max([ frame.max() for frame in frames ])
         vmin = vmax - vmax  # to retain units
