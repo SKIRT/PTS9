@@ -27,6 +27,10 @@ import pts.utils as ut
 # with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
 # projection (ParallelProjectionForm, AllSkyProjectionForm). If this is not the case, the function does nothing.
 #
+# \note If the probe output in the encountered FITS file(s) is a data cube instead of a single data frame, this
+# function selects the middle frame from the data cube, i.e. the frame with index int("nr of frames" / 2).
+# This is a work-around to make plot_opacity work now that the opacity probe outputs multiple frames.
+#
 # For \em decades=0, the color scale is linear. For \em decades>0, the color scale is logarithmic with the given
 # dynamic range in dex.
 #
@@ -78,6 +82,11 @@ def plotScalarCuts(simulation, probeTypes, decades=5, *,
         numframes = len(pathgroup)
         frames = [ sm.loadFits(path) for path in pathgroup ]
         grids = [ sm.getFitsAxes(path) for path in pathgroup ]
+
+        # if the frames happen to be cubes, select the middle frame
+        # (this is a hack to make plot_opacity work now that the opacity probe outputs multiple frames)
+        frames = [ frame if len(frame.shape) == 2 else frame[:,:,frame.shape[2]//2] for frame in frames ]
+        grids = [ grid if len(grid) == 2 else grid[0:2] for grid in grids ]
 
         # determine the range of values to display and clip the data arrays
         vmax = max([ frame.max() for frame in frames ])
