@@ -13,6 +13,11 @@
 # is an opacity \f$k=\kappa\rho=n\varsigma\f$; for projections, the plotted quantity is an optical depth \f$\tau\f$.
 # If the simulation does not include any supported probes, the script does nothing.
 #
+# \note If the wavelength grid configured for the opacity probe specifies more than a single wavelength, the probe's
+# output is a data cube with a frame for each of these wavelengths. In that case, this script selects the middle frame
+# from the data cube, i.e. the frame with index int("nr of frames" / 2).
+# This is a work-around to make plot_opacity work now that the opacity probe can output multiple frames.
+#
 # If the output for a given medium component or medium type (dust, gas, or electrons) includes two or three files
 # with names that differ only by orientation labels ("_xy", "_xz", and/or "_yz"), the density maps for these
 # files are included in a single plot and share the same scale.

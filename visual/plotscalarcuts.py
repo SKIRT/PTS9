@@ -27,6 +27,10 @@ import pts.utils as ut
 # with an associated probe form that produces a planar cut (DefaultCutsForm, PlanarCutsForm) or planar
 # projection (ParallelProjectionForm, AllSkyProjectionForm). If this is not the case, the function does nothing.
 #
+# \note If the probe output in the encountered FITS file(s) is a data cube instead of a single data frame, this
+# function selects the middle frame from the data cube, i.e. the frame with index int("nr of frames" / 2).
+# This is a work-around to make plot_opacity work now that the opacity probe outputs multiple frames.
+#
 # For \em decades=0, the color scale is linear. For \em decades>0, the color scale is logarithmic with the given
 # dynamic range in dex.
 #
